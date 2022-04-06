@@ -1,2 +1,2 @@
-# HymnPlayer_S
+# Bach Bot
 Hymn Midi Player for Schlicker Organs
