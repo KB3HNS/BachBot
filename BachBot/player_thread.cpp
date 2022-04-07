@@ -6,26 +6,24 @@
 
 #include "player_thread.h"
 
-PlayerThread::PlayerThread(wxFrame* const frame) :
+
+PlayerThread::PlayerThread(PlayerWindow* const frame, const uint32_t port_id) :
     wxThread(wxTHREAD_JOINABLE),
     m_mutex(),
     m_midi_event_queue(),
     m_bank_number{0U},
     m_mode_number{0U},
     m_frame{frame},
-    m_midi_out(),
+    m_midi_out(frame->m_midi_out),
     m_waiting{nullptr},
-    m_current_time{TimeReference::now()},
-    m_current_ms{0ULL}
+    m_current_time()
 {
-
+    m_midi_out.openPort(port_id);
 }
 
 
 wxThread::ExitCode PlayerThread::Entry()
 {
-    // std::vector<uint8_t> midi_message(3);
-    std::vector<std::string> port_names;
     [[maybe_unused]] const auto start_result = timeBeginPeriod(1U);
 
     auto timer_callback = [](UINT, UINT, DWORD_PTR dwUser, DWORD_PTR, DWORD_PTR) {
@@ -35,38 +33,13 @@ wxThread::ExitCode PlayerThread::Entry()
     const auto timer_id = timeSetEvent(
         1U, 1U, timer_callback, DWORD_PTR(this), TIME_PERIODIC);
 
-    for (auto i = 0U; i < m_midi_out.getPortCount(); ++i) {
-        port_names.push_back(m_midi_out.getPortName(i));
-    }
-    // m_midi_out.openPort(1U);
-    m_midi_out.openPort();
-
-    // midi_message[0U] = 192U;
-    // midi_message[1U] = 68U;
-    // m_midi_out.sendMessage(midi_message.data(), 2U);
     auto run = true;
-
-    auto note = 0U;
-    /*auto next_note = [&]() {
-        if (note > 0U) {
-            midi_message[2] = 0U;
-            m_midi_out.sendMessage(midi_message.data(), midi_message.size());
-        }
-
-        ++note;
-        midi_message[1] = uint8_t(note & 0x7FU);
-        midi_message[2] = 90U;
-        m_midi_out.sendMessage(midi_message.data(), midi_message.size());
-    };*/
-
     auto i = 0U;
-    // midi_message[0] = 0x90;
     while (run && (m_midi_event_queue.size() > 0U)) {
         auto message = wait_for_message();
         switch (message.first)
         {
         case MessageId::ADVANCE_MESSAGE:
-            // next_note();
             force_advance();
             process_notes();
             break;
@@ -77,10 +50,13 @@ wxThread::ExitCode PlayerThread::Entry()
 
         case MessageId::TICK_MESSAGE:
             if (++i >= 500U) {
+                if (++m_bank_number >= 8U) {
+                    m_bank_number = 0U;
+                    ++m_mode_number;
+                }
                 i = 0U;
-            //     next_note();
                 wxThreadEvent tick_event(wxEVT_THREAD, PlayerEvents::TICK_EVENT);
-                tick_event.SetInt(int(++note));
+                tick_event.SetInt(int((m_mode_number * 8U) + m_bank_number));
                 wxQueueEvent(m_frame, tick_event.Clone());
             }
             process_notes();
@@ -91,13 +67,9 @@ wxThread::ExitCode PlayerThread::Entry()
         }
     }
 
-    // midi_message[2] = 0U;
-    // m_midi_out.sendMessage(midi_message.data(), midi_message.size());
-
     wxThreadEvent exit_event(wxEVT_THREAD, PlayerEvents::EXIT_EVENT);
     exit_event.SetInt(0);
     wxQueueEvent(m_frame, exit_event.Clone());
-    // m_midi_out.closePort();
     timeKillEvent(timer_id);
 
     [[maybe_unused]] const auto end_result = timeEndPeriod(1U);
@@ -150,12 +122,12 @@ void PlayerThread::play(const std::list<OrganMidiEvent>& event_list)
 
 void PlayerThread::process_notes()
 {
-    std::array<uint8_t, 3U> midi_message;
-    ++m_current_ms;
+    std::array<uint8_t, MIDI_MESSAGE_SIZE> midi_message;
+    const auto time_now = m_current_time.TimeInMicro();
     do {
         const auto &midi_event = m_midi_event_queue.front();
-        const auto timestamp = midi_event.get_ms();
-        if (timestamp > m_current_ms) {
+        const auto timestamp = midi_event.get_us();
+        if (timestamp > time_now) {
             break;
         }
 
@@ -181,5 +153,19 @@ void PlayerThread::process_notes()
 void PlayerThread::force_advance()
 {
     const auto &current_event = m_midi_event_queue.front();
-    m_current_ms = current_event.get_ms() - 1U;
+    const auto ms = current_event.get_us().GetValue();
+    m_current_time.Start(long(ms / 1000LL));
+}
+
+
+size_t PlayerThread::get_events_remaining()
+{
+    wxMutexLocker lock(m_mutex);
+    return m_midi_event_queue.size();
+}
+
+
+PlayerThread::~PlayerThread()
+{
+    m_midi_out.closePort();
 }

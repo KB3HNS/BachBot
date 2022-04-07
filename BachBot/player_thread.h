@@ -3,31 +3,11 @@
 #include <cstdint>
 #include <list>
 #include <utility>
-#include <chrono>
-#include <optional>
 #include <RtMidi.h>
 #include <wx/wx.h>
 
-
-struct OrganMidiEvent
-{
-    uint8_t event_code;
-    double seconds;
-    double delta_time;
-    std::optional<uint8_t> byte1;
-    std::optional<uint8_t> byte2;
-    uint8_t desired_bank_number;
-    uint32_t desired_mode_number;
-    std::chrono::microseconds duration;
-    int delay;
-    int delta;
-
-    constexpr uint64_t get_ms() const
-    {
-        const auto ms_time = seconds * 1000.0;
-        return uint64_t(ms_time + 0.5);
-    }
-};
+#include "player_window.h"
+#include "common_defs.h"
 
 
 enum PlayerEvents : int
@@ -48,21 +28,24 @@ class PlayerThread : public wxThread
     };
 
     using Message = std::pair<MessageId, uintptr_t>;
-    using TimeReference = std::chrono::high_resolution_clock;
 
 public:
-    PlayerThread(wxFrame *const frame);
+    PlayerThread(PlayerWindow *const frame, const uint32_t port_id);
 
     void signal_stop()
     {
         post_message(MessageId::STOP_MESSAGE);
     }
+
     void signal_advance()
     {
         post_message(MessageId::ADVANCE_MESSAGE);
     }
 
     void play(const std::list<OrganMidiEvent> &event_list);
+    size_t get_events_remaining();
+
+    virtual ~PlayerThread() override;
 
 protected:
     virtual ExitCode Entry() override;
@@ -87,9 +70,8 @@ private:
     uint8_t m_bank_number;
     uint32_t m_mode_number;
     wxFrame *const m_frame;
-    RtMidiOut m_midi_out;
+    RtMidiOut &m_midi_out;
     wxCondition *m_waiting;
-    std::chrono::time_point<TimeReference> m_current_time;
-    uint64_t m_current_ms;
+    wxStopWatch m_current_time;
 };
 
