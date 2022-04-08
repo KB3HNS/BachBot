@@ -1,29 +1,55 @@
 
+#include <iostream>  //  Delete me
 #include <chrono>
 #include <algorithm>
 #include <array>
+#include <exception>
+#include <limits>
 #include <fmt/xchar.h>
 #include <wx/wx.h>
 
 #include "player_window.h"
 #include "player_thread.h"
+#include "midi_note_tracker.h"
+#include "organ_midi_event.h"
 
 
 namespace {
     std::list<OrganMidiEvent> file_events;
 
-    struct MidiTracking
-    {
-        bool on_now;
-        uint8_t node_number;
-        uint8_t channel_number;
-
-        uint32_t midi_ticks_on_time;
-        uint32_t last_midi_off_time;
-
-        OrganMidiEvent *note_on;
-        OrganMidiEvent *note_off;
+    const std::array<SyndineKeyboards,
+                     NUM_SYNDINE_KEYBOARDS> keyboard_indexes = {
+        MANUAL1_SWELL, MANUAL2_GREAT, PETAL
     };
+
+    const std::array<uint8_t, 16U> channel_mapping = {
+        MANUAL1_SWELL, MANUAL1_SWELL, MANUAL1_SWELL,
+        MANUAL2_GREAT, MANUAL2_GREAT, MANUAL2_GREAT,
+        PETAL, PETAL,
+        0xFFU,  //  Drums - used for control
+        MANUAL1_SWELL, MANUAL2_GREAT, PETAL,
+        MANUAL1_SWELL, MANUAL2_GREAT, PETAL,
+        0xFFU
+    };
+
+    size_t get_control_index(const int channel)
+    {
+        if (channel < 0 || channel > int(channel_mapping.size())) {
+            throw std::runtime_error(fmt::format("Index out of range: {}",
+                                     channel));
+        }
+
+        const auto keyboard = channel_mapping[size_t(channel)];
+        auto index = std::numeric_limits<size_t>::max();
+        for (auto i = 0U; i < keyboard_indexes.size(); ++i) {
+            if (keyboard == keyboard_indexes[i]) {
+                index = i;
+                break;
+            }
+        }
+
+        return index;
+    }
 }
 
 
@@ -202,6 +228,74 @@ void PlayerWindow::send_manual_message(const SyndyneBankCommands value)
 void PlayerWindow::build_syndine_sequence(const smf::MidiEventList& event_list) const
 {
     std::list<OrganMidiEvent> events;
+    SyndineMidiEventTable<MidiNoteTracker> current_state;
+    // std::ofstream log("temp.log", std::ios_base::out);
+    for (auto i = 0U; i < current_state.size(); ++i) {
+        const auto keyboard_id = keyboard_indexes[i];
+        for (auto j = 0U; j < current_state[i].size(); ++j) {
+            current_state[i][j].set_keyboard(keyboard_id);
+        }
+    }
+
+    //  1st pass: Process all events
+    uint8_t current_bank = 0U;
+    uint32_t current_mode = 0U;
+    for (auto i = 0; i < event_list.size(); ++i) {
+        const auto& midi_event = event_list[i];
+        if (midi_event.isNote()) {
+            //if (midi_event.getChannel() == 5) {
+            //    log << fmt::format("Ch 5 note {} time:{}, ticks:{}\n", 
+            //                       (midi_event.isNoteOn() ? "on" : "off"),
+            //                       midi_event.seconds, midi_event.tick);
+            //} else {
+            //    continue;
+            //}
+            const auto channel_id = get_control_index(midi_event.getChannel());
+            if (channel_id < current_state.size()) {
+                current_state[channel_id][midi_event.getKeyNumber()].add_event(midi_event);
+            } else {
+                //  Treat as control event
+                events.emplace_back(midi_event, 
+                                    BankConfig{current_bank, current_mode});
+            }
+        }
+    }
+
+    //  2nd pass: append all de-duplicated events
+    for (const auto &i: current_state) {
+        for (const auto &j: i) {
+            j.append_events(events);
+        }
+    }
+
+    //  3rd pass: sort by time
+    events.sort();
+
+    //  4th pass: update bank config, build output events
+    auto current_config = events.front().get_bank_config();
+    for (auto &i: events) {
+        if (i.is_mode_change_event()) {
+            current_config = i.get_bank_config();
+        } else {
+            i.set_bank_config(current_config);
+            file_events.push_back(i);
+        }
+    }
+
+    //  5th pass: remove start dead time
+    auto &initial_delay = file_events.front();
+    auto last_element = initial_delay;
+    for (auto &i : file_events) {
+        i -= initial_delay;
+        i.calculate_delta(last_element);
+        last_element = i;
+    }
+}
+
+/*
+void build_syndine_sequence(const smf::MidiEventList& event_list)
+{
+    std::list<OrganMidiEvent> events;
     auto current_tick = 0;
     auto current_time = 0.0;
     for (auto i = 0; i < event_list.size(); ++i) {
@@ -225,10 +319,10 @@ void PlayerWindow::build_syndine_sequence(const smf::MidiEventList& event_list) 
         events.push_back(ev);
     }
 
+    events.sort();
     file_events = std::move(events);
-
 }
-
+*/
 
 PlayerWindow::~PlayerWindow()
 {

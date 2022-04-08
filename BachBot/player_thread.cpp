@@ -122,7 +122,6 @@ void PlayerThread::play(const std::list<OrganMidiEvent>& event_list)
 
 void PlayerThread::process_notes()
 {
-    std::array<uint8_t, MIDI_MESSAGE_SIZE> midi_message;
     const auto time_now = m_current_time.TimeInMicro();
     do {
         const auto &midi_event = m_midi_event_queue.front();
@@ -131,20 +130,7 @@ void PlayerThread::process_notes()
             break;
         }
 
-        size_t msg_size = 0U;
-        if (midi_event.event_code < 0xF0) {
-            midi_message[msg_size++] = midi_event.event_code;
-
-            if (midi_event.byte1.has_value()) {
-                midi_message[msg_size++] = midi_event.byte1.value();
-                
-                if (midi_event.byte2.has_value()) {
-                    midi_message[msg_size++] = midi_event.byte2.value();
-                }
-            }
-
-            m_midi_out.sendMessage(midi_message.data(), msg_size);
-        }
+        midi_event.send_event(m_midi_out);
         m_midi_event_queue.pop_front();
     } while (m_midi_event_queue.size() > 0U);
 }

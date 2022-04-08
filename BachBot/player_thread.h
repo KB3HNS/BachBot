@@ -8,6 +8,7 @@
 
 #include "player_window.h"
 #include "common_defs.h"
+#include "organ_midi_event.h"
 
 
 enum PlayerEvents : int

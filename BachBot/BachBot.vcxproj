@@ -149,12 +149,16 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="main_window.cpp" />
+    <ClCompile Include="midi_note_tracker.cpp" />
+    <ClCompile Include="organ_midi_event.cpp" />
     <ClCompile Include="player_thread.cpp" />
     <ClCompile Include="player_window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common_defs.h" />
     <ClInclude Include="main_window.h" />
+    <ClInclude Include="midi_note_tracker.h" />
+    <ClInclude Include="organ_midi_event.h" />
     <ClInclude Include="player_thread.h" />
     <ClInclude Include="player_window.h" />
   </ItemGroup>

@@ -3,8 +3,7 @@
 
 #include <cstdint>  //  uintXX_t
 #include <cstdlib>  //  size_t
-#include <optional>  //  std::optional
-#include <wx/wx.h>  //  wxLongLong
+#include <array>  //  std::array
 
 
 enum SyndyneBankCommands : uint8_t
@@ -14,10 +13,22 @@ enum SyndyneBankCommands : uint8_t
     NEXT_BANK = 2U
 };
 
+enum SyndineKeyboards : size_t
+{
+    MANUAL1_SWELL = 2U,
+    MANUAL2_GREAT = 1U,
+    PETAL = 3U
+};
+constexpr const size_t NUM_SYNDINE_KEYBOARDS = 3U;
 constexpr const uint8_t SYNDINE_CONTROLLER_ID = 16U;
 
 
 constexpr const size_t MIDI_MESSAGE_SIZE = 3U;
+
+
+template <typename T>
+using SyndineMidiEventTable = std::array<std::array<T, 127U>, 
+                                         NUM_SYNDINE_KEYBOARDS>;
 
 
 enum MidiCommands : uint8_t
@@ -33,31 +44,6 @@ enum MidiCommands : uint8_t
 };
 
 
-struct OrganMidiEvent
-{
-    uint8_t event_code;
-    double seconds;
-    double delta_time;
-    std::optional<uint8_t> byte1;
-    std::optional<uint8_t> byte2;
-    uint8_t desired_bank_number;
-    uint32_t desired_mode_number;
-    int delay;
-    int delta;
-
-    wxLongLong get_us() const
-    {
-        const auto ms_time = seconds * 1000000.0;
-        return wxLongLong(ms_time + 0.5);
-    }
-
-    constexpr bool operator< (const OrganMidiEvent& rhs) const
-    {
-        return (seconds < rhs.seconds);
-    }
-};
-
-
 constexpr uint8_t make_midi_command_byte(const uint8_t chan, 
                                          const MidiCommands command)
 {
@@ -65,5 +51,6 @@ constexpr uint8_t make_midi_command_byte(const uint8_t chan,
 }
 
 /* Midi timing magic constants */
-constexpr const auto MINIMUM_NOTE_GAP_S = 0.05;
+constexpr const auto MINIMUM_NOTE_GAP_S = 0.02;
+constexpr const auto MINIMUM_NOTE_LENGTH_S = 0.08;
 constexpr const auto MINIMUM_BANK_CHANGE_INTERVAL_S = 0.1;
