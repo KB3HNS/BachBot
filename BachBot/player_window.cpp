@@ -272,6 +272,7 @@ void PlayerWindow::build_syndine_sequence(const smf::MidiEventList& event_list) 
     events.sort();
 
     //  4th pass: update bank config, build output events
+    file_events.clear();
     auto current_config = events.front().get_bank_config();
     for (auto &i: events) {
         if (i.is_mode_change_event()) {

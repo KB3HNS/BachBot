@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seqview xscroll="0.000000" yscroll="0" zoom="150">
+<sequence maintempo="120" measureAmount="110" currentTrack="0" beatResolution="960" internalName="Tool Test Cases" fileFormatVersion="4" channelManagement="manual" metronome="false">
+
+<measure  firstMeasure="0" denom="4" num="4"/>
+
+<tempo>
+</tempo>
+<text>
+</text>
+<copyright>
+</copyright>
+<defaultkeysig keytype="2" keysymbolamount="0" />
+
+
+<track name="A" id="0" channel="0" muted="false" soloed="false" volume="100" default_volume="80">
+  <key type="C" />
+  <editors height="128">
+    <score enabled="true" musical_notation="true" linear_notation="true" g_clef="true" f_clef="true" scroll="0.547945" proportion="1.000000"/>
+    <keyboard enabled="false" scroll="0.500000"/>
+    <guitar enabled="false"/>
+    <drum enabled="false" scroll="0.000000"/>
+    <controller enabled="false" controller="7"/>
+  </editors>
+  <magneticgrid divider="2" triplet="false" dotted="false"/>
+  <instrument id="0"/>
+  <drumkit id="0" collapseView="false"/>
+  <guitartuning  string0="67" string1="72" string2="76" string3="81" string4="86" string5="91"/>
+
+  <note pitch="86" start="0" end="3840" volume="80"/>
+  <note pitch="84" start="7680" end="11520" volume="80"/>
+  <note pitch="83" start="11520" end="11760" volume="80"/>
+  <note pitch="83" start="11760" end="12000" volume="80"/>
+  <note pitch="83" start="12000" end="12240" volume="80"/>
+  <note pitch="83" start="12240" end="12480" volume="80"/>
+  <note pitch="83" start="12480" end="12720" volume="80" fret="1" string="0"/>
+  <note pitch="83" start="12720" end="12960" volume="80" fret="1" string="0"/>
+  <note pitch="83" start="12960" end="13200" volume="80" fret="1" string="0"/>
+  <note pitch="83" start="13200" end="13440" volume="80" fret="1" string="0"/>
+  <note pitch="83" start="13440" end="13680" volume="80" fret="1" string="0"/>
+  <note pitch="83" start="13680" end="13920" volume="80" fret="1" string="0"/>
+  <note pitch="83" start="13920" end="14160" volume="80" fret="1" string="0"/>
+  <note pitch="83" start="14160" end="14400" volume="80" fret="1" string="0"/>
+  <note pitch="83" start="14400" end="14640" volume="80" fret="1" string="0"/>
+  <note pitch="83" start="14640" end="14880" volume="80" fret="1" string="0"/>
+  <note pitch="83" start="14880" end="15120" volume="80" fret="1" string="0"/>
+  <note pitch="83" start="15120" end="15360" volume="80" fret="1" string="0"/>
+  <note pitch="79" start="15360" end="19200" volume="80"/>
+  <note pitch="76" start="19200" end="23040" volume="80"/>
+  <note pitch="74" start="23040" end="26880" volume="80"/>
+  <note pitch="72" start="26880" end="28800" volume="80"/>
+  <note pitch="72" start="28800" end="30720" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="30720" end="32640" volume="80"/>
+  <note pitch="71" start="32640" end="34560" volume="80" selected="true"/>
+  <note pitch="71" start="38400" end="38480" volume="80"/>
+  <note pitch="71" start="38480" end="38560" volume="80"/>
+  <note pitch="71" start="38560" end="38640" volume="80"/>
+  <note pitch="71" start="38640" end="38720" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="38720" end="38800" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="38800" end="38880" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="38880" end="38960" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="38960" end="39040" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="39040" end="39120" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="39120" end="39200" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="39200" end="39280" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="39280" end="39360" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="39360" end="39440" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="39440" end="39520" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="39520" end="39600" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="39600" end="39680" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="39680" end="39760" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="39760" end="39840" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="39840" end="39920" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="39920" end="40000" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="40000" end="40080" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="40080" end="40160" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="40160" end="40240" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="40240" end="40320" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="40320" end="40400" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="40400" end="40480" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="40480" end="40560" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="40560" end="40640" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="40640" end="40720" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="40720" end="40800" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="40800" end="40880" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="40880" end="40960" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="40960" end="41040" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="41040" end="41120" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="41120" end="41200" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="41200" end="41280" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="41280" end="41360" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="41360" end="41440" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="41440" end="41520" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="41520" end="41600" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="41600" end="41680" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="41680" end="41760" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="41760" end="41840" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="41840" end="41920" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="41920" end="42000" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="42000" end="42080" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="42080" end="42160" volume="80" fret="1" string="0"/>
+  <note pitch="71" start="42160" end="42240" volume="80" fret="1" string="0"/>
+  <note pitch="69" start="42240" end="46080" volume="80"/>
+</track>
+
+
+<track name="B" id="1" channel="1" muted="false" soloed="false" volume="100" default_volume="80">
+  <key type="C" />
+  <editors height="128">
+    <score enabled="true" musical_notation="true" linear_notation="true" g_clef="true" f_clef="true" scroll="0.547945" proportion="1.000000"/>
+    <keyboard enabled="false" scroll="0.500000"/>
+    <guitar enabled="false"/>
+    <drum enabled="false" scroll="0.000000"/>
+    <controller enabled="false" controller="7"/>
+  </editors>
+  <magneticgrid divider="4" triplet="false" dotted="false"/>
+  <instrument id="0"/>
+  <drumkit id="0" collapseView="false"/>
+  <guitartuning  string0="67" string1="72" string2="76" string3="81" string4="86" string5="91"/>
+
+  <note pitch="86" start="1920" end="5760" volume="80"/>
+  <note pitch="84" start="8640" end="10560" volume="80"/>
+  <note pitch="79" start="15360" end="19200" volume="80"/>
+  <note pitch="76" start="19200" end="20160" volume="80"/>
+  <note pitch="74" start="25920" end="26880" volume="80"/>
+  <note pitch="71" start="31680" end="33600" volume="80" selected="true"/>
+  <note pitch="69" start="42240" end="44160" volume="80"/>
+  <note pitch="69" start="44160" end="46080" volume="80"/>
+</track>
+
+
+<track name="Control" id="2" channel="9" muted="false" soloed="false" volume="100" default_volume="80">
+  <key type="C" />
+  <editors height="128">
+    <score enabled="false" musical_notation="true" linear_notation="true" g_clef="true" f_clef="true" scroll="0.547945"/>
+    <keyboard enabled="false" scroll="0.500000"/>
+    <guitar enabled="false"/>
+    <drum enabled="true" scroll="0.000000" proportion="1.000000"/>
+    <controller enabled="false" controller="7"/>
+  </editors>
+  <magneticgrid divider="8" triplet="false" dotted="false"/>
+  <instrument id="0"/>
+  <drumkit id="0" collapseView="false"/>
+  <guitartuning  string0="67" string1="72" string2="76" string3="81" string4="86" string5="91"/>
+
+</track>
+
+
+<track name="Untitled" id="3" channel="3" muted="false" soloed="false" volume="100" default_volume="80">
+  <key type="C" />
+  <editors height="128">
+    <score enabled="true" musical_notation="true" linear_notation="true" g_clef="true" f_clef="true" scroll="0.547945" proportion="1.000000"/>
+    <keyboard enabled="false" scroll="0.500000"/>
+    <guitar enabled="false"/>
+    <drum enabled="false" scroll="0.000000"/>
+    <controller enabled="false" controller="7"/>
+  </editors>
+  <magneticgrid divider="8" triplet="false" dotted="false"/>
+  <instrument id="0"/>
+  <drumkit id="0" collapseView="false"/>
+  <guitartuning  string0="67" string1="72" string2="76" string3="81" string4="86" string5="91"/>
+
+</track>
+
+
+<track name="Untitled" id="4" channel="4" muted="false" soloed="false" volume="100" default_volume="80">
+  <key type="C" />
+  <editors height="128">
+    <score enabled="true" musical_notation="true" linear_notation="true" g_clef="true" f_clef="true" scroll="0.547945" proportion="1.000000"/>
+    <keyboard enabled="false" scroll="0.500000"/>
+    <guitar enabled="false"/>
+    <drum enabled="false" scroll="0.000000"/>
+    <controller enabled="false" controller="7"/>
+  </editors>
+  <magneticgrid divider="8" triplet="false" dotted="false"/>
+  <instrument id="0"/>
+  <drumkit id="0" collapseView="false"/>
+  <guitartuning  string0="67" string1="72" string2="76" string3="81" string4="86" string5="91"/>
+
+</track>
+
+
+<track name="Untitled" id="5" channel="5" muted="false" soloed="false" volume="100" default_volume="80">
+  <key type="C" />
+  <editors height="128">
+    <score enabled="true" musical_notation="true" linear_notation="true" g_clef="true" f_clef="true" scroll="0.547945" proportion="1.000000"/>
+    <keyboard enabled="false" scroll="0.500000"/>
+    <guitar enabled="false"/>
+    <drum enabled="false" scroll="0.000000"/>
+    <controller enabled="false" controller="7"/>
+  </editors>
+  <magneticgrid divider="8" triplet="false" dotted="false"/>
+  <instrument id="0"/>
+  <drumkit id="0" collapseView="false"/>
+  <guitartuning  string0="67" string1="72" string2="76" string3="81" string4="86" string5="91"/>
+
+</track>
+
+
+<track name="Untitled" id="6" channel="6" muted="false" soloed="false" volume="100" default_volume="80">
+  <key type="C" />
+  <editors height="128">
+    <score enabled="true" musical_notation="true" linear_notation="true" g_clef="true" f_clef="true" scroll="0.547945" proportion="1.000000"/>
+    <keyboard enabled="false" scroll="0.500000"/>
+    <guitar enabled="false"/>
+    <drum enabled="false" scroll="0.000000"/>
+    <controller enabled="false" controller="7"/>
+  </editors>
+  <magneticgrid divider="8" triplet="false" dotted="false"/>
+  <instrument id="0"/>
+  <drumkit id="0" collapseView="false"/>
+  <guitartuning  string0="67" string1="72" string2="76" string3="81" string4="86" string5="91"/>
+
+</track>
+
+</sequence></seqview>

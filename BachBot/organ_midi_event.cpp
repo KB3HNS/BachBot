@@ -10,7 +10,7 @@ OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent& midi_event, const SyndineKe
     m_delta_time{0.0},
     m_byte1(),
     m_byte2(),
-    m_delay{midi_event.tick},
+    m_midi_time{midi_event.tick},
     m_delta{0}
 {
     if (midi_event.isNoteOn()) {
@@ -43,7 +43,7 @@ OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent &midi_event,
     m_delta_time{0.0},
     m_byte1(),
     m_byte2(),
-    m_delay{midi_event.tick},
+    m_midi_time{midi_event.tick},
     m_delta{0}
 {
 }
@@ -67,7 +67,8 @@ void OrganMidiEvent::send_event(RtMidiOut& player) const
             midi_message[msg_size++] = m_byte1.value();
 
             if (m_byte2.has_value()) {
-                midi_message[msg_size++] = m_byte2.value();
+                midi_message[msg_size] = m_byte2.value();
+                msg_size++;
             }
         }
 
@@ -98,7 +99,7 @@ bool OrganMidiEvent::is_mode_change_event() const
 OrganMidiEvent& OrganMidiEvent::operator-=(const OrganMidiEvent &rhs)
 {
     m_seconds -= rhs.m_seconds;
-    m_delay -= rhs.m_delay;
+    m_midi_time -= rhs.m_midi_time;
     return *this;
 }
 
@@ -106,5 +107,5 @@ OrganMidiEvent& OrganMidiEvent::operator-=(const OrganMidiEvent &rhs)
 void OrganMidiEvent::calculate_delta(const OrganMidiEvent& rhs)
 {
     m_delta_time = m_seconds - rhs.m_seconds;
-    m_delta = m_delay - rhs.m_delay;
+    m_delta = m_midi_time - rhs.m_midi_time;
 }

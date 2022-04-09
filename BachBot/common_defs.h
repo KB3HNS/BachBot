@@ -21,7 +21,7 @@ enum SyndineKeyboards : size_t
 };
 constexpr const size_t NUM_SYNDINE_KEYBOARDS = 3U;
 constexpr const uint8_t SYNDINE_CONTROLLER_ID = 16U;
-
+constexpr const uint8_t SYNDINE_NOTE_ON_VELOCITY = 127U;
 
 constexpr const size_t MIDI_MESSAGE_SIZE = 3U;
 

@@ -16,6 +16,8 @@ using BankConfig = std::pair<uint8_t, uint32_t>;
 
 class OrganMidiEvent
 {
+    friend class MidiNoteTracker;
+
 public:
     OrganMidiEvent(const smf::MidiEvent& midi_event, 
                    const SyndineKeyboards channel);
@@ -44,6 +46,6 @@ private:
     double m_delta_time;
     std::optional<uint8_t> m_byte1;
     std::optional<uint8_t> m_byte2;
-    int m_delay;
+    int m_midi_time;
     int m_delta;
 };
