@@ -1,27 +1,56 @@
+/**
+ * @file player_window.cpp
+ * @brief Application main window
+ * @copyright
+ * 2022 Andrew Buettner (ABi)
+ *
+ * @section LICENSE
+ *
+ * BachBot - A hymn Midi player for Schlicker organs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-#include <iostream>  //  Delete me
-#include <chrono>
-#include <algorithm>
-#include <array>
-#include <exception>
-#include <limits>
-#include <fmt/xchar.h>
-#include <wx/wx.h>
 
-#include "player_window.h"
-#include "player_thread.h"
-#include "midi_note_tracker.h"
-#include "organ_midi_event.h"
+//  system includes
+#include <algorithm>  //  std::foreach
+#include <array>  //  std::array
+#include <exception>  //  std::runtime_exception
+#include <limits>  //  std::numeric_limits
+#include <fmt/xchar.h>  //  fmt::format(L
+#include <fmt/format.h>  //  fmt::format
+
+//  module includes
+// -none-
+
+//  local includes
+#include "player_window.h"  //  local include
+#include "player_thread.h"  //  PlayerThread
+#include "midi_note_tracker.h"  //  MidiNoteTracker
+#include "organ_midi_event.h"  //  OrganMidiEvent
 
 
 namespace {
     std::list<OrganMidiEvent> file_events;
 
+    /** Map of keyboard index to keyboard channel */
     const std::array<SyndineKeyboards,
                      NUM_SYNDINE_KEYBOARDS> keyboard_indexes = {
         MANUAL1_SWELL, MANUAL2_GREAT, PETAL
     };
 
+    /** Map MIDI channel to keyboard / special event */
     const std::array<uint8_t, 16U> channel_mapping = {
         MANUAL1_SWELL, MANUAL1_SWELL, MANUAL1_SWELL,
         MANUAL2_GREAT, MANUAL2_GREAT, MANUAL2_GREAT,
@@ -32,6 +61,13 @@ namespace {
         0xFFU
     };
 
+    /** 
+     * @brief Get the the appropriate index of the channel event map based on
+     *        the reported MIDI channel of a MIDI event.
+     * @param channel midi event channel
+     * @returns array index
+     * @retval size_t::max Channel is a control channel
+     */
     size_t get_control_index(const int channel)
     {
         if (channel < 0 || channel > int(channel_mapping.size())) {
@@ -50,7 +86,20 @@ namespace {
 
         return index;
     }
-}
+
+    /**
+     * @brief Remap a MIDI note to a note that exists on the appropriate
+     *        keyboard.
+     * @param note MIDI note ID
+     * @param keyboard note is being assigned to
+     * @retval MIDI note that can be corectly represented on the keyboard
+     */
+    uint8_t remap_note(const int note, const SyndineKeyboards keyboard)
+    {
+        static_cast<void>(keyboard);
+        return uint8_t(note);
+    }
+}  //  end anonymous namespace
 
 
 PlayerWindow::PlayerWindow() :
@@ -229,7 +278,6 @@ void PlayerWindow::build_syndine_sequence(const smf::MidiEventList& event_list) 
 {
     std::list<OrganMidiEvent> events;
     SyndineMidiEventTable<MidiNoteTracker> current_state;
-    // std::ofstream log("temp.log", std::ios_base::out);
     for (auto i = 0U; i < current_state.size(); ++i) {
         const auto keyboard_id = keyboard_indexes[i];
         for (auto j = 0U; j < current_state[i].size(); ++j) {
@@ -241,18 +289,14 @@ void PlayerWindow::build_syndine_sequence(const smf::MidiEventList& event_list) 
     uint8_t current_bank = 0U;
     uint32_t current_mode = 0U;
     for (auto i = 0; i < event_list.size(); ++i) {
-        const auto& midi_event = event_list[i];
+        auto midi_event = event_list[i];
         if (midi_event.isNote()) {
-            //if (midi_event.getChannel() == 5) {
-            //    log << fmt::format("Ch 5 note {} time:{}, ticks:{}\n", 
-            //                       (midi_event.isNoteOn() ? "on" : "off"),
-            //                       midi_event.seconds, midi_event.tick);
-            //} else {
-            //    continue;
-            //}
             const auto channel_id = get_control_index(midi_event.getChannel());
             if (channel_id < current_state.size()) {
-                current_state[channel_id][midi_event.getKeyNumber()].add_event(midi_event);
+                const auto note = remap_note(midi_event.getKeyNumber(), 
+                                             keyboard_indexes[channel_id]);
+                midi_event[2] = note;
+                current_state[channel_id][note].add_event(midi_event);
             } else {
                 //  Treat as control event
                 events.emplace_back(midi_event, 

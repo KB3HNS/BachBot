@@ -1,8 +1,54 @@
+/**
+ * @file midi_note_tracker.h
+ * @brief Note deduplication logic
+ * @copyright
+ * 2022 Andrew Buettner (ABi)
+ *
+ * @section LICENSE
+ *
+ * BachBot - A hymn Midi player for Schlicker organs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-#include <iostream>  //  Delete me
+
+//  system includes
 #include <cmath>  //  abs
 
-#include "midi_note_tracker.h"
+//  module includes
+// -none-
+
+//  local includes
+#include "midi_note_tracker.h"  //  local include
+
+
+namespace {
+
+/**
+ * @brief Simple test to see if a midi event occurs at the same time as a
+ *        currently tracked event.
+ * @param ev event to test
+ * @param organ_time time to test against
+ * @retval `true` events occur at the same time
+ * @retval `false` events are at different times
+ */
+bool is_same_time(const smf::MidiEvent &ev, const int organ_time)
+{
+    return (abs(ev.tick - organ_time) <= 1);
+}
+
+}  //  end anonymous namespace.
 
 
 MidiNoteTracker::MidiNoteTracker() :
@@ -52,7 +98,7 @@ void MidiNoteTracker::append_events(std::list<OrganMidiEvent> &event_list) const
 {
     //if (m_event_list.size() > 0U) {
     //    std::cout << "\n";
-   // }
+    // }
 
     for (const auto &i: m_event_list) {
         if (i.second->m_seconds - i.first->m_seconds > MINIMUM_NOTE_LENGTH_S) {
@@ -66,13 +112,6 @@ void MidiNoteTracker::append_events(std::list<OrganMidiEvent> &event_list) const
 void MidiNoteTracker::set_keyboard(const SyndineKeyboards keyboard_id)
 {
     m_keyboard = keyboard_id;
-}
-
-
-bool MidiNoteTracker::is_same_time(const smf::MidiEvent &ev,
-                                   const int organ_time) const
-{
-    return (abs(ev.tick - organ_time) <= 1);
 }
 
 

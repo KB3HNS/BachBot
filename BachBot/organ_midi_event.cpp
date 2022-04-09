@@ -1,4 +1,36 @@
-#include "organ_midi_event.h"
+/**
+ * @file organ_midi_event.cpp
+ * @brief Individual MIDI event sent to organ.
+ * @copyright
+ * 2022 Andrew Buettner (ABi)
+ *
+ * @section LICENSE
+ *
+ * BachBot - A hymn Midi player for Schlicker organs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
+//  system includes
+// -none-
+
+//  module includes
+// -none-
+
+//  local includes
+#include "organ_midi_event.h"  //  Local include
 
 
 OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent& midi_event, const SyndineKeyboards channel) :
