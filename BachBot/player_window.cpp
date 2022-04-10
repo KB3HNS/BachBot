@@ -199,19 +199,19 @@ namespace {
                 break;
 
             case SyndyneBankCommands::PREV_BANK:
-                ++current_state.first;
-                if (current_state.first >= 8U) {
-                    current_state.first = 0U;
-                    ++current_state.second;
-                }
-                break;
-
-            case SyndyneBankCommands::NEXT_BANK:
                 if (0U == current_state.first) {
                     current_state.first = 8U;
                     --current_state.second;
                 }
                 --current_state.first;
+                break;
+
+            case SyndyneBankCommands::NEXT_BANK:
+                ++current_state.first;
+                if (current_state.first >= 8U) {
+                    current_state.first = 0U;
+                    ++current_state.second;
+                }
                 break;
 
             default:

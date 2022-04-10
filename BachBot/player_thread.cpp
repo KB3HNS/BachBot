@@ -68,6 +68,7 @@ wxThread::ExitCode PlayerThread::Entry()
 
     auto run = true;
     auto i = 0U;
+    m_current_time.Start();
     while (run && (m_midi_event_queue.size() > 0U)) {
         auto message = wait_for_message();
         switch (message.first)
