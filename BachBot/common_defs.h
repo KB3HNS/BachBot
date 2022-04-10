@@ -110,7 +110,7 @@ constexpr uint8_t make_midi_command_byte(const uint8_t chan,
 
 /* Midi timing magic constants */
 /** Minimum gap between notes */
-constexpr const auto MINIMUM_NOTE_GAP_S = 0.025;
+constexpr const auto MINIMUM_NOTE_GAP_S = 0.09;
 /** Minimum length of one note */
 constexpr const auto MINIMUM_NOTE_LENGTH_S = 0.065;
 
