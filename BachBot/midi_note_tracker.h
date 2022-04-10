@@ -84,7 +84,7 @@ public:
 
     /**
      * @brief Append our events to the list
-     * @param[out] event_list current list of midi events
+     * @param[in/out] event_list current list of midi events
     */
     void append_events(std::list<OrganMidiEvent> &event_list) const;
     

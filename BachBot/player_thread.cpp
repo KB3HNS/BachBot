@@ -33,6 +33,10 @@
 #include "player_thread.h"  //   local include
 
 
+namespace {
+const auto TICKS_PER_UI_REFRESH = 500U;
+}
+
 PlayerThread::PlayerThread(PlayerWindow* const frame, const uint32_t port_id) :
     wxThread(wxTHREAD_JOINABLE),
     m_mutex(),
@@ -42,14 +46,17 @@ PlayerThread::PlayerThread(PlayerWindow* const frame, const uint32_t port_id) :
     m_frame{frame},
     m_midi_out(frame->m_midi_out),
     m_waiting{nullptr},
-    m_current_time()
+    m_current_time(),
+    m_bank_change_delay()
 {
     m_midi_out.openPort(port_id);
+    m_bank_change_delay.Start();
 }
 
 
 wxThread::ExitCode PlayerThread::Entry()
 {
+    wxMutexLocker lock(m_mutex);
     [[maybe_unused]] const auto start_result = timeBeginPeriod(1U);
 
     auto timer_callback = [](UINT, UINT, DWORD_PTR dwUser, DWORD_PTR, DWORD_PTR) {
@@ -75,11 +82,7 @@ wxThread::ExitCode PlayerThread::Entry()
             break;
 
         case MessageId::TICK_MESSAGE:
-            if (++i >= 500U) {
-                if (++m_bank_number >= 8U) {
-                    m_bank_number = 0U;
-                    ++m_mode_number;
-                }
+            if (++i >= TICKS_PER_UI_REFRESH) {
                 i = 0U;
                 wxThreadEvent tick_event(wxEVT_THREAD, PlayerEvents::TICK_EVENT);
                 tick_event.SetInt(int((m_mode_number * 8U) + m_bank_number));
@@ -93,23 +96,23 @@ wxThread::ExitCode PlayerThread::Entry()
         }
     }
 
-    wxThreadEvent exit_event(wxEVT_THREAD, PlayerEvents::EXIT_EVENT);
-    exit_event.SetInt(0);
-    wxQueueEvent(m_frame, exit_event.Clone());
     timeKillEvent(timer_id);
+    const auto end_result = timeEndPeriod(1U);
 
-    [[maybe_unused]] const auto end_result = timeEndPeriod(1U);
+    wxThreadEvent exit_event(wxEVT_THREAD, PlayerEvents::EXIT_EVENT);
+    exit_event.SetInt(int(end_result));
+    wxQueueEvent(m_frame, exit_event.Clone());
+
     return nullptr;
 }
 
 
 PlayerThread::Message PlayerThread::wait_for_message()
 {
-    m_mutex.Lock();
     if (m_event_queue.size() == 0U) {
         wxCondition signal(m_mutex);
         m_waiting = &signal;
-        signal.Wait();
+        static_cast<void>(signal.Wait());
         m_waiting = nullptr;
     }
 
@@ -119,7 +122,13 @@ PlayerThread::Message PlayerThread::wait_for_message()
     const auto message = m_event_queue.front();
     m_event_queue.pop_front();
 
-    m_mutex.Unlock();
+    //  To reduce overhead, do the mode check while locked.
+    if (MessageId::TICK_MESSAGE == message.first &&
+        m_midi_event_queue.size() > 0U &&
+        m_bank_change_delay.Time() > MINIMUM_BANK_CHANGE_INTERVAL_MS) {
+            do_mode_check();
+    }
+
     return message;
 }
 
@@ -174,6 +183,55 @@ size_t PlayerThread::get_events_remaining()
 {
     wxMutexLocker lock(m_mutex);
     return m_midi_event_queue.size();
+}
+
+
+void PlayerThread::set_bank_config(const uint8_t current_bank,
+                                   const uint32_t current_mode)
+{
+    wxMutexLocker lock(m_mutex);
+    m_bank_number = current_bank;
+    m_mode_number = current_mode;
+    m_bank_change_delay.Start();
+}
+
+
+void PlayerThread::do_mode_check()
+{
+    const auto desired_mode = m_midi_event_queue.front().get_bank_config();
+    if ((desired_mode.second < m_mode_number && m_bank_number > 0U) || 
+        (desired_mode.second == m_mode_number && 0U == desired_mode.first))
+    {
+        //  The desired piston mode is *lower* than the current state:  We
+        // can take a shortcut and use CLEAR to get to the start of this 
+        // piston mode.
+        m_frame->send_manual_message(SyndyneBankCommands::GENERAL_CANCEL);
+        m_bank_number = 0U;
+        m_bank_change_delay.Start();
+    } else if (desired_mode.second < m_mode_number || 
+               desired_mode.first < m_bank_number) {
+        //  Either at the bottom of this piston mode and need to step down to
+        // the top of the last one, or we just need to walk down to the desired
+        // bank.
+        m_frame->send_manual_message(SyndyneBankCommands::PREV_BANK);
+        if (0U == m_bank_number) {
+            --m_mode_number;
+            m_bank_number = 8U;
+        }
+        --m_bank_number;
+        m_bank_change_delay.Start();
+    } else if (desired_mode.second > m_mode_number ||
+               desired_mode.first > m_bank_number) {
+        //  We need to go up, no shortcuts available.
+        m_frame->send_manual_message(SyndyneBankCommands::NEXT_BANK);
+        ++m_bank_number;
+        if (m_bank_number >= 8U) {
+            m_bank_number = 0U;
+            ++m_mode_number;
+        }
+        m_bank_change_delay.Start();
+    }
+
 }
 
 

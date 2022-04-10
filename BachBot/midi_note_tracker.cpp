@@ -59,7 +59,7 @@ MidiNoteTracker::MidiNoteTracker() :
     m_note_nesting_count{0U},
     m_note_on(),
     m_note_off(),
-    m_keyboard{SyndineKeyboards::MANUAL1_SWELL},
+    m_keyboard{SyndineKeyboards::MANUAL2_SWELL},
     m_event_list()
 {
 }
@@ -68,9 +68,6 @@ MidiNoteTracker::MidiNoteTracker() :
 void MidiNoteTracker::add_event(const smf::MidiEvent &ev)
 {
     auto organ_event = std::make_shared<OrganMidiEvent>(ev, m_keyboard);
-    //if (ev[1] == 0x34) {
-    //    organ_event->m_delta_time = 0.0;
-    //}
 
     if (ev.isNoteOn() && !m_on_now) {
         process_new_note_on_event(organ_event);
@@ -96,14 +93,23 @@ void MidiNoteTracker::add_event(const smf::MidiEvent &ev)
 
 void MidiNoteTracker::append_events(std::list<OrganMidiEvent> &event_list) const
 {
-    //if (m_event_list.size() > 0U) {
-    //    std::cout << "\n";
-    // }
-
+    OrganNote grouped_note_on;
     for (const auto &i: m_event_list) {
+        auto grouped_length = 0.0;
+        if (grouped_note_on.get() != nullptr) {
+            grouped_length = i.second->m_seconds - grouped_note_on->m_seconds;
+        }
+
         if (i.second->m_seconds - i.first->m_seconds > MINIMUM_NOTE_LENGTH_S) {
-            event_list.push_back(*(i.first));
-            event_list.push_back(*(i.second));
+            event_list.emplace_back(*(i.first));
+            event_list.emplace_back(*(i.second));
+            grouped_note_on.reset();
+        } else if (grouped_note_on.get() == nullptr) {
+            grouped_note_on = i.first;
+        } else if (grouped_length > MINIMUM_NOTE_LENGTH_S) {
+            event_list.emplace_back(*(grouped_note_on));
+            event_list.emplace_back(*(i.second));
+            grouped_note_on.reset();
         }
     }
 }

@@ -36,8 +36,8 @@
 #include <cstdint>  //  uint32_t, uintptr_t, etc
 #include <list>  //  std::list
 #include <utility>  //  std::pair
-#include <RtMidi.h>  //  
-#include <wx/wx.h>
+#include <RtMidi.h>  //  RtMidiOut
+#include <wx/wx.h>  //  wxCondition, wxThread, etc
 
 //  module includes
 // -none-
@@ -136,6 +136,14 @@ public:
      */
     size_t get_events_remaining();
 
+    /**
+     * @brief Set the current state of the organ bank externally.
+     * @param current_bank current bank (1-8)
+     * @param current_mode current piston mode (1-100)
+     */
+    void set_bank_config(const uint8_t current_bank, 
+                         const uint32_t current_mode);
+
     virtual ~PlayerThread() override;
 
 protected:
@@ -175,6 +183,11 @@ private:
      */
     void force_advance();
 
+    /**
+     * @brief Internal logic to check the mode and (possibly) change it.
+     */
+    void do_mode_check();
+
     wxMutex m_mutex;  ///< Shared data are protected by mutex
 
     std::list<Message> m_event_queue;  ///< Current Thread-Safe event queue
@@ -191,7 +204,7 @@ private:
      */
     uint32_t m_mode_number;
 
-    wxFrame *const m_frame;  ///<  Pointer to parent window
+    PlayerWindow *const m_frame;  ///<  Pointer to parent window
     RtMidiOut &m_midi_out;  ///<  Reference to MIDI port
     
     /**
@@ -201,4 +214,5 @@ private:
     wxCondition *m_waiting;
 
     wxStopWatch m_current_time;  ///<  Current time and event time measurement.
+    wxStopWatch m_bank_change_delay;  ///<  Holdoff delay between bank changes
 };

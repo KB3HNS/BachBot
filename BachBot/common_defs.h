@@ -53,11 +53,11 @@ enum SyndyneBankCommands : uint8_t
 /**
  * @brief MIDI Channels (tracks) associated with each keyboard.
  */
-enum SyndineKeyboards : size_t
+enum SyndineKeyboards : uint8_t
 {
-    MANUAL1_SWELL = 2U,
-    MANUAL2_GREAT = 1U,
-    PETAL = 3U
+    MANUAL1_GREAT = 1U,  ///<  Bottom keyboard
+    MANUAL2_SWELL,  ///<  Top keyboard
+    PETAL
 };
 
 /** Number of keyboards in the console */
@@ -110,9 +110,9 @@ constexpr uint8_t make_midi_command_byte(const uint8_t chan,
 
 /* Midi timing magic constants */
 /** Minimum gap between notes */
-constexpr const auto MINIMUM_NOTE_GAP_S = 0.02;
+constexpr const auto MINIMUM_NOTE_GAP_S = 0.025;
 /** Minimum length of one note */
-constexpr const auto MINIMUM_NOTE_LENGTH_S = 0.08;
+constexpr const auto MINIMUM_NOTE_LENGTH_S = 0.065;
 
 /**
  * @brief Minimum delay between consecutive bank-change commands.
@@ -120,4 +120,4 @@ constexpr const auto MINIMUM_NOTE_LENGTH_S = 0.08;
  *       console.  Don't reduce this!  Period!  I don't care what it sound
  *       like, just don't do it!
  */
-constexpr const auto MINIMUM_BANK_CHANGE_INTERVAL_S = 0.25;
+constexpr const auto MINIMUM_BANK_CHANGE_INTERVAL_MS = 250L;

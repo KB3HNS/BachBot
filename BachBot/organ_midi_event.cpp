@@ -64,6 +64,29 @@ OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent& midi_event, const SyndineKe
 }
 
 
+OrganMidiEvent::OrganMidiEvent(const MidiCommands command,
+                               const SyndineKeyboards channel,
+                               const int8_t byte1,
+                               const int8_t byte2) :
+    m_event_code{make_midi_command_byte(channel, command)},
+    m_mode_change_event{(MidiCommands::CONTROL_CHANGE == command)},
+    m_desired_bank_number{0U},
+    m_desired_mode_number{0U},
+    m_seconds{0.0},
+    m_delta_time{0.0},
+    m_byte1(),
+    m_byte2(),
+    m_midi_time{0},
+    m_delta{0}
+{
+    if (byte1 >= 0) {
+        m_byte1 = uint8_t(byte1);
+    }
+    if (byte2 >= 0) {
+        m_byte1 = uint8_t(byte2);
+    }
+}
+
 OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent &midi_event,
                                const BankConfig& cfg) :
     m_event_code{make_midi_command_byte(uint8_t(midi_event.getChannel()),
@@ -99,8 +122,7 @@ void OrganMidiEvent::send_event(RtMidiOut& player) const
             midi_message[msg_size++] = m_byte1.value();
 
             if (m_byte2.has_value()) {
-                midi_message[msg_size] = m_byte2.value();
-                msg_size++;
+                midi_message[msg_size++] = m_byte2.value();
             }
         }
 

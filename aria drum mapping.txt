@@ -1,0 +1,76 @@
+# Drumkit
+Note 1:36
+Note 2:35
+Note 3:38
+Note 4:40
+Note 5:37
+
+# Hi-hat
+Note 6:42
+Note 7:46
+Note 8:44
+
+# Cymbal
+Note 9:49
+Note 10:57
+Note 11:55
+Note 12:52
+Note 13:51
+Note 14:59
+Note 15:53
+
+# Toms
+Note 16:41
+Note 17:43
+Note 18:45
+Note 19:47
+Note 20:48
+Note 21:50
+
+# African
+Note 22:76
+Note 23:77
+Note 24:69
+Note 25:67
+Note 26:68
+Note 27:58
+Note 28:62
+Note 29:63
+Note 30:64
+
+# Latin
+Note 31:73
+Note 32:74
+Note 33:75
+Note 34:78
+Note 35:79
+Note 36:70
+Note 37:56
+Note 38:60
+Note 39:61
+Note 40:85
+Note 41:86
+Note 42:87
+
+# Others
+Note 43:54
+Note 44:65
+Note 45:66
+Note 46:71
+Note 47:72
+Note 48:80
+Note 49:81
+Note 50:82
+Note 51:83
+Note 52:84
+Note 53:31
+
+# Sound Effects
+Note 54:34
+Note 55:33
+Note 56:32
+Note 57:30
+Note 58:29
+Note 59:28
+Note 60:27
+Note 61:39
