@@ -33,7 +33,7 @@
 #include "organ_midi_event.h"  //  Local include
 
 
-OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent& midi_event, const SyndineKeyboards channel) :
+OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent& midi_event, const SyndyneKeyboards channel) :
     m_event_code{make_midi_command_byte(channel, MidiCommands::SPECIAL)},
     m_mode_change_event{false},
     m_desired_bank_number{0U},
@@ -65,7 +65,7 @@ OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent& midi_event, const SyndineKe
 
 
 OrganMidiEvent::OrganMidiEvent(const MidiCommands command,
-                               const SyndineKeyboards channel,
+                               const SyndyneKeyboards channel,
                                const int8_t byte1,
                                const int8_t byte2) :
     m_event_code{make_midi_command_byte(channel, command)},
@@ -83,7 +83,7 @@ OrganMidiEvent::OrganMidiEvent(const MidiCommands command,
         m_byte1 = uint8_t(byte1);
     }
     if (byte2 >= 0) {
-        m_byte1 = uint8_t(byte2);
+        m_byte2 = uint8_t(byte2);
     }
 }
 

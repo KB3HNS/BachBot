@@ -59,7 +59,7 @@ MidiNoteTracker::MidiNoteTracker() :
     m_note_nesting_count{0U},
     m_note_on(),
     m_note_off(),
-    m_keyboard{SyndineKeyboards::MANUAL2_SWELL},
+    m_keyboard{SyndyneKeyboards::MANUAL2_SWELL},
     m_event_list()
 {
 }
@@ -115,7 +115,7 @@ void MidiNoteTracker::append_events(std::list<OrganMidiEvent> &event_list) const
 }
 
 
-void MidiNoteTracker::set_keyboard(const SyndineKeyboards keyboard_id)
+void MidiNoteTracker::set_keyboard(const SyndyneKeyboards keyboard_id)
 {
     m_keyboard = keyboard_id;
 }
@@ -138,7 +138,7 @@ void MidiNoteTracker::process_new_note_on_event(OrganNote &organ_ev)
     m_midi_ticks_on_time = organ_ev->m_midi_time;
     m_on_now = true;
     ++m_note_nesting_count;
-    organ_ev->m_byte2 = SYNDINE_NOTE_ON_VELOCITY;
+    organ_ev->m_byte2 = SYNDYNE_NOTE_ON_VELOCITY;
 }
 
 

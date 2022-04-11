@@ -92,7 +92,7 @@ public:
      * @brief Set the keyboard that we will use.
      * @param keyboard_id keyboard to route all events to.
     */
-    void set_keyboard(const SyndineKeyboards keyboard_id);
+    void set_keyboard(const SyndyneKeyboards keyboard_id);
 
 private:
     /**
@@ -142,7 +142,7 @@ private:
     uint32_t m_note_nesting_count;  ///<  Number of concurrent note-on events
     OrganNote m_note_on;  ///<  Shared pointer to the last "note-on" event
     OrganNote m_note_off;  ///<  Shared pointer to the last "note-off" event
-    SyndineKeyboards m_keyboard;  ///<  Keyboard that events shall be routed to
+    SyndyneKeyboards m_keyboard;  ///<  Keyboard that events shall be routed to
 
     /**
      * @brief Event list for this note

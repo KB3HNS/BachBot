@@ -47,11 +47,11 @@ namespace {
     std::list<OrganMidiEvent> file_events;
 
     /** Map of keyboard index to keyboard channel */
-    const std::array<SyndineKeyboards,
-                     NUM_SYNDINE_KEYBOARDS> keyboard_indexes = {
-        SyndineKeyboards::MANUAL1_GREAT, 
-        SyndineKeyboards::MANUAL2_SWELL, 
-        SyndineKeyboards::PETAL
+    const std::array<SyndyneKeyboards,
+                     NUM_SYNDYNE_KEYBOARDS> keyboard_indexes = {
+        SyndyneKeyboards::MANUAL1_GREAT, 
+        SyndyneKeyboards::MANUAL2_SWELL, 
+        SyndyneKeyboards::PETAL
     };
 
     /** Map drums to commands */
@@ -136,12 +136,12 @@ namespace {
 
     /** Map MIDI channel to keyboard / special event */
     const std::array<uint8_t, 16U> channel_mapping = {
-        SyndineKeyboards::MANUAL2_SWELL, SyndineKeyboards::MANUAL2_SWELL, SyndineKeyboards::MANUAL2_SWELL,
-        SyndineKeyboards::MANUAL1_GREAT, SyndineKeyboards::MANUAL1_GREAT, SyndineKeyboards::MANUAL1_GREAT,
-        SyndineKeyboards::PETAL, SyndineKeyboards::PETAL, SyndineKeyboards::PETAL,
+        SyndyneKeyboards::MANUAL2_SWELL, SyndyneKeyboards::MANUAL2_SWELL, SyndyneKeyboards::MANUAL2_SWELL,
+        SyndyneKeyboards::MANUAL1_GREAT, SyndyneKeyboards::MANUAL1_GREAT, SyndyneKeyboards::MANUAL1_GREAT,
+        SyndyneKeyboards::PETAL, SyndyneKeyboards::PETAL, SyndyneKeyboards::PETAL,
         0xFFU,  //  (9) Drums - used for control
-        SyndineKeyboards::MANUAL2_SWELL, SyndineKeyboards::MANUAL1_GREAT, SyndineKeyboards::PETAL,
-        SyndineKeyboards::MANUAL2_SWELL, SyndineKeyboards::MANUAL1_GREAT, SyndineKeyboards::PETAL
+        SyndyneKeyboards::MANUAL2_SWELL, SyndyneKeyboards::MANUAL1_GREAT, SyndyneKeyboards::PETAL,
+        SyndyneKeyboards::MANUAL2_SWELL, SyndyneKeyboards::MANUAL1_GREAT, SyndyneKeyboards::PETAL
     };
 
     /** 
@@ -177,10 +177,22 @@ namespace {
      * @param keyboard note is being assigned to
      * @retval MIDI note that can be corectly represented on the keyboard
      */
-    uint8_t remap_note(const int note, const SyndineKeyboards keyboard)
+    uint8_t remap_note(const int note, const SyndyneKeyboards keyboard)
     {
-        static_cast<void>(keyboard);
-        return uint8_t(note);
+        uint8_t low_limit = 36U;  //  Standard range of organ keys.
+        uint8_t high_limit = 96U;
+        if (SyndyneKeyboards::PETAL == keyboard) {
+            high_limit = 67U;  //  Petal only goes up to G above middle-C
+        }
+
+        auto mapped_note = uint8_t(note);
+        while (mapped_note < low_limit) {
+            mapped_note += 12U;  //  Bump 1 octave
+        }
+        while (mapped_note > high_limit) {
+            mapped_note -= 12U;  //  Bump 1 octave down
+        }
+        return mapped_note;
     }
 
     /**
@@ -311,7 +323,7 @@ void PlayerWindow::on_open_midi(wxCommandEvent &event)
     midifile.doTimeAnalysis();
     midifile.linkNotePairs();
     midifile.joinTracks();
-    build_syndine_sequence(midifile[0]);
+    build_syndyne_sequence(midifile[0]);
 }
 
 
@@ -336,8 +348,11 @@ void PlayerWindow::on_thread_tick(wxThreadEvent &event)
     const auto mode = current_setting / 8U;
     bank_label->SetLabel(wxString(fmt::format(L"{}", bank + 1U)));
     mode_label->SetLabel(wxString(fmt::format(L"{}", mode + 1U)));
-    const auto events_complete = file_events.size() - 
-                                 m_player_thread->get_events_remaining();
+    size_t events_complete = 0U;
+    if (file_events.size() > 0U) {
+        events_complete = file_events.size() - 
+                          m_player_thread->get_events_remaining();
+    }
     event_count->SetValue(int(events_complete));
 }
 
@@ -383,7 +398,7 @@ void PlayerWindow::send_manual_message(const SyndyneBankCommands value)
 {
     std::array<uint8_t, MIDI_MESSAGE_SIZE> midi_message;
     midi_message[0] = make_midi_command_byte(0U, MidiCommands::CONTROL_CHANGE);
-    midi_message[1] = SYNDINE_CONTROLLER_ID;
+    midi_message[1] = SYNDYNE_CONTROLLER_ID;
     midi_message[2] = value;
 
     const auto port_open = m_midi_out.isPortOpen();
@@ -399,10 +414,10 @@ void PlayerWindow::send_manual_message(const SyndyneBankCommands value)
 }
 
 
-void PlayerWindow::build_syndine_sequence(const smf::MidiEventList& event_list) const
+void PlayerWindow::build_syndyne_sequence(const smf::MidiEventList& event_list) const
 {
     std::list<OrganMidiEvent> events;
-    SyndineMidiEventTable<MidiNoteTracker> current_state;
+    SyndyneMidiEventTable<MidiNoteTracker> current_state;
     for (auto i = 0U; i < current_state.size(); ++i) {
         const auto keyboard_id = keyboard_indexes[i];
         for (auto j = 0U; j < current_state[i].size(); ++j) {

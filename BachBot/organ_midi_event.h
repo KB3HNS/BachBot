@@ -39,7 +39,7 @@
 
 #include "MidiEvent.h"  //  smf::MidiEvent
 
-#include "common_defs.h"  //  SyndineKeyboards
+#include "common_defs.h"  //  SyndyneKeyboards
 
 
 /**
@@ -58,11 +58,8 @@ using BankConfig = std::pair<uint8_t, uint32_t>;
 /**
  * @brief Organ MIDI event storage class.
  */
-class OrganMidiEvent
+struct OrganMidiEvent
 {
-    //  Allow the note deduplication logic to mess with the internals.
-    friend class MidiNoteTracker;
-
 public:
     /**
      * @brief Construct from a MIDI event and map to a specific keyboard.
@@ -70,7 +67,7 @@ public:
      * @param channel Route MIDI event to this keyboard.
      */
     OrganMidiEvent(const smf::MidiEvent& midi_event, 
-                   const SyndineKeyboards channel);
+                   const SyndyneKeyboards channel);
 
     /**
      * @brief Construct a bank change event.
@@ -79,7 +76,7 @@ public:
      */
     OrganMidiEvent(const smf::MidiEvent &midi_event, const BankConfig& cfg);
     OrganMidiEvent(const MidiCommands command, 
-                   const SyndineKeyboards channel,
+                   const SyndyneKeyboards channel,
                    const int8_t byte1=-1,
                    const int8_t byte2=-1);
 
@@ -147,7 +144,6 @@ public:
         return (m_seconds < rhs.m_seconds);
     }
 
-private:
     uint8_t m_event_code;  ///<  This event command
     bool m_mode_change_event; ///< Was this constructed as a mode change event?
     uint8_t m_desired_bank_number;  ///<  Store the desired bank number

@@ -93,7 +93,7 @@ private:
      * @brief Logic to build an appropriate midi sequence to send to the organ
      * @param value message to send
      */
-    void build_syndine_sequence(const smf::MidiEventList &event_list) const;
+    void build_syndyne_sequence(const smf::MidiEventList &event_list) const;
 
     uint32_t m_counter;
     PlayerThread *m_player_thread;

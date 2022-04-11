@@ -188,10 +188,20 @@ private:
      */
     void do_mode_check();
 
+    /**
+     * @brief Generate the test pattern as a sequence to be played.
+    */
+    void generate_test_pattern();
+
+    double generate_test_pattern(const SyndyneKeyboards keyboard, 
+                                 double start_time);
+
     wxMutex m_mutex;  ///< Shared data are protected by mutex
 
     std::list<Message> m_event_queue;  ///< Current Thread-Safe event queue
     std::list<OrganMidiEvent> m_midi_event_queue;  ///< List of midi events
+
+    bool m_playing_test_pattern;  ///<  Are we playing the test pattern?
 
     /**
      *  @brief Value of the current bank registration number that the organ

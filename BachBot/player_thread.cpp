@@ -41,6 +41,7 @@ PlayerThread::PlayerThread(PlayerWindow* const frame, const uint32_t port_id) :
     wxThread(wxTHREAD_JOINABLE),
     m_mutex(),
     m_midi_event_queue(),
+    m_playing_test_pattern{false},
     m_bank_number{0U},
     m_mode_number{0U},
     m_frame{frame},
@@ -124,9 +125,10 @@ PlayerThread::Message PlayerThread::wait_for_message()
     m_event_queue.pop_front();
 
     //  To reduce overhead, do the mode check while locked.
-    if (MessageId::TICK_MESSAGE == message.first &&
-        m_midi_event_queue.size() > 0U &&
-        m_bank_change_delay.Time() > MINIMUM_BANK_CHANGE_INTERVAL_MS) {
+    if ((MessageId::TICK_MESSAGE == message.first) && 
+        !m_playing_test_pattern &&
+        (m_midi_event_queue.size() > 0U) &&
+        (m_bank_change_delay.Time() > MINIMUM_BANK_CHANGE_INTERVAL_MS)) {
             do_mode_check();
     }
 
@@ -146,7 +148,13 @@ void PlayerThread::post_message(const MessageId msg_id, const uintptr_t value)
 
 void PlayerThread::play(const std::list<OrganMidiEvent>& event_list)
 {
-    m_midi_event_queue = event_list;
+    if (event_list.size() == 0U) {
+        generate_test_pattern();
+        m_playing_test_pattern = true;
+    } else {
+        m_midi_event_queue = event_list;
+        m_playing_test_pattern = false;
+    }
     if (Create() != wxTHREAD_NO_ERROR) {
         wxLogError(wxT("Can't create thread!"));
         return;
@@ -167,6 +175,10 @@ void PlayerThread::process_notes()
         }
 
         midi_event.send_event(m_midi_out);
+        if (m_playing_test_pattern) {
+            m_bank_number = (midi_event.m_event_code & 0x0FU) - 1U;
+            m_mode_number = midi_event.m_byte1.value() - 1U;
+        }
         m_midi_event_queue.pop_front();
     } while (m_midi_event_queue.size() > 0U);
 }
@@ -233,6 +245,33 @@ void PlayerThread::do_mode_check()
         m_bank_change_delay.Start();
     }
 
+}
+
+
+void PlayerThread::generate_test_pattern()
+{
+    auto midi_time = 0.0;
+    midi_time = generate_test_pattern(SyndyneKeyboards::PETAL, midi_time);
+    midi_time = generate_test_pattern(SyndyneKeyboards::MANUAL1_GREAT, 
+                                      midi_time);
+    generate_test_pattern(SyndyneKeyboards::MANUAL2_SWELL, midi_time);
+}
+
+
+double PlayerThread::generate_test_pattern(const SyndyneKeyboards keyboard, 
+                                           double start_time)
+{
+    for (uint8_t i = 1U; i <= 127U; ++i) {
+        m_midi_event_queue.emplace_back(MidiCommands::NOTE_ON, keyboard,
+                                        i, SYNDYNE_NOTE_ON_VELOCITY);
+        m_midi_event_queue.back().m_seconds = start_time;
+        start_time += 1.0;
+        m_midi_event_queue.emplace_back(MidiCommands::NOTE_OFF, keyboard,
+                                        i, 0U);
+        m_midi_event_queue.back().m_seconds = start_time;
+    }
+
+    return start_time;
 }
 
 

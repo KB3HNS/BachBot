@@ -23,7 +23,7 @@
  *
  * @section DESCRIPTION
  * These are the values that define aspects of either the MIDI standard, 
- * the Syndine computer used in the organ console, or the "magic" timing values
+ * the Syndyne computer used in the organ console, or the "magic" timing values
  * used for note-deduplication and retriggering.
  */
 
@@ -53,7 +53,7 @@ enum SyndyneBankCommands : uint8_t
 /**
  * @brief MIDI Channels (tracks) associated with each keyboard.
  */
-enum SyndineKeyboards : uint8_t
+enum SyndyneKeyboards : uint8_t
 {
     MANUAL1_GREAT = 1U,  ///<  Bottom keyboard
     MANUAL2_SWELL,  ///<  Top keyboard
@@ -61,13 +61,13 @@ enum SyndineKeyboards : uint8_t
 };
 
 /** Number of keyboards in the console */
-constexpr const size_t NUM_SYNDINE_KEYBOARDS = 3U;
+constexpr const size_t NUM_SYNDYNE_KEYBOARDS = 3U;
 
 /** Organ "controller" `general controller 1` */
-constexpr const uint8_t SYNDINE_CONTROLLER_ID = 16U;
+constexpr const uint8_t SYNDYNE_CONTROLLER_ID = 16U;
 
 /** Optimal Note-On velocity to use */
-constexpr const uint8_t SYNDINE_NOTE_ON_VELOCITY = 127U;
+constexpr const uint8_t SYNDYNE_NOTE_ON_VELOCITY = 127U;
 
 /** Message size of [nearly] all midi events */
 constexpr const size_t MIDI_MESSAGE_SIZE = 3U;
@@ -78,8 +78,8 @@ constexpr const size_t MIDI_MESSAGE_SIZE = 3U;
  * @tparam T Type associated with each keyboard-note combination.
  */
 template <typename T>
-using SyndineMidiEventTable = std::array<std::array<T, 127U>, 
-                                         NUM_SYNDINE_KEYBOARDS>;
+using SyndyneMidiEventTable = std::array<std::array<T, 127U>, 
+                                         NUM_SYNDYNE_KEYBOARDS>;
 
 /**
  * @brief The official command set for General Midi
