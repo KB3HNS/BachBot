@@ -40,6 +40,8 @@
 //  local includes
 // -none-
 
+namespace bach_bot {
+
 /**
  * @brief Bank control command values sent to "General Controller 1"
  */
@@ -121,3 +123,5 @@ constexpr const auto MINIMUM_NOTE_LENGTH_S = 0.065;
  *       like, just don't do it!
  */
 constexpr const auto MINIMUM_BANK_CHANGE_INTERVAL_MS = 250L;
+
+}  //  end bach_bot

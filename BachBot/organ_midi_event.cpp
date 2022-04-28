@@ -33,7 +33,10 @@
 #include "organ_midi_event.h"  //  Local include
 
 
-OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent& midi_event, const SyndyneKeyboards channel) :
+namespace bach_bot {
+
+OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent& midi_event,
+                               const SyndyneKeyboards channel) :
     m_event_code{make_midi_command_byte(channel, MidiCommands::SPECIAL)},
     m_mode_change_event{false},
     m_desired_bank_number{0U},
@@ -163,3 +166,5 @@ void OrganMidiEvent::calculate_delta(const OrganMidiEvent& rhs)
     m_delta_time = m_seconds - rhs.m_seconds;
     m_delta = m_midi_time - rhs.m_midi_time;
 }
+
+}  //  end bach_bot

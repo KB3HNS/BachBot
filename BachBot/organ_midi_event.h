@@ -41,6 +41,7 @@
 
 #include "common_defs.h"  //  SyndyneKeyboards
 
+namespace bach_bot {
 
 /**
  * @brief Type for setting/getting the desired bank configuration.
@@ -155,3 +156,5 @@ public:
     int m_midi_time;  ///<  Midi event MIDI ticks time.
     int m_delta;  ///<  Midi ticks since last event.
 };
+
+}  //  end bach_bot

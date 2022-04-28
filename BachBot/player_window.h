@@ -41,8 +41,11 @@
 #include "common_defs.h"  //  SyndyneBankCommands
 
 
+namespace bach_bot {
 //  Forward declare this class to prevent circular dependencies
 class PlayerThread;
+
+namespace ui {
 
 
 /**
@@ -104,3 +107,6 @@ private:
     wxDECLARE_EVENT_TABLE();
 
 };
+
+}  //  end ui
+}  //  end bach_bot

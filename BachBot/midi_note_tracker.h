@@ -56,6 +56,7 @@
 #include "common_defs.h"  //  Orgain timing "magic numbers"
 #include "organ_midi_event.h"  //  OrganMidiEvent
 
+namespace bach_bot {
 
 /**
  * @brief Midi note tracking.
@@ -152,3 +153,5 @@ private:
      */
     std::list<std::pair<OrganNote, OrganNote>> m_event_list;
 };
+
+}  //  end bach_bot

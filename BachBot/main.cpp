@@ -37,19 +37,19 @@
 /**
  * @brief Application main class
  */
-class MyApp : public wxApp
+class BachBot : public wxApp
 {
 public:
     virtual bool OnInit() override final
     {
-        m_window = new PlayerWindow();
+        m_window = new bach_bot::ui::PlayerWindow();
         m_window->Show(true);
         return true;
     }
 
 private:
-    PlayerWindow *m_window = nullptr;
+    bach_bot::ui::PlayerWindow *m_window = nullptr;
 };
 
 
-wxIMPLEMENT_APP(MyApp);
+wxIMPLEMENT_APP(BachBot);

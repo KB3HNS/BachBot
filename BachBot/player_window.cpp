@@ -44,6 +44,7 @@
 
 
 namespace {
+    using namespace bach_bot;
     std::list<OrganMidiEvent> file_events;
 
     /** Map of keyboard index to keyboard channel */
@@ -239,6 +240,9 @@ namespace {
 }  //  end anonymous namespace
 
 
+namespace bach_bot {
+namespace ui {
+
 PlayerWindow::PlayerWindow() :
     MainWindow(nullptr),
     wxLog(),
@@ -323,6 +327,23 @@ void PlayerWindow::on_open_midi(wxCommandEvent &event)
     midifile.doTimeAnalysis();
     midifile.linkNotePairs();
     midifile.joinTracks();
+    auto tempo = 120.0;
+    for (auto i = 0; i < midifile[0].size(); ++i) {
+        const auto &evt = midifile[0][i];
+        if (evt.isTempo()) {
+            tempo = evt.getTempoBPM();
+            break;
+        }
+    }
+
+    LoadMidiDialog import_dialog(this);
+    import_dialog.file_name_label->SetLabel(open_dialog.GetPath());
+    import_dialog.tempo_label->SetLabel(fmt::format(L"{}bpm", tempo));
+    import_dialog.select_tempo->SetValue(int(tempo));
+    if (import_dialog.ShowModal() == wxID_CANCEL) {
+        return;
+    }
+
     build_syndyne_sequence(midifile[0]);
 }
 
@@ -492,3 +513,6 @@ wxBEGIN_EVENT_TABLE(PlayerWindow, wxFrame)
     EVT_THREAD(PlayerEvents::TICK_EVENT, PlayerWindow::on_thread_tick)
     EVT_THREAD(PlayerEvents::EXIT_EVENT, PlayerWindow::on_thread_exit)
 wxEND_EVENT_TABLE()
+
+}  //  end ui
+}  //  end bach_bot

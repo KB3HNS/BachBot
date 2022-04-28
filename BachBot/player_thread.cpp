@@ -37,7 +37,10 @@ namespace {
 const auto TICKS_PER_UI_REFRESH = 500U;
 }
 
-PlayerThread::PlayerThread(PlayerWindow* const frame, const uint32_t port_id) :
+
+namespace bach_bot {
+
+PlayerThread::PlayerThread(ui::PlayerWindow* const frame, const uint32_t port_id) :
     wxThread(wxTHREAD_JOINABLE),
     m_mutex(),
     m_midi_event_queue(),
@@ -279,3 +282,5 @@ PlayerThread::~PlayerThread()
 {
     m_midi_out.closePort();
 }
+
+}  //  end bach_bot

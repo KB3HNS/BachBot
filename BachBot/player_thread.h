@@ -47,6 +47,7 @@
 #include "common_defs.h"
 #include "organ_midi_event.h"
 
+namespace bach_bot {
 
 /**
  * @brief wx Events issues by this class
@@ -91,7 +92,7 @@ public:
      * @param frame reference to main window 
      * @param port_id MIDI port to open to send events to
      */
-    PlayerThread(PlayerWindow *const frame, const uint32_t port_id);
+    PlayerThread(ui::PlayerWindow *const frame, const uint32_t port_id);
 
     /**
      * @brief Thread-safe call to send MIDI stop to.
@@ -214,7 +215,7 @@ private:
      */
     uint32_t m_mode_number;
 
-    PlayerWindow *const m_frame;  ///<  Pointer to parent window
+    ui::PlayerWindow *const m_frame;  ///<  Pointer to parent window
     RtMidiOut &m_midi_out;  ///<  Reference to MIDI port
     
     /**
@@ -226,3 +227,5 @@ private:
     wxStopWatch m_current_time;  ///<  Current time and event time measurement.
     wxStopWatch m_bank_change_delay;  ///<  Holdoff delay between bank changes
 };
+
+}  //  end bach_bot

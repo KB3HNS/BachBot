@@ -51,6 +51,8 @@ bool is_same_time(const smf::MidiEvent &ev, const int organ_time)
 }  //  end anonymous namespace.
 
 
+namespace bach_bot {
+
 MidiNoteTracker::MidiNoteTracker() :
     m_on_now{false},
     m_last_event_was_on{false},
@@ -171,3 +173,5 @@ void MidiNoteTracker::backfill_on_event(OrganNote &organ_ev)
     process_new_note_on_event(organ_event);
     --m_note_nesting_count;
 }
+
+}  //  end bach_bot
