@@ -240,7 +240,7 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 
 	bSizer17->Add( 0, 0, 1, wxEXPAND, 5 );
 
-	initial_gap_text_box = new wxTextCtrl( this, wxID_ANY, wxT("0"), wxDefaultPosition, wxDefaultSize, 0 );
+	initial_gap_text_box = new wxTextCtrl( this, wxID_ANY, wxT("0.0"), wxDefaultPosition, wxDefaultSize, 0 );
 	bSizer17->Add( initial_gap_text_box, 0, wxALL, 5 );
 
 	m_staticText17 = new wxStaticText( this, wxID_ANY, wxT("beats"), wxDefaultPosition, wxDefaultSize, 0 );
@@ -269,7 +269,7 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 	m_staticText20->Wrap( -1 );
 	bSizer19->Add( m_staticText20, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
-	mode_select = new wxSpinCtrl( this, wxID_ANY, wxT("1"), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 99, 0 );
+	mode_select = new wxSpinCtrl( this, wxID_ANY, wxT("1"), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 100, 0 );
 	mode_select->SetToolTip( wxT("Set starting piston mode number (1-99)") );
 
 	bSizer19->Add( mode_select, 0, wxALL, 5 );
@@ -302,19 +302,21 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 
 	m_staticText13 = new wxStaticText( this, wxID_ANY, wxT("Extend last note by"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText13->Wrap( -1 );
+	m_staticText13->SetToolTip( wxT("Extends duration of final note by multiplying the length by this number.") );
+
 	bSizer14->Add( m_staticText13, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
 
 	bSizer14->Add( 0, 0, 1, wxEXPAND, 5 );
 
-	extend_ending_textbox = new wxTextCtrl( this, wxID_ANY, wxT("0"), wxDefaultPosition, wxDefaultSize, 0 );
-	extend_ending_textbox->SetToolTip( wxT("Increase the length of the final note in song by N beats") );
-
-	bSizer14->Add( extend_ending_textbox, 0, wxALL, 5 );
-
-	m_staticText15 = new wxStaticText( this, wxID_ANY, wxT("beats"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText15 = new wxStaticText( this, wxID_ANY, wxT("X"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText15->Wrap( -1 );
 	bSizer14->Add( m_staticText15, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+	extend_ending_textbox = new wxTextCtrl( this, wxID_ANY, wxT("1.0"), wxDefaultPosition, wxDefaultSize, 0 );
+	extend_ending_textbox->SetToolTip( wxT("Extends duration of final note by multiplying the length by this number.") );
+
+	bSizer14->Add( extend_ending_textbox, 0, wxALL, 5 );
 
 
 	fgSizer3->Add( bSizer14, 1, wxEXPAND, 5 );

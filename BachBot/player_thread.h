@@ -38,6 +38,7 @@
 #include <utility>  //  std::pair
 #include <RtMidi.h>  //  RtMidiOut
 #include <wx/wx.h>  //  wxCondition, wxThread, etc
+#include <wx/power.h>  //  wxPowerResourceBlocker
 
 //  module includes
 // -none-
@@ -225,7 +226,9 @@ private:
     wxCondition *m_waiting;
 
     wxStopWatch m_current_time;  ///<  Current time and event time measurement.
-    wxStopWatch m_bank_change_delay;  ///<  Holdoff delay between bank changes
+    wxStopWatch m_bank_change_delay;  ///<  Holdoff delay between bank changes.
+    wxPowerResourceBlocker m_power_control;  ///<  Prevent low power mode
+    wxPowerResourceBlocker m_screen_control;  ///<  Prevent screen blanking
 };
 
 }  //  end bach_bot

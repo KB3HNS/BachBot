@@ -34,7 +34,7 @@
 #include <RtMidi.h>  //  RtMidiOut
 
 //  module includes
-#include "MidiFile.h"  //  smf::MidiEventLis
+// -none-
 
 //  local includes
 #include "main_window.h"  //  MainWindow
@@ -91,12 +91,6 @@ private:
      * @param value message to send
      */
     void send_manual_message(const SyndyneBankCommands value);
-
-    /**
-     * @brief Logic to build an appropriate midi sequence to send to the organ
-     * @param value message to send
-     */
-    void build_syndyne_sequence(const smf::MidiEventList &event_list) const;
 
     uint32_t m_counter;
     PlayerThread *m_player_thread;

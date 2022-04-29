@@ -24,7 +24,7 @@
 
 
 //  system includes
-// -none-
+#include <limits>  //  std::numeric_limits
 
 //  module includes
 // -none-
@@ -46,7 +46,9 @@ OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent& midi_event,
     m_byte1(),
     m_byte2(),
     m_midi_time{midi_event.tick},
-    m_delta{0}
+    m_delta{0},
+    m_partner{nullptr},
+    m_song_id{std::numeric_limits<uint32_t>::max()}
 {
     if (midi_event.isNoteOn()) {
         m_event_code = make_midi_command_byte(channel, MidiCommands::NOTE_ON);
@@ -80,7 +82,9 @@ OrganMidiEvent::OrganMidiEvent(const MidiCommands command,
     m_byte1(),
     m_byte2(),
     m_midi_time{0},
-    m_delta{0}
+    m_delta{0},
+    m_partner{nullptr},
+    m_song_id{std::numeric_limits<uint32_t>::max()}
 {
     if (byte1 >= 0) {
         m_byte1 = uint8_t(byte1);
@@ -102,7 +106,9 @@ OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent &midi_event,
     m_byte1(),
     m_byte2(),
     m_midi_time{midi_event.tick},
-    m_delta{0}
+    m_delta{0},
+    m_partner{nullptr},
+    m_song_id{std::numeric_limits<uint32_t>::max()}
 {
 }
 
@@ -165,6 +171,22 @@ void OrganMidiEvent::calculate_delta(const OrganMidiEvent& rhs)
 {
     m_delta_time = m_seconds - rhs.m_seconds;
     m_delta = m_midi_time - rhs.m_midi_time;
+}
+
+
+void OrganMidiEvent::link(OrganMidiEvent &rhs)
+{
+    m_partner = &rhs;
+    rhs.m_partner = this;
+}
+
+
+OrganMidiEvent::~OrganMidiEvent()
+{
+    if (nullptr != m_partner) {
+        m_partner->m_partner = nullptr;
+        m_partner = nullptr;
+    }
 }
 
 }  //  end bach_bot

@@ -24,14 +24,9 @@
 
 
 //  system includes
-#include <algorithm>  //  std::foreach, std::clamp
+#include <algorithm>  //  std::foreach
 #include <array>  //  std::array
-#include <exception>  //  std::runtime_exception
-#include <limits>  //  std::numeric_limits
-#include <unordered_map>  //  std::unordered_map
-#include <optional>  //  std::optional
 #include <fmt/xchar.h>  //  fmt::format(L
-#include <fmt/format.h>  //  fmt::format
 
 //  module includes
 // -none-
@@ -39,204 +34,12 @@
 //  local includes
 #include "player_window.h"  //  local include
 #include "player_thread.h"  //  PlayerThread
-#include "midi_note_tracker.h"  //  MidiNoteTracker
 #include "organ_midi_event.h"  //  OrganMidiEvent
-
+#include "syndyne_importer.h"  //  SyndineImporter
 
 namespace {
-    using namespace bach_bot;
-    std::list<OrganMidiEvent> file_events;
+    std::list<bach_bot::OrganMidiEvent> file_events;
 
-    /** Map of keyboard index to keyboard channel */
-    const std::array<SyndyneKeyboards,
-                     NUM_SYNDYNE_KEYBOARDS> keyboard_indexes = {
-        SyndyneKeyboards::MANUAL1_GREAT, 
-        SyndyneKeyboards::MANUAL2_SWELL, 
-        SyndyneKeyboards::PETAL
-    };
-
-    /** Map drums to commands */
-    const std::unordered_map<uint8_t, SyndyneBankCommands> drum_map = {
-        // Drumkit
-        {36U, SyndyneBankCommands::PREV_BANK},
-        {35U, SyndyneBankCommands::PREV_BANK},
-        {38U, SyndyneBankCommands::PREV_BANK},
-        {40U, SyndyneBankCommands::PREV_BANK},
-        {37U, SyndyneBankCommands::PREV_BANK},
-
-        // Hi-hat
-        {42U, SyndyneBankCommands::GENERAL_CANCEL},
-        {46U, SyndyneBankCommands::GENERAL_CANCEL},
-        {44U, SyndyneBankCommands::GENERAL_CANCEL},
-
-        // Cymbal
-        {49U, SyndyneBankCommands::NEXT_BANK},
-        {57U, SyndyneBankCommands::NEXT_BANK},
-        {55U, SyndyneBankCommands::NEXT_BANK},
-        {52U, SyndyneBankCommands::NEXT_BANK},
-        {51U, SyndyneBankCommands::NEXT_BANK},
-        {59U, SyndyneBankCommands::NEXT_BANK},
-        {53U, SyndyneBankCommands::NEXT_BANK},
-
-        // Toms
-        {41U, SyndyneBankCommands::PREV_BANK},
-        {43U, SyndyneBankCommands::PREV_BANK},
-        {45U, SyndyneBankCommands::PREV_BANK},
-        {47U, SyndyneBankCommands::PREV_BANK},
-        {48U, SyndyneBankCommands::PREV_BANK},
-        {50U, SyndyneBankCommands::PREV_BANK},
-
-        // African
-        {76U, SyndyneBankCommands::GENERAL_CANCEL},
-        {77U, SyndyneBankCommands::GENERAL_CANCEL},
-        {69U, SyndyneBankCommands::GENERAL_CANCEL},
-        {67U, SyndyneBankCommands::GENERAL_CANCEL},
-        {68U, SyndyneBankCommands::GENERAL_CANCEL},
-        {58U, SyndyneBankCommands::GENERAL_CANCEL},
-        {62U, SyndyneBankCommands::GENERAL_CANCEL},
-        {63U, SyndyneBankCommands::GENERAL_CANCEL},
-        {64U, SyndyneBankCommands::GENERAL_CANCEL},
-
-        // Latin
-        {73U, SyndyneBankCommands::NEXT_BANK},
-        {74U, SyndyneBankCommands::NEXT_BANK},
-        {75U, SyndyneBankCommands::NEXT_BANK},
-        {78U, SyndyneBankCommands::NEXT_BANK},
-        {79U, SyndyneBankCommands::NEXT_BANK},
-        {70U, SyndyneBankCommands::NEXT_BANK},
-        {56U, SyndyneBankCommands::NEXT_BANK},
-        {60U, SyndyneBankCommands::NEXT_BANK},
-        {61U, SyndyneBankCommands::NEXT_BANK},
-        {85U, SyndyneBankCommands::NEXT_BANK},
-        {86U, SyndyneBankCommands::NEXT_BANK},
-        {87U, SyndyneBankCommands::NEXT_BANK},
-
-        // Others
-        {54U, SyndyneBankCommands::PREV_BANK},
-        {65U, SyndyneBankCommands::PREV_BANK},
-        {66U, SyndyneBankCommands::PREV_BANK},
-        {71U, SyndyneBankCommands::PREV_BANK},
-        {72U, SyndyneBankCommands::PREV_BANK},
-        {80U, SyndyneBankCommands::PREV_BANK},
-        {81U, SyndyneBankCommands::PREV_BANK},
-        {82U, SyndyneBankCommands::PREV_BANK},
-        {83U, SyndyneBankCommands::PREV_BANK},
-        {84U, SyndyneBankCommands::PREV_BANK},
-        {31U, SyndyneBankCommands::PREV_BANK},
-
-        // Sound Effects
-        {34U, SyndyneBankCommands::NEXT_BANK},
-        {33U, SyndyneBankCommands::NEXT_BANK},
-        {32U, SyndyneBankCommands::NEXT_BANK},
-        {30U, SyndyneBankCommands::NEXT_BANK},
-        {29U, SyndyneBankCommands::NEXT_BANK},
-        {28U, SyndyneBankCommands::NEXT_BANK},
-        {27U, SyndyneBankCommands::NEXT_BANK},
-        {39U, SyndyneBankCommands::NEXT_BANK}
-    };
-
-    /** Map MIDI channel to keyboard / special event */
-    const std::array<uint8_t, 16U> channel_mapping = {
-        SyndyneKeyboards::MANUAL2_SWELL, SyndyneKeyboards::MANUAL2_SWELL, SyndyneKeyboards::MANUAL2_SWELL,
-        SyndyneKeyboards::MANUAL1_GREAT, SyndyneKeyboards::MANUAL1_GREAT, SyndyneKeyboards::MANUAL1_GREAT,
-        SyndyneKeyboards::PETAL, SyndyneKeyboards::PETAL, SyndyneKeyboards::PETAL,
-        0xFFU,  //  (9) Drums - used for control
-        SyndyneKeyboards::MANUAL2_SWELL, SyndyneKeyboards::MANUAL1_GREAT, SyndyneKeyboards::PETAL,
-        SyndyneKeyboards::MANUAL2_SWELL, SyndyneKeyboards::MANUAL1_GREAT, SyndyneKeyboards::PETAL
-    };
-
-    /** 
-     * @brief Get the the appropriate index of the channel event map based on
-     *        the reported MIDI channel of a MIDI event.
-     * @param channel midi event channel
-     * @returns array index
-     * @retval size_t::max Channel is a control channel
-     */
-    size_t get_control_index(const int channel)
-    {
-        if (channel < 0 || channel > int(channel_mapping.size())) {
-            throw std::runtime_error(fmt::format("Index out of range: {}",
-                                     channel));
-        }
-
-        const auto keyboard = channel_mapping[size_t(channel)];
-        auto index = std::numeric_limits<size_t>::max();
-        for (auto i = 0U; i < keyboard_indexes.size(); ++i) {
-            if (keyboard == keyboard_indexes[i]) {
-                index = i;
-                break;
-            }
-        }
-
-        return index;
-    }
-
-    /**
-     * @brief Remap a MIDI note to a note that exists on the appropriate
-     *        keyboard.
-     * @param note MIDI note ID
-     * @param keyboard note is being assigned to
-     * @retval MIDI note that can be corectly represented on the keyboard
-     */
-    uint8_t remap_note(const int note, const SyndyneKeyboards keyboard)
-    {
-        uint8_t low_limit = 36U;  //  Standard range of organ keys.
-        uint8_t high_limit = 96U;
-        if (SyndyneKeyboards::PETAL == keyboard) {
-            high_limit = 67U;  //  Petal only goes up to G above middle-C
-        }
-
-        auto mapped_note = uint8_t(note);
-        while (mapped_note < low_limit) {
-            mapped_note += 12U;  //  Bump 1 octave
-        }
-        while (mapped_note > high_limit) {
-            mapped_note -= 12U;  //  Bump 1 octave down
-        }
-        return mapped_note;
-    }
-
-    /**
-     * @brief Update the current state of the configuration based on a drum
-     *        channel note.
-     * @param note note ID
-     * @param current_state[in/out] state to update
-     */
-    void get_bank_event(const int note, BankConfig &current_state)
-    {
-        const auto bank_event = drum_map.find(uint8_t(note));
-        if (drum_map.end() != bank_event) {
-            switch (bank_event->second) {
-            case SyndyneBankCommands::GENERAL_CANCEL:
-                current_state.first = 0U;
-                break;
-
-            case SyndyneBankCommands::PREV_BANK:
-                if (0U == current_state.first) {
-                    current_state.first = 8U;
-                    --current_state.second;
-                }
-                --current_state.first;
-                break;
-
-            case SyndyneBankCommands::NEXT_BANK:
-                ++current_state.first;
-                if (current_state.first >= 8U) {
-                    current_state.first = 0U;
-                    ++current_state.second;
-                }
-                break;
-
-            default:
-                break;
-            }
-        }
-
-        current_state.first = std::clamp(current_state.first, 
-                                         uint8_t(0U), 
-                                         uint8_t(7U));
-        current_state.second = std::clamp(current_state.second,  0U,  99U);
-    }
 }  //  end anonymous namespace
 
 
@@ -322,29 +125,23 @@ void PlayerWindow::on_open_midi(wxCommandEvent &event)
         return;
     }
 
-    smf::MidiFile midifile;
-    midifile.read(open_dialog.GetPath().ToStdString());
-    midifile.doTimeAnalysis();
-    midifile.linkNotePairs();
-    midifile.joinTracks();
-    auto tempo = 120.0;
-    for (auto i = 0; i < midifile[0].size(); ++i) {
-        const auto &evt = midifile[0][i];
-        if (evt.isTempo()) {
-            tempo = evt.getTempoBPM();
-            break;
-        }
+    auto importer = std::make_unique<SyndineImporter>(
+    open_dialog.GetPath().ToStdString(), 0U);
+
+    auto tempo = importer->get_tempo();
+    if (!tempo.has_value()) {
+        tempo = 120;
     }
 
     LoadMidiDialog import_dialog(this);
     import_dialog.file_name_label->SetLabel(open_dialog.GetPath());
-    import_dialog.tempo_label->SetLabel(fmt::format(L"{}bpm", tempo));
-    import_dialog.select_tempo->SetValue(int(tempo));
+    import_dialog.tempo_label->SetLabel(fmt::format(L"{}bpm", tempo.value()));
+    import_dialog.select_tempo->SetValue(tempo.value());
     if (import_dialog.ShowModal() == wxID_CANCEL) {
         return;
     }
 
-    build_syndyne_sequence(midifile[0]);
+    file_events = importer->get_events(0.0, 0.0);
 }
 
 
@@ -431,71 +228,6 @@ void PlayerWindow::send_manual_message(const SyndyneBankCommands value)
 
     if (!port_open) {
         m_midi_out.closePort();
-    }
-}
-
-
-void PlayerWindow::build_syndyne_sequence(const smf::MidiEventList& event_list) const
-{
-    std::list<OrganMidiEvent> events;
-    SyndyneMidiEventTable<MidiNoteTracker> current_state;
-    for (auto i = 0U; i < current_state.size(); ++i) {
-        const auto keyboard_id = keyboard_indexes[i];
-        for (auto j = 0U; j < current_state[i].size(); ++j) {
-            current_state[i][j].set_keyboard(keyboard_id);
-        }
-    }
-
-    //  1st pass: Process all events
-    auto config = BankConfig{0U, 0U};
-    uint8_t current_bank = 0U;
-    uint32_t current_mode = 0U;
-    for (auto i = 0; i < event_list.size(); ++i) {
-        auto midi_event = event_list[i];
-        if (midi_event.isNote()) {
-            const auto channel_id = get_control_index(midi_event.getChannel());
-            if (channel_id < current_state.size()) {
-                const auto note = remap_note(midi_event.getKeyNumber(), 
-                                             keyboard_indexes[channel_id]);
-                midi_event[2] = note;
-                current_state[channel_id][note].add_event(midi_event);
-            } else if (midi_event.isNoteOn()) {
-                //  Treat as control event
-                get_bank_event(midi_event.getKeyNumber(), config);
-                events.emplace_back(midi_event, config);
-            }
-        }
-    }
-
-    //  2nd pass: append all de-duplicated events
-    for (const auto &i: current_state) {
-        for (const auto &j: i) {
-            j.append_events(events);
-        }
-    }
-
-    //  3rd pass: sort by time
-    events.sort();
-
-    //  4th pass: update bank config, build output events
-    file_events.clear();
-    auto current_config = events.front().get_bank_config();
-    for (auto &i: events) {
-        if (i.is_mode_change_event()) {
-            current_config = i.get_bank_config();
-        } else {
-            i.set_bank_config(current_config);
-            file_events.push_back(i);
-        }
-    }
-
-    //  5th pass: remove start dead time
-    auto &initial_delay = file_events.front();
-    auto last_element = initial_delay;
-    for (auto &i : file_events) {
-        i -= initial_delay;
-        i.calculate_delta(last_element);
-        last_element = i;
     }
 }
 

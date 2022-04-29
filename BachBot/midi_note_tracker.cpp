@@ -34,7 +34,6 @@
 
 
 namespace {
-
 /**
  * @brief Simple test to see if a midi event occurs at the same time as a
  *        currently tracked event.
@@ -96,22 +95,28 @@ void MidiNoteTracker::add_event(const smf::MidiEvent &ev)
 void MidiNoteTracker::append_events(std::list<OrganMidiEvent> &event_list) const
 {
     OrganNote grouped_note_on;
-    for (const auto &i: m_event_list) {
+
+    auto append_pair = [&](const OrganMidiEvent &note_on, const OrganMidiEvent &note_off) {
+        event_list.emplace_back(note_on);
+        // auto &on_event = event_list.back();
+        event_list.emplace_back(note_off);
+        // on_event.link(event_list.back());
+        grouped_note_on.reset();
+    };
+
+    for (auto i= m_event_list.cbegin(); m_event_list.cend() != i; ++i) {
         auto grouped_length = 0.0;
         if (grouped_note_on.get() != nullptr) {
-            grouped_length = i.second->m_seconds - grouped_note_on->m_seconds;
+            grouped_length = i->second->m_seconds - grouped_note_on->m_seconds;
         }
 
-        if (i.second->m_seconds - i.first->m_seconds > MINIMUM_NOTE_LENGTH_S) {
-            event_list.emplace_back(*(i.first));
-            event_list.emplace_back(*(i.second));
-            grouped_note_on.reset();
+
+        if (i->second->m_seconds - i->first->m_seconds > MINIMUM_NOTE_LENGTH_S) {
+            append_pair(*(i->first), *(i->second));
         } else if (grouped_note_on.get() == nullptr) {
-            grouped_note_on = i.first;
+            grouped_note_on = i->first;
         } else if (grouped_length > MINIMUM_NOTE_LENGTH_S) {
-            event_list.emplace_back(*(grouped_note_on));
-            event_list.emplace_back(*(i.second));
-            grouped_note_on.reset();
+            append_pair(*(grouped_note_on), *(i->second));
         }
     }
 }

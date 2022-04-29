@@ -34,7 +34,7 @@
 
 
 namespace {
-const auto TICKS_PER_UI_REFRESH = 500U;
+constexpr const auto TICKS_PER_UI_REFRESH = 500U;
 }
 
 
@@ -51,7 +51,9 @@ PlayerThread::PlayerThread(ui::PlayerWindow* const frame, const uint32_t port_id
     m_midi_out(frame->m_midi_out),
     m_waiting{nullptr},
     m_current_time(),
-    m_bank_change_delay()
+    m_bank_change_delay(),
+    m_power_control(wxPOWER_RESOURCE_SYSTEM, "BachBot Playing"),
+    m_screen_control(wxPOWER_RESOURCE_SCREEN, "BachBot Playing")
 {
     m_midi_out.openPort(port_id);
     m_bank_change_delay.Start();

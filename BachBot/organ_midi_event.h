@@ -61,7 +61,6 @@ using BankConfig = std::pair<uint8_t, uint32_t>;
  */
 struct OrganMidiEvent
 {
-public:
     /**
      * @brief Construct from a MIDI event and map to a specific keyboard.
      * @param midi_event Midi event to take timing and note information from.
@@ -145,6 +144,14 @@ public:
         return (m_seconds < rhs.m_seconds);
     }
 
+    /**
+     * @brief Link this event to another event (usually note-on/note-off pair)
+     * @param rhs other item being linked.
+     */
+    void link(OrganMidiEvent &rhs);
+
+    ~OrganMidiEvent();
+
     uint8_t m_event_code;  ///<  This event command
     bool m_mode_change_event; ///< Was this constructed as a mode change event?
     uint8_t m_desired_bank_number;  ///<  Store the desired bank number
@@ -155,6 +162,8 @@ public:
     std::optional<uint8_t> m_byte2;  ///<  MIDI event payload second byte
     int m_midi_time;  ///<  Midi event MIDI ticks time.
     int m_delta;  ///<  Midi ticks since last event.
+    OrganMidiEvent *m_partner;  ///< Partner event (for event pairs)
+    uint32_t m_song_id;  ///<  The song ID that this event is associated with.
 };
 
 }  //  end bach_bot
