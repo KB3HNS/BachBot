@@ -128,7 +128,7 @@ public:
      * after the `EXIT_EVENT` has been issued.
      * @sa PlayerEvents
      */
-    void play(const std::list<OrganMidiEvent> &event_list);
+    void play(const std::list<OrganNote> &event_list);
 
     /**
      * @brief Thread-safe get the number of events remaining in the current
@@ -201,7 +201,7 @@ private:
     wxMutex m_mutex;  ///< Shared data are protected by mutex
 
     std::list<Message> m_event_queue;  ///< Current Thread-Safe event queue
-    std::list<OrganMidiEvent> m_midi_event_queue;  ///< List of midi events
+    std::list<OrganNote> m_midi_event_queue;  ///< List of midi events
 
     bool m_playing_test_pattern;  ///<  Are we playing the test pattern?
 

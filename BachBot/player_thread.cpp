@@ -151,7 +151,7 @@ void PlayerThread::post_message(const MessageId msg_id, const uintptr_t value)
 }
 
 
-void PlayerThread::play(const std::list<OrganMidiEvent>& event_list)
+void PlayerThread::play(const std::list<OrganNote>& event_list)
 {
     if (event_list.size() == 0U) {
         generate_test_pattern();
@@ -174,15 +174,15 @@ void PlayerThread::process_notes()
     const auto time_now = m_current_time.TimeInMicro();
     do {
         const auto &midi_event = m_midi_event_queue.front();
-        const auto timestamp = midi_event.get_us();
+        const auto timestamp = midi_event->get_us();
         if (timestamp > time_now) {
             break;
         }
 
-        midi_event.send_event(m_midi_out);
+        midi_event->send_event(m_midi_out);
         if (m_playing_test_pattern) {
-            m_bank_number = (midi_event.m_event_code & 0x0FU) - 1U;
-            m_mode_number = midi_event.m_byte1.value() - 1U;
+            m_bank_number = (midi_event->m_event_code & 0x0FU) - 1U;
+            m_mode_number = midi_event->m_byte1.value() - 1U;
         }
         m_midi_event_queue.pop_front();
     } while (m_midi_event_queue.size() > 0U);
@@ -192,7 +192,7 @@ void PlayerThread::process_notes()
 void PlayerThread::force_advance()
 {
     const auto &current_event = m_midi_event_queue.front();
-    const auto ms = current_event.get_us().GetValue();
+    const auto ms = current_event->get_us().GetValue();
     m_current_time.Start(long(ms / 1000LL));
 }
 
@@ -216,7 +216,7 @@ void PlayerThread::set_bank_config(const uint8_t current_bank,
 
 void PlayerThread::do_mode_check()
 {
-    const auto desired_mode = m_midi_event_queue.front().get_bank_config();
+    const auto desired_mode = m_midi_event_queue.front()->get_bank_config();
     if ((desired_mode.second < m_mode_number && m_bank_number > 0U) || 
         (desired_mode.second == m_mode_number && 0U == desired_mode.first))
     {
@@ -267,13 +267,14 @@ double PlayerThread::generate_test_pattern(const SyndyneKeyboards keyboard,
                                            double start_time)
 {
     for (uint8_t i = 1U; i <= 127U; ++i) {
-        m_midi_event_queue.emplace_back(MidiCommands::NOTE_ON, keyboard,
-                                        i, SYNDYNE_NOTE_ON_VELOCITY);
-        m_midi_event_queue.back().m_seconds = start_time;
+        m_midi_event_queue.emplace_back(
+            new OrganMidiEvent(MidiCommands::NOTE_ON, keyboard,
+                               i, SYNDYNE_NOTE_ON_VELOCITY));
+        m_midi_event_queue.back()->m_seconds = start_time;
         start_time += 1.0;
-        m_midi_event_queue.emplace_back(MidiCommands::NOTE_OFF, keyboard,
-                                        i, 0U);
-        m_midi_event_queue.back().m_seconds = start_time;
+        m_midi_event_queue.emplace_back(
+            new OrganMidiEvent(MidiCommands::NOTE_OFF, keyboard, i, 0U));
+        m_midi_event_queue.back()->m_seconds = start_time;
     }
 
     return start_time;

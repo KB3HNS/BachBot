@@ -104,8 +104,8 @@ public:
      *                              final chord.
      * @returns timed event list to send to player 
      */
-    std::list<OrganMidiEvent> get_events(const double initial_delay_beats,
-                                         const double extend_final_duration);
+    std::list<OrganNote> get_events(const double initial_delay_beats,
+                                    const double extend_final_duration);
 
 private:
     /** 
@@ -139,12 +139,14 @@ private:
     */
     void build_syndyne_sequence(const smf::MidiEventList &event_list);
 
+
     smf::MidiFile m_midifile;  ///< parsed midi events
-    std::list<OrganMidiEvent> m_file_events;  ///< intermediate events
+    std::list<OrganNote> m_file_events;  ///< intermediate events
     /** Array of tracks & notes */
     SyndyneMidiEventTable<MidiNoteTracker> m_current_state;
     const uint32_t m_song_id;  ///< Requested song ID
     std::optional<double> m_tempo_detected;  ///< detected song tempo
+    int m_bpm;  ///< Beats/min either detected or default
     BankConfig m_current_config;   ///< current bank/piston setting
     double m_time_scaling_factor;  ///< calculated tempo time skew
     int8_t m_note_offset;  ///< key adjustment

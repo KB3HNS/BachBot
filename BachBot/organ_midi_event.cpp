@@ -25,6 +25,7 @@
 
 //  system includes
 #include <limits>  //  std::numeric_limits
+#include <exception>  //  std::runtime_error
 
 //  module includes
 // -none-
@@ -94,6 +95,7 @@ OrganMidiEvent::OrganMidiEvent(const MidiCommands command,
     }
 }
 
+
 OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent &midi_event,
                                const BankConfig& cfg) :
     m_event_code{make_midi_command_byte(uint8_t(midi_event.getChannel()),
@@ -115,8 +117,8 @@ OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent &midi_event,
 
 wxLongLong OrganMidiEvent::get_us() const
 {
-    const auto ms_time = m_seconds * 1000000.0;
-    return wxLongLong(ms_time + 0.5);
+    const auto us_time = m_seconds * 1000000.0;
+    return wxLongLong(us_time + 0.5);
 }
 
 
@@ -159,25 +161,10 @@ bool OrganMidiEvent::is_mode_change_event() const
 }
 
 
-OrganMidiEvent& OrganMidiEvent::operator-=(const OrganMidiEvent &rhs)
-{
-    m_seconds -= rhs.m_seconds;
-    m_midi_time -= rhs.m_midi_time;
-    return *this;
-}
-
-
 void OrganMidiEvent::calculate_delta(const OrganMidiEvent& rhs)
 {
     m_delta_time = m_seconds - rhs.m_seconds;
     m_delta = m_midi_time - rhs.m_midi_time;
-}
-
-
-void OrganMidiEvent::link(OrganMidiEvent &rhs)
-{
-    m_partner = &rhs;
-    rhs.m_partner = this;
 }
 
 
@@ -188,5 +175,51 @@ OrganMidiEvent::~OrganMidiEvent()
         m_partner = nullptr;
     }
 }
+
+
+OrganNote::OrganNote(OrganMidiEvent *const ptr) :
+    std::shared_ptr<OrganMidiEvent>(ptr)
+{
+}
+
+OrganNote::OrganNote(const OrganMidiEvent &rhs) :
+    OrganNote(new OrganMidiEvent(rhs))
+{
+    get()->m_partner = nullptr;
+}
+
+
+void OrganNote::link(OrganNote &rhs) const
+{
+    auto *const this_inst = get();
+    if (nullptr == this_inst || nullptr == rhs.get()) {
+        throw std::runtime_error("link() on null instance");
+    }
+    this_inst->m_partner = rhs.get();
+    rhs->m_partner = this_inst;
+}
+
+
+bool OrganNote::operator< (const OrganNote& rhs) const
+{
+    const auto *const this_event = get();
+    if (nullptr == this_event || nullptr == rhs.get()) {
+        throw std::runtime_error("operator< on null instance");
+    }
+    return (this_event->m_seconds < rhs->m_seconds);
+}
+
+
+OrganNote& OrganNote::operator-=(const OrganNote &rhs)
+{
+    auto *const this_event = get();
+    if (nullptr == this_event || nullptr == rhs.get()) {
+        throw std::runtime_error("operator-= on null instance");
+    }
+    this_event->m_seconds -= rhs->m_seconds;
+    this_event->m_midi_time -= rhs->m_midi_time;
+    return *this;
+}
+
 
 }  //  end bach_bot

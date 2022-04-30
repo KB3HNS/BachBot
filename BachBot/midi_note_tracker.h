@@ -46,7 +46,6 @@
 
 //  system includes
 #include <list>  //  std::list
-#include <memory>  //  std::shared_ptr
 #include <utility>  //  std::pari
 
 //  module includes
@@ -65,11 +64,6 @@ namespace bach_bot {
  */
 class MidiNoteTracker
 {
-    /**
-     * @brief Simplify this type.  Organ event storage.
-     */
-    using OrganNote = std::shared_ptr<OrganMidiEvent>;
-
 public:
     /**
      * @brief Constructor
@@ -87,7 +81,7 @@ public:
      * @brief Append our events to the list
      * @param[in/out] event_list current list of midi events
     */
-    void append_events(std::list<OrganMidiEvent> &event_list) const;
+    void append_events(std::list<OrganNote> &event_list) const;
     
     /**
      * @brief Set the keyboard that we will use.

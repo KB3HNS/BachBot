@@ -38,7 +38,7 @@
 #include "syndyne_importer.h"  //  SyndineImporter
 
 namespace {
-    std::list<bach_bot::OrganMidiEvent> file_events;
+    std::list<bach_bot::OrganNote> file_events;
 
 }  //  end anonymous namespace
 
@@ -141,7 +141,7 @@ void PlayerWindow::on_open_midi(wxCommandEvent &event)
         return;
     }
 
-    file_events = importer->get_events(0.0, 0.0);
+    file_events = importer->get_events(12.0, 6.0);
 }
 
 

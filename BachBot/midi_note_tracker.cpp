@@ -68,7 +68,7 @@ MidiNoteTracker::MidiNoteTracker() :
 
 void MidiNoteTracker::add_event(const smf::MidiEvent &ev)
 {
-    auto organ_event = std::make_shared<OrganMidiEvent>(ev, m_keyboard);
+    auto organ_event = OrganNote(new OrganMidiEvent(ev, m_keyboard));
 
     if (ev.isNoteOn() && !m_on_now) {
         process_new_note_on_event(organ_event);
@@ -92,15 +92,15 @@ void MidiNoteTracker::add_event(const smf::MidiEvent &ev)
 }
 
 
-void MidiNoteTracker::append_events(std::list<OrganMidiEvent> &event_list) const
+void MidiNoteTracker::append_events(std::list<OrganNote> &event_list) const
 {
     OrganNote grouped_note_on;
 
-    auto append_pair = [&](const OrganMidiEvent &note_on, const OrganMidiEvent &note_off) {
+    auto append_pair = [&](const OrganNote &note_on, const OrganNote &note_off) {
         event_list.emplace_back(note_on);
-        // auto &on_event = event_list.back();
+        auto &on_event = event_list.back();
         event_list.emplace_back(note_off);
-        // on_event.link(event_list.back());
+        on_event.link(event_list.back());
         grouped_note_on.reset();
     };
 
@@ -112,11 +112,11 @@ void MidiNoteTracker::append_events(std::list<OrganMidiEvent> &event_list) const
 
 
         if (i->second->m_seconds - i->first->m_seconds > MINIMUM_NOTE_LENGTH_S) {
-            append_pair(*(i->first), *(i->second));
+            append_pair(i->first, i->second);
         } else if (grouped_note_on.get() == nullptr) {
             grouped_note_on = i->first;
         } else if (grouped_length > MINIMUM_NOTE_LENGTH_S) {
-            append_pair(*(grouped_note_on), *(i->second));
+            append_pair(grouped_note_on, i->second);
         }
     }
 }
@@ -162,7 +162,7 @@ void MidiNoteTracker::process_new_note_off_event(OrganNote &organ_ev)
 
 void MidiNoteTracker::insert_off_event(OrganNote &organ_ev)
 {
-    auto organ_event = std::make_shared<OrganMidiEvent>(*organ_ev);
+    OrganNote organ_event(*organ_ev);
     organ_event->m_event_code = make_midi_command_byte(m_keyboard, 
                                                        MidiCommands::NOTE_OFF);
     process_new_note_off_event(organ_event);
@@ -172,7 +172,7 @@ void MidiNoteTracker::insert_off_event(OrganNote &organ_ev)
 
 void MidiNoteTracker::backfill_on_event(OrganNote &organ_ev)
 {
-    auto organ_event = std::make_shared<OrganMidiEvent>(*m_note_off);
+    OrganNote organ_event(*m_note_off);
     organ_event->m_event_code = make_midi_command_byte(m_keyboard, 
                                                        MidiCommands::NOTE_ON);
     process_new_note_on_event(organ_event);

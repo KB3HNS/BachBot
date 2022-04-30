@@ -25,9 +25,10 @@
 
 //  system includes
 #include <limits>  //  std::numeric_limits
-#include <algorithm>  //  std::clamp
+#include <algorithm>  //  std::clamp, std::for_each
 #include <array>  //  std::array
 #include <utility>  //  std::pair
+#include <exception>   //  std::runtime_error
 #include <fmt/format.h>  //  fmt::format
 
 //  module includes
@@ -140,7 +141,7 @@ const std::array<uint8_t, 16U> g_channel_mapping = {
 };
 
 /** Tempo to derive beat timing from if tempo does not exist in song. */
-constexpr const auto DEFAULT_NO_TEMPO = 120.0;
+constexpr const auto DEFAULT_NO_TEMPO = 120;
 
 }  //  end anonymous namespace
 
@@ -154,6 +155,7 @@ SyndineImporter::SyndineImporter(const std::string &file_name,
     m_current_state(),
     m_song_id{song_id},
     m_tempo_detected(),
+    m_bpm{DEFAULT_NO_TEMPO},
     m_current_config{0U, 0U},
     m_time_scaling_factor{1.0},
     m_note_offset{0},
@@ -192,6 +194,8 @@ void SyndineImporter::adjust_tempo(const int new_tempo)
         //  Yeay, I still remember jr-high algebra 30 years later.
         m_time_scaling_factor = m_tempo_detected.value() / double(new_tempo);
     }
+
+    m_bpm = new_tempo;
 }
 
 
@@ -283,7 +287,7 @@ void SyndineImporter::update_bank_event(const int note)
 
 void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_list)
 {
-    std::list<OrganMidiEvent> events;
+    std::list<OrganNote> events;
 
     //  1st pass: Process all events
     for (auto i = 0; i < event_list.size(); ++i) {
@@ -299,7 +303,7 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
             } else if (midi_event.isNoteOn()) {
                 //  Treat as control event
                 update_bank_event(midi_event.getKeyNumber());
-                events.emplace_back(midi_event, m_current_config);
+                events.emplace_back(new OrganMidiEvent(midi_event, m_current_config));
             }
         }
     }
@@ -316,24 +320,23 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
 
     //  4th pass: update bank config, build output events
     m_file_events.clear();
-    auto current_config = events.front().get_bank_config();
+    auto current_config = events.front();
     for (auto &i: events) {
-        if (i.is_mode_change_event()) {
-            current_config = i.get_bank_config();
+        if (i->is_mode_change_event()) {
+            current_config = i;
         } else {
-            i.set_bank_config(current_config);
+            i->set_bank_config(current_config->get_bank_config());
             m_file_events.push_back(i);
         }
     }
 
-    //  5th pass: remove start dead time from song, assign song id, add start 
-    // silence
+    //  5th pass: remove start dead time from song, assign song id
     auto &initial_delay = m_file_events.front();
     auto last_element = initial_delay;
-    for (auto &i : m_file_events) {
-        i.m_song_id = m_song_id;
+    for (auto &i: m_file_events) {
+        i->m_song_id = m_song_id;
         i -= initial_delay;
-        i.calculate_delta(last_element);
+        i->calculate_delta(*last_element);
         last_element = i;
     }
 }
@@ -353,7 +356,9 @@ std::optional<int> SyndineImporter::get_tempo()
         for (auto i = 0; i < m_midifile[0].size(); ++i) {
             const auto &evt = m_midifile[0][i];
             if (evt.isTempo()) {
-                m_tempo_detected = evt.getTempoBPM();
+                const auto tempo_bpm = evt.getTempoBPM();
+                m_tempo_detected = tempo_bpm;
+                m_bpm = int(m_tempo_detected.value() + 0.5);
                 break;
             }
         }
@@ -361,17 +366,49 @@ std::optional<int> SyndineImporter::get_tempo()
 
     std::optional<int> tempo;
     if (m_tempo_detected.has_value()) {
-        tempo = int(m_tempo_detected.value() + 0.5);
+        tempo = m_bpm;
     }
 
     return tempo;
 }
 
 
-std::list<OrganMidiEvent> SyndineImporter::get_events(
+std::list<OrganNote> SyndineImporter::get_events(
     const double initial_delay_beats, const double extend_final_duration)
 {
     build_syndyne_sequence(m_midifile[0]);
+
+    if (initial_delay_beats > 0.0) {
+        if (!m_tempo_detected.has_value()) {
+            static_cast<void>(get_tempo());
+        }
+        const auto spb = 60.0 / double(m_bpm);  //  Seconds/beat
+        std::for_each(m_file_events.begin(), 
+                      m_file_events.end(), 
+                      [=](OrganNote &evt) {
+            evt->m_seconds += spb * initial_delay_beats;
+        });
+    }
+
+    if (m_file_events.size() < 2) {
+        throw std::runtime_error("Parsed events < 2");
+    }
+
+    for (auto i = m_file_events.rbegin(); m_file_events.rend() != i; ++i) {
+        if ((*i)->m_delta > 0) {
+            //  Find last non-zero delta midi time MIDI event
+            (*i)->m_delta_time *= extend_final_duration;
+            ++i;
+            auto next_event_time = (*i)->m_seconds;
+            do {
+                --i;
+                next_event_time += (*i)->m_delta_time;
+                (*i)->m_seconds = next_event_time;
+            } while (m_file_events.rbegin() != i);
+            break;
+        }
+    }
+
     return std::move(m_file_events);
 }
 
