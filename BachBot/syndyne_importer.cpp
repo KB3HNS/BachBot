@@ -1,26 +1,26 @@
 /**
-* @file syndyne_importer.cpp
-* @brief MIDI -> Syndyne Sequence conversion.
-* @copyright
-* 2022 Andrew Buettner (ABi)
-*
-* @section LICENSE
-*
-* BachBot - A hymn Midi player for Schlicker organs
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * @file syndyne_importer.cpp
+ * @brief MIDI -> Syndyne Sequence conversion.
+ * @copyright
+ * 2022 Andrew Buettner (ABi)
+ *
+ * @section LICENSE
+ *
+ * BachBot - A hymn Midi player for Schlicker organs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 
 //  system includes
@@ -28,7 +28,7 @@
 #include <algorithm>  //  std::clamp, std::for_each
 #include <array>  //  std::array
 #include <utility>  //  std::pair
-#include <exception>   //  std::runtime_error
+#include <stdexcept>   //  std::runtime_error
 #include <fmt/format.h>  //  fmt::format
 
 //  module includes
@@ -139,9 +139,6 @@ const std::array<uint8_t, 16U> g_channel_mapping = {
     SyndyneKeyboards::MANUAL2_SWELL, SyndyneKeyboards::MANUAL1_GREAT, SyndyneKeyboards::PETAL,
     SyndyneKeyboards::MANUAL2_SWELL, SyndyneKeyboards::MANUAL1_GREAT, SyndyneKeyboards::PETAL
 };
-
-/** Tempo to derive beat timing from if tempo does not exist in song. */
-constexpr const auto DEFAULT_NO_TEMPO = 120;
 
 }  //  end anonymous namespace
 

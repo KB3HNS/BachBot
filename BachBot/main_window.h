@@ -55,7 +55,8 @@ namespace bach_bot
 				wxStaticText* mode_label;
 				wxGauge* event_count;
 				wxStaticText* track_label;
-				wxPanel* m_panel4;
+				wxPanel* playlist_panel;
+				wxBoxSizer* playlist_container;
 				wxStaticText* playlist_label;
 				wxStatusBar* m_statusBar1;
 				wxMenuBar* m_menubar1;
@@ -98,13 +99,11 @@ namespace bach_bot
 			protected:
 				wxStaticText* m_staticText10;
 				wxStaticText* m_staticText14;
-				wxStaticText* m_staticText16;
 				wxStaticText* m_staticText17;
 				wxStaticText* m_staticText19;
 				wxStaticText* m_staticText20;
 				wxStaticText* m_staticText21;
 				wxStaticText* m_staticText22;
-				wxStaticText* m_staticText13;
 				wxStaticText* m_staticText15;
 				wxStaticText* m_staticText18;
 				wxStdDialogButtonSizer* m_sdbSizer1;
@@ -115,12 +114,14 @@ namespace bach_bot
 				wxStaticText* file_name_label;
 				wxStaticText* tempo_label;
 				wxSpinCtrl* select_tempo;
+				wxStaticText* initial_gap_label;
 				wxTextCtrl* initial_gap_text_box;
 				wxSpinCtrl* bank_select;
 				wxSpinCtrl* mode_select;
 				wxSpinCtrl* pitch_change;
+				wxStaticText* extended_ending_label;
 				wxTextCtrl* extend_ending_textbox;
-				wxCheckBox* m_checkBox1;
+				wxCheckBox* play_next_checkbox;
 
 				LoadMidiDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Import MIDI File"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 400,286 ), long style = wxDEFAULT_DIALOG_STYLE );
 

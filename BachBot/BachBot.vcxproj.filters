@@ -36,6 +36,9 @@
     <ClCompile Include="syndyne_importer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="play_list.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main_window.h">
@@ -57,6 +60,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="syndyne_importer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="play_list.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -74,6 +74,9 @@ constexpr const uint8_t SYNDYNE_NOTE_ON_VELOCITY = 127U;
 /** Message size of [nearly] all midi events */
 constexpr const size_t MIDI_MESSAGE_SIZE = 3U;
 
+/** Tempo to derive beat timing from if tempo does not exist in song. */
+constexpr const auto DEFAULT_NO_TEMPO = 120;
+
 /**
  * @brief Adding or subtracting this from the note yields a note 1 octave up 
  *        or down from the current note.

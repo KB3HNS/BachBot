@@ -25,7 +25,7 @@
 
 //  system includes
 #include <limits>  //  std::numeric_limits
-#include <exception>  //  std::runtime_error
+#include <stdexcept>  //  std::runtime_error
 
 //  module includes
 // -none-

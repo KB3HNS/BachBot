@@ -84,20 +84,19 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	track_label->Wrap( -1 );
 	bSizer2->Add( track_label, 0, wxALL, 5 );
 
-	m_panel4 = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxSize( -1,500 ), wxTAB_TRAVERSAL );
-	m_panel4->SetMinSize( wxSize( -1,500 ) );
+	playlist_panel = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxSize( -1,500 ), wxTAB_TRAVERSAL );
+	playlist_panel->SetMinSize( wxSize( -1,500 ) );
 
-	wxBoxSizer* bSizer3;
-	bSizer3 = new wxBoxSizer( wxVERTICAL );
+	playlist_container = new wxBoxSizer( wxVERTICAL );
 
-	playlist_label = new wxStaticText( m_panel4, wxID_ANY, wxT("No Tracks Loaded"), wxDefaultPosition, wxDefaultSize, 0 );
+	playlist_label = new wxStaticText( playlist_panel, wxID_ANY, wxT("No Tracks Loaded"), wxDefaultPosition, wxDefaultSize, 0 );
 	playlist_label->Wrap( -1 );
-	bSizer3->Add( playlist_label, 0, wxALL, 5 );
+	playlist_container->Add( playlist_label, 0, wxALL, 5 );
 
 
-	m_panel4->SetSizer( bSizer3 );
-	m_panel4->Layout();
-	bSizer2->Add( m_panel4, 1, wxALL|wxEXPAND|wxFIXED_MINSIZE, 5 );
+	playlist_panel->SetSizer( playlist_container );
+	playlist_panel->Layout();
+	bSizer2->Add( playlist_panel, 1, wxALL|wxEXPAND|wxFIXED_MINSIZE, 5 );
 
 
 	this->SetSizer( bSizer2 );
@@ -231,11 +230,11 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 	wxBoxSizer* bSizer17;
 	bSizer17 = new wxBoxSizer( wxHORIZONTAL );
 
-	m_staticText16 = new wxStaticText( this, wxID_ANY, wxT("Add silence gap before first note"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticText16->Wrap( -1 );
-	m_staticText16->SetToolTip( wxT("Add a gap of silence of N beats before playing song.") );
+	initial_gap_label = new wxStaticText( this, wxID_ANY, wxT("Add silence gap before first note"), wxDefaultPosition, wxDefaultSize, 0 );
+	initial_gap_label->Wrap( -1 );
+	initial_gap_label->SetToolTip( wxT("Add a gap of silence of N beats before playing song.") );
 
-	bSizer17->Add( m_staticText16, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	bSizer17->Add( initial_gap_label, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
 
 	bSizer17->Add( 0, 0, 1, wxEXPAND, 5 );
@@ -300,11 +299,11 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 	wxBoxSizer* bSizer14;
 	bSizer14 = new wxBoxSizer( wxHORIZONTAL );
 
-	m_staticText13 = new wxStaticText( this, wxID_ANY, wxT("Extend last note by"), wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticText13->Wrap( -1 );
-	m_staticText13->SetToolTip( wxT("Extends duration of final note by multiplying the length by this number.") );
+	extended_ending_label = new wxStaticText( this, wxID_ANY, wxT("Extend last note by"), wxDefaultPosition, wxDefaultSize, 0 );
+	extended_ending_label->Wrap( -1 );
+	extended_ending_label->SetToolTip( wxT("Extends duration of final note by multiplying the length by this number.") );
 
-	bSizer14->Add( m_staticText13, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	bSizer14->Add( extended_ending_label, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
 
 	bSizer14->Add( 0, 0, 1, wxEXPAND, 5 );
@@ -331,8 +330,8 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 
 	bSizer18->Add( 0, 0, 1, wxEXPAND, 5 );
 
-	m_checkBox1 = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
-	bSizer18->Add( m_checkBox1, 0, wxALL, 5 );
+	play_next_checkbox = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer18->Add( play_next_checkbox, 0, wxALL, 5 );
 
 
 	fgSizer3->Add( bSizer18, 1, wxBOTTOM|wxEXPAND, 5 );

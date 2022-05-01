@@ -26,7 +26,10 @@
 //  system includes
 #include <algorithm>  //  std::foreach
 #include <array>  //  std::array
+#include <stdexcept>  //  std::runtime_error
+#include <string>  //  std::string
 #include <fmt/xchar.h>  //  fmt::format(L
+#include <fmt/format.h>  //  fmt::format
 
 //  module includes
 // -none-
@@ -34,11 +37,11 @@
 //  local includes
 #include "player_window.h"  //  local include
 #include "player_thread.h"  //  PlayerThread
-#include "organ_midi_event.h"  //  OrganMidiEvent
+#include "organ_midi_event.h"  //  OrganMidiEvent, BankConfig
 #include "syndyne_importer.h"  //  SyndineImporter
 
+
 namespace {
-    std::list<bach_bot::OrganNote> file_events;
 
 }  //  end anonymous namespace
 
@@ -53,7 +56,13 @@ PlayerWindow::PlayerWindow() :
     m_player_thread{nullptr},
     m_midi_devices(),
     m_midi_out(),
-    m_current_device_id{0U}
+    m_current_device_id{0U},
+    m_playlist(),
+    m_current_song_event_count{0U},
+    m_current_song_id{0U},
+    m_first_song_id{0U},
+    m_last_song_id{0U},
+    m_song_labels()
 {
     for (auto i = 0U; i < m_midi_out.getPortCount(); ++i) {
         m_midi_devices.emplace_back(
@@ -73,10 +82,8 @@ PlayerWindow::PlayerWindow() :
 void PlayerWindow::on_play_advance(wxCommandEvent &event)
 {
     if (nullptr == m_player_thread) {
-        event_count->SetValue(0);
-        event_count->SetRange(int(file_events.size()));
         m_player_thread = new PlayerThread(this, m_current_device_id);
-        m_player_thread->play(file_events);
+        m_player_thread->play(m_first_song_id);
         std::for_each(m_midi_devices.begin(), m_midi_devices.end(), 
                       [](wxMenuItem &i) { i.Enable(false); });
     } else {
@@ -125,23 +132,81 @@ void PlayerWindow::on_open_midi(wxCommandEvent &event)
         return;
     }
 
-    auto importer = std::make_unique<SyndineImporter>(
-    open_dialog.GetPath().ToStdString(), 0U);
+    auto lock = m_playlist.lock();
+    auto &song_entry = m_playlist.get_playlist_entry();
 
-    auto tempo = importer->get_tempo();
-    if (!tempo.has_value()) {
-        tempo = 120;
+    auto importer = std::make_unique<SyndineImporter>(
+        open_dialog.GetPath().ToStdString(), song_entry.current_song_id);
+
+    song_entry.file_name = open_dialog.GetPath();
+    song_entry.tempo_detected = importer->get_tempo();
+    auto tempo = DEFAULT_NO_TEMPO;
+    if (song_entry.tempo_detected.has_value()) {
+        tempo = song_entry.tempo_detected.value();
     }
 
     LoadMidiDialog import_dialog(this);
     import_dialog.file_name_label->SetLabel(open_dialog.GetPath());
-    import_dialog.tempo_label->SetLabel(fmt::format(L"{}bpm", tempo.value()));
-    import_dialog.select_tempo->SetValue(tempo.value());
-    if (import_dialog.ShowModal() == wxID_CANCEL) {
-        return;
+    import_dialog.tempo_label->SetLabel(fmt::format(L"{}bpm", tempo));
+    import_dialog.select_tempo->SetValue(tempo);
+
+    auto test = [](double &dest, wxTextCtrl *const box) -> bool {
+        auto test_value = std::numeric_limits<double>::max();
+        const auto ok = box->GetValue().ToDouble(&test_value);
+        if (ok) {
+            dest = test_value;
+        }
+
+        return ok;
+    };
+
+    wxString error_text;
+    do {
+        if (error_text.size() > 0U) {
+            wxMessageBox(fmt::format(L"Error in field: {}", error_text),
+                         "Form Error", wxOK | wxICON_INFORMATION);
+        }
+
+        if (import_dialog.ShowModal() == wxID_CANCEL) {
+            return;
+        }
+
+        error_text.clear();
+        if (!test(song_entry.last_note_multiplier,
+                  import_dialog.extend_ending_textbox)) {
+            error_text = import_dialog.extended_ending_label->GetLabelText();
+        }
+
+        if (!test(song_entry.gap_beats, import_dialog.initial_gap_text_box)) {
+            error_text = import_dialog.initial_gap_label->GetLabelText();
+        }
+    } while (error_text.size() > 0U);
+
+
+    song_entry.tempo_requested = import_dialog.select_tempo->GetValue();
+    song_entry.starting_config = std::make_pair(
+        uint8_t(import_dialog.bank_select->GetValue() - 1), 
+        uint32_t(import_dialog.mode_select->GetValue() - 1));
+    song_entry.delta_pitch = import_dialog.pitch_change->GetValue();
+    song_entry.play_next = import_dialog.play_next_checkbox->IsChecked();
+
+    song_entry.midi_events = importer->get_events(
+        song_entry.gap_beats, song_entry.last_note_multiplier);
+
+    if (0U == m_first_song_id) {
+        m_first_song_id = song_entry.current_song_id;
+        playlist_label->SetLabel(song_entry.file_name);
+    } else {
+        auto &prev_song = m_playlist.get_playlist_entry(m_last_song_id);
+        prev_song.next_song_id = song_entry.current_song_id;
+        m_song_labels.emplace_back(playlist_panel, 
+                                   wxID_ANY, 
+                                   song_entry.file_name);
+        auto *const p_label = &m_song_labels.back();
+        playlist_container->Add(p_label, 0, wxALL, 5);
     }
 
-    file_events = importer->get_events(12.0, 6.0);
+    m_last_song_id = song_entry.current_song_id;
 }
 
 
@@ -161,17 +226,11 @@ void PlayerWindow::on_about(wxCommandEvent &event)
 void PlayerWindow::on_thread_tick(wxThreadEvent &event)
 {
     ++m_counter;
-    const auto current_setting = uint32_t(event.GetInt());
-    const auto bank = current_setting % 8U;
-    const auto mode = current_setting / 8U;
-    bank_label->SetLabel(wxString(fmt::format(L"{}", bank + 1U)));
-    mode_label->SetLabel(wxString(fmt::format(L"{}", mode + 1U)));
-    size_t events_complete = 0U;
-    if (file_events.size() > 0U) {
-        events_complete = file_events.size() - 
-                          m_player_thread->get_events_remaining();
+    auto events_complete = 0;
+    if (m_current_song_event_count > 0U) {
+        events_complete = int(m_current_song_event_count)-event.GetInt();
     }
-    event_count->SetValue(int(events_complete));
+    event_count->SetValue(events_complete);
 }
 
 
@@ -182,7 +241,11 @@ void PlayerWindow::on_thread_exit(wxThreadEvent &event)
         m_player_thread = nullptr;
     }
 
+    m_current_song_event_count = 0U;
+    m_current_song_id = 0U;
+
     event_count->SetValue(0);
+    track_label->SetLabel(L"Not Playing");
     std::for_each(m_midi_devices.begin(), m_midi_devices.end(),
                   [](wxMenuItem& i) { i.Enable(); });
 }
@@ -191,6 +254,32 @@ void PlayerWindow::on_thread_exit(wxThreadEvent &event)
 void PlayerWindow::on_device_changed(const uint32_t device_id)
 {
     m_current_device_id = device_id;
+}
+
+
+void PlayerWindow::on_bank_changed(wxThreadEvent &event)
+{
+    const auto current_setting = uint32_t(event.GetInt());
+    const auto bank = current_setting % 8U;
+    const auto mode = current_setting / 8U;
+    bank_label->SetLabel(wxString(fmt::format(L"{}", bank + 1U)));
+    mode_label->SetLabel(wxString(fmt::format(L"{}", mode + 1U)));
+}
+
+
+void PlayerWindow::on_song_starts_playing(wxThreadEvent &event)
+{
+    event_count->SetValue(0);
+    const auto song_id = uint32_t(event.GetInt());
+    if (song_id > 0U) {
+        auto lock = m_playlist.lock();
+        const auto &song_data = m_playlist.get_playlist_entry(song_id);
+
+        m_current_song_event_count = song_data.midi_events.size();
+        event_count->SetRange(int(m_current_song_event_count));
+        m_current_song_id = song_id;
+        track_label->SetLabel(song_data.file_name);
+    }
 }
 
 
@@ -214,17 +303,12 @@ void PlayerWindow::on_manual_cancel(wxCommandEvent &event)
 
 void PlayerWindow::send_manual_message(const SyndyneBankCommands value)
 {
-    std::array<uint8_t, MIDI_MESSAGE_SIZE> midi_message;
-    midi_message[0] = make_midi_command_byte(0U, MidiCommands::CONTROL_CHANGE);
-    midi_message[1] = SYNDYNE_CONTROLLER_ID;
-    midi_message[2] = value;
-
     const auto port_open = m_midi_out.isPortOpen();
     if (!port_open) {
         m_midi_out.openPort(m_current_device_id);
     }
 
-    m_midi_out.sendMessage(midi_message.data(), MIDI_MESSAGE_SIZE);
+    send_bank_change_message(m_midi_out, value);
 
     if (!port_open) {
         m_midi_out.closePort();
@@ -243,6 +327,9 @@ PlayerWindow::~PlayerWindow()
 
 wxBEGIN_EVENT_TABLE(PlayerWindow, wxFrame)
     EVT_THREAD(PlayerEvents::TICK_EVENT, PlayerWindow::on_thread_tick)
+    EVT_THREAD(PlayerEvents::SONG_START_EVENT, 
+               PlayerWindow::on_song_starts_playing)
+    EVT_THREAD(PlayerEvents::BANK_CHANGE_EVENT, PlayerWindow::on_bank_changed)
     EVT_THREAD(PlayerEvents::EXIT_EVENT, PlayerWindow::on_thread_exit)
 wxEND_EVENT_TABLE()
 

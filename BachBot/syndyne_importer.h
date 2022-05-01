@@ -1,36 +1,36 @@
 /**
-* @file syndyne_importer.h
-* @brief MIDI -> Syndyne Sequence conversion.
-* @copyright
-* 2022 Andrew Buettner (ABi)
-*
-* @section LICENSE
-*
-* BachBot - A hymn Midi player for Schlicker organs
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*
-* @section DESCRIPTION
-* This is the top-level container class for converting raw MIDI to a sequence
-* understood and that can be played by the organ.  Importing requires multiple
-* passes through the MIDI sequence applying different transforms at each step
-* with the final result being a list of OrganMidiEvents with appropriate timing
-* information that can be sent to the organ using a timer.  This application
-* uses the Windows Multimedia Timer (or an empty select loop in the case of
-* Linux) as the timing generator.  Timing should be accurate to < +/- 1ms or 
-* better with an ideal timing accuracy of +/- 100nS.
-*/
+ * @file syndyne_importer.h
+ * @brief MIDI -> Syndyne Sequence conversion.
+ * @copyright
+ * 2022 Andrew Buettner (ABi)
+ *
+ * @section LICENSE
+ *
+ * BachBot - A hymn Midi player for Schlicker organs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @section DESCRIPTION
+ * This is the top-level container class for converting raw MIDI to a sequence
+ * understood and that can be played by the organ.  Importing requires multiple
+ * passes through the MIDI sequence applying different transforms at each step
+ * with the final result being a list of OrganMidiEvents with appropriate
+ * timing information that can be sent to the organ using a timer.  This 
+ * application uses the Windows Multimedia Timer (or an empty select loop in 
+ * the case of Linux) as the timing generator.  Timing should be accurate to
+ * < +/- 1ms or better with an ideal timing accuracy of +/- 100nS.
+ */
 
 
 #pragma once
@@ -138,7 +138,6 @@ private:
     * @param value message to send
     */
     void build_syndyne_sequence(const smf::MidiEventList &event_list);
-
 
     smf::MidiFile m_midifile;  ///< parsed midi events
     std::list<OrganNote> m_file_events;  ///< intermediate events

@@ -39,6 +39,7 @@
 #include <RtMidi.h>  //  RtMidiOut
 #include <wx/wx.h>  //  wxCondition, wxThread, etc
 #include <wx/power.h>  //  wxPowerResourceBlocker
+#include <RtMidi.h>  //  RtMidiOut
 
 //  module includes
 // -none-
@@ -51,6 +52,15 @@
 namespace bach_bot {
 
 /**
+ * @brief Manually send an explicit bank-change message
+ * @param midi_out[in] MIDI output handler
+ * @param value message to send
+ */
+void send_bank_change_message(RtMidiOut &midi_out, 
+                              const SyndyneBankCommands value);
+
+
+/**
  * @brief wx Events issues by this class
  */
 enum PlayerEvents : int
@@ -58,9 +68,18 @@ enum PlayerEvents : int
     /**
      * @brief Periodic message sent to UI to refresh screen.
      * @note
-     * "Int" value is formatted as `(mode << 3) | bank`
+     * "Int" value contains events remaining. 
      */
     TICK_EVENT = 1001,
+    SONG_START_EVENT,  ///< On start playing song, "Int" is song id.
+    SONG_LYRIC_EVENT,  ///< Update lyrics, int is string number (future)
+    SONG_META_EVENT,  ///< Future use
+    /**
+     * @brief Sent on bank change format same as tick
+     * @note
+     * "Int" value is formatted as `(mode << 3) | bank`
+     */
+    BANK_CHANGE_EVENT,
     EXIT_EVENT  ///< On thread exit message "Int" is return code.
 };
 
@@ -121,22 +140,14 @@ public:
 
     /**
      * @brief Play music, upon completion `EXIT_EVENT` will be issued.
-     * @param event_list Parsed MIDI event list
+     * @param song_id play songs starting with this ID
      * @note 
      * Currently there is no check to prevent this from re-triggering.
      * Therefore, external logic should prevent this from being called until
      * after the `EXIT_EVENT` has been issued.
      * @sa PlayerEvents
      */
-    void play(const std::list<OrganNote> &event_list);
-
-    /**
-     * @brief Thread-safe get the number of events remaining in the current
-     *        MIDI event list.
-     * @returns number of events remaining
-     * @note this is intended to drive a simple progress bar in the UI.
-     */
-    size_t get_events_remaining();
+    void play(const uint32_t song_id);
 
     /**
      * @brief Set the current state of the organ bank externally.
@@ -152,6 +163,18 @@ protected:
     virtual ExitCode Entry() override;
 
 private:
+
+    /**
+     * @brief Play the currently loaded song
+     * @retval `true` song ended
+     * @retval `false` received stop signal
+     */
+    bool run_song();
+    
+    /**
+     * @brief Run player walking through the playlist.
+     */
+    void run_playlist();
 
     /**
      * @brief Callback to post timer tick events.
@@ -202,6 +225,7 @@ private:
 
     std::list<Message> m_event_queue;  ///< Current Thread-Safe event queue
     std::list<OrganNote> m_midi_event_queue;  ///< List of midi events
+    uint32_t m_first_song_id;
 
     bool m_playing_test_pattern;  ///<  Are we playing the test pattern?
 

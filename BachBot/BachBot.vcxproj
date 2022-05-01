@@ -153,6 +153,7 @@
     <ClCompile Include="organ_midi_event.cpp" />
     <ClCompile Include="player_thread.cpp" />
     <ClCompile Include="player_window.cpp" />
+    <ClCompile Include="play_list.cpp" />
     <ClCompile Include="syndyne_importer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -162,6 +163,7 @@
     <ClInclude Include="organ_midi_event.h" />
     <ClInclude Include="player_thread.h" />
     <ClInclude Include="player_window.h" />
+    <ClInclude Include="play_list.h" />
     <ClInclude Include="syndyne_importer.h" />
   </ItemGroup>
   <ItemGroup>
