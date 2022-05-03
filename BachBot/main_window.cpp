@@ -355,3 +355,32 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 LoadMidiDialog::~LoadMidiDialog()
 {
 }
+
+LoadingPopup::LoadingPopup( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxDialog( parent, id, title, pos, size, style )
+{
+	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
+
+	wxBoxSizer* bSizer9;
+	bSizer9 = new wxBoxSizer( wxVERTICAL );
+
+	m_staticText22 = new wxStaticText( this, wxID_ANY, wxT("Loading playlist, please wait"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText22->Wrap( -1 );
+	m_staticText22->SetFont( wxFont( 16, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxEmptyString ) );
+
+	bSizer9->Add( m_staticText22, 0, wxALL|wxEXPAND, 5 );
+
+	progress_bar = new wxGauge( this, wxID_ANY, 100, wxDefaultPosition, wxDefaultSize, wxGA_HORIZONTAL );
+	progress_bar->SetValue( 0 );
+	bSizer9->Add( progress_bar, 0, wxALL|wxBOTTOM|wxEXPAND, 5 );
+
+
+	this->SetSizer( bSizer9 );
+	this->Layout();
+	bSizer9->Fit( this );
+
+	this->Centre( wxBOTH );
+}
+
+LoadingPopup::~LoadingPopup()
+{
+}

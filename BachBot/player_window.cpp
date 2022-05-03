@@ -28,8 +28,10 @@
 #include <array>  //  std::array
 #include <stdexcept>  //  std::runtime_error
 #include <string>  //  std::string
+#include <string_view>  //  sv
 #include <fmt/xchar.h>  //  fmt::format(L
 #include <fmt/format.h>  //  fmt::format
+#include <wx/xml/xml.h>  //  wxXml API
 
 //  module includes
 // -none-
@@ -39,10 +41,12 @@
 #include "player_thread.h"  //  PlayerThread
 #include "organ_midi_event.h"  //  OrganMidiEvent, BankConfig
 #include "syndyne_importer.h"  //  SyndineImporter
+#include "playlist_loader.h"  //  PlaylistLoader
 
 
 namespace {
-
+    using namespace std::literals::string_view_literals;
+    const auto EDITION = L"Trinity"sv;
 }  //  end anonymous namespace
 
 
@@ -53,7 +57,7 @@ PlayerWindow::PlayerWindow() :
     MainWindow(nullptr),
     wxLog(),
     m_counter{0U},
-    m_player_thread{nullptr},
+    m_player_thread(),
     m_midi_devices(),
     m_midi_out(),
     m_current_device_id{0U},
@@ -82,7 +86,7 @@ PlayerWindow::PlayerWindow() :
 void PlayerWindow::on_play_advance(wxCommandEvent &event)
 {
     if (nullptr == m_player_thread) {
-        m_player_thread = new PlayerThread(this, m_current_device_id);
+        m_player_thread = std::make_unique<PlayerThread>(this, m_current_device_id);
         m_player_thread->play(m_first_song_id);
         std::for_each(m_midi_devices.begin(), m_midi_devices.end(), 
                       [](wxMenuItem &i) { i.Enable(false); });
@@ -110,15 +114,74 @@ void PlayerWindow::on_new_playlist(wxCommandEvent &event)
 
 void PlayerWindow::on_load_playlist(wxCommandEvent &event)
 {
-    wxMessageBox("Load Playlist",
-                 "load playlist", wxOK | wxICON_INFORMATION);
+    wxFileDialog open_dialog(this, "Open Playlist", "", "", 
+                             "BachBot Playlist|*.bbp", 
+                             wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+
+    if (open_dialog.ShowModal() == wxID_CANCEL) {
+        return;
+    }
+
+    wxXmlDocument playlist;
+    playlist.Load(open_dialog.GetPath());
+
+    PlaylistLoader loader(this, m_playlist, playlist.GetRoot());
+
+    static_cast<void>(loader.ShowModal());
 }
 
 
 void PlayerWindow::on_save_playlist(wxCommandEvent &event)
 {
-    wxMessageBox("Save Playlist",
-                 "Save current playlist", wxOK | wxICON_INFORMATION);
+    wxFileDialog save_dialog(this, "Save Playlist", "", "", 
+                             "BachBot Playlist|*.bbp", 
+                             wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+
+    if (save_dialog.ShowModal() == wxID_CANCEL) {
+        return;
+    }
+
+    wxXmlDocument playlist_doc;
+    auto playlist_root = new wxXmlNode(nullptr, 
+                                       wxXML_ELEMENT_NODE,
+                                       wxT("BachBot_Playlist"));
+
+    playlist_doc.SetRoot(playlist_root);
+    auto song_id = m_first_song_id;
+    while (song_id > 0U) {
+        auto playlist_entry = new wxXmlNode(playlist_root, 
+                                            wxXML_ELEMENT_NODE, 
+                                            wxT("song"));
+
+        auto lock = m_playlist.lock();
+        const auto &song = m_playlist.get_playlist_entry(song_id);
+        if (song.tempo_detected.has_value()) {
+            playlist_entry->AddAttribute(
+                wxT("tempo_detected"),
+                wxString::Format(wxT("%i"), song.tempo_detected.value()));
+            playlist_entry->AddAttribute(
+                wxT("tempo_requested"),
+                wxString::Format(wxT("%i"), song.tempo_requested));
+        }
+        playlist_entry->AddAttribute(
+            wxT("gap"), wxString::FromDouble(song.gap_beats));
+        playlist_entry->AddAttribute(
+            wxT("pitch"),
+            wxString::Format(wxT("%i"), song.delta_pitch));
+        playlist_entry->AddAttribute(
+            wxT("last_note_multiplier"), 
+            wxString::FromDouble(song.last_note_multiplier));
+        playlist_entry->AddAttribute(
+            wxT("auto_play_next"),
+            wxString::Format(wxT("%i"), int(song.play_next)));
+        playlist_entry->AddChild(new wxXmlNode(wxXML_TEXT_NODE, 
+                                               wxT(""), 
+                                               song.file_name));
+
+        song_id = song.next_song_id;
+    }
+
+    playlist_doc.Save(save_dialog.GetPath());
 }
 
 
@@ -206,6 +269,7 @@ void PlayerWindow::on_open_midi(wxCommandEvent &event)
         playlist_container->Add(p_label, 0, wxALL, 5);
     }
 
+    playlist_panel->Layout();
     m_last_song_id = song_entry.current_song_id;
 }
 
@@ -218,8 +282,12 @@ void PlayerWindow::on_quit(wxCommandEvent &event)
 
 void PlayerWindow::on_about(wxCommandEvent &event)
 {
-    wxMessageBox("This is a wxWidgets' Hello world sample",
-                 "About Hello World", wxOK | wxICON_INFORMATION);
+    wxMessageBox(fmt::format(
+        L"BachBot MIDI player for Schlicker Organs {} edition\n"
+         " or other Organs using the Syndyne Console Control system\n"
+         "Written By Andrew Buettner for Zion Lutheran Church and School\n"
+         "https://www.github.com/KB3HNS/BachBot", EDITION),
+        L"About BachBot", wxOK | wxICON_INFORMATION);
 }
 
 
@@ -236,11 +304,7 @@ void PlayerWindow::on_thread_tick(wxThreadEvent &event)
 
 void PlayerWindow::on_thread_exit(wxThreadEvent &event)
 {
-    if (nullptr != m_player_thread) {
-        delete m_player_thread;
-        m_player_thread = nullptr;
-    }
-
+    m_player_thread.reset();
     m_current_song_event_count = 0U;
     m_current_song_id = 0U;
 

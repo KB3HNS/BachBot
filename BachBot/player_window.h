@@ -30,6 +30,7 @@
 //  system includes
 #include <cstdint>  //  uint32_t
 #include <list>  //  std::list
+#include <memory>  //  std::unique_ptr
 #include <wx/wx.h>  //  wxLog, wxThread, etc
 #include <RtMidi.h>  //  RtMidiOut
 
@@ -58,7 +59,7 @@ class PlayerWindow : public MainWindow, private wxLog
     friend class PlayerThread;
 
 public:
-    
+
     /**
      * @brief default constructor
      */
@@ -88,7 +89,7 @@ private:
     void on_device_changed(const uint32_t device_id);
     void on_bank_changed(wxThreadEvent &event);
     void on_song_starts_playing(wxThreadEvent &event);
-    
+
     /**
      * @brief Manually send an explicit bank-change message
      * @param value message to send
@@ -96,7 +97,7 @@ private:
     void send_manual_message(const SyndyneBankCommands value);
 
     uint32_t m_counter;
-    PlayerThread *m_player_thread;
+    std::unique_ptr<PlayerThread> m_player_thread;
     std::list<wxMenuItem> m_midi_devices;
     RtMidiOut m_midi_out;
     uint32_t m_current_device_id;

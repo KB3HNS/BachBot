@@ -40,7 +40,6 @@
 
 //  local includes
 #include "organ_midi_event.h"  //  OrganNote
-#include "main_window.h"  //  SomeDialog...
 
 
 namespace bach_bot {
@@ -78,6 +77,7 @@ class PlayListMutex
 {
     friend class PlayList;
 public:
+    PlayListMutex(const PlayListMutex&) = delete;
     ~PlayListMutex();
 
 private:

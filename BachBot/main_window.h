@@ -129,6 +129,25 @@ namespace bach_bot
 
 		};
 
+		///////////////////////////////////////////////////////////////////////////////
+		/// Class LoadingPopup
+		///////////////////////////////////////////////////////////////////////////////
+		class LoadingPopup : public wxDialog
+		{
+			private:
+
+			protected:
+				wxStaticText* m_staticText22;
+				wxGauge* progress_bar;
+
+			public:
+
+				LoadingPopup( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Loading Playlist..."), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxCAPTION );
+
+				~LoadingPopup();
+
+		};
+
 	} // namespace ui
 } // namespace bach_bot
 
