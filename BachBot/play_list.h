@@ -121,6 +121,20 @@ public:
      */
     PlayListEntry& get_playlist_entry(const uint32_t song_id=0U);
 
+    /**
+     * @brief Clear all entries in the playlist and reset state.
+     */
+    void clear();
+
+    /**
+     * @brief Get the number of items in the playlist.
+     * @return number of items in playlist
+     */
+    size_t count() const
+    {
+        return m_play_list.size();
+    }
+
 private:
     std::unordered_map<uint32_t, PlayListEntry> m_play_list;
     uint32_t m_next_song_id;

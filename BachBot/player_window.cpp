@@ -29,6 +29,7 @@
 #include <stdexcept>  //  std::runtime_error
 #include <string>  //  std::string
 #include <string_view>  //  sv
+#include <utility>  //  std::as_const
 #include <fmt/xchar.h>  //  fmt::format(L
 #include <fmt/format.h>  //  fmt::format
 #include <wx/xml/xml.h>  //  wxXml API
@@ -107,8 +108,8 @@ void PlayerWindow::on_stop(wxCommandEvent &event)
 
 void PlayerWindow::on_new_playlist(wxCommandEvent &event)
 {
-    wxMessageBox("New Playlist",
-                 "create new playlist", wxOK | wxICON_INFORMATION);
+    m_playlist.clear();
+    clear_playlist_window();
 }
 
 
@@ -122,12 +123,43 @@ void PlayerWindow::on_load_playlist(wxCommandEvent &event)
         return;
     }
 
-    wxXmlDocument playlist;
-    playlist.Load(open_dialog.GetPath());
+    if (m_playlist.count() > 0U) {
+        wxMessageDialog confirm_dialog(
+            this,  wxT("Clear current playlist?"), wxT("Confirm clear"),
+            wxOK|wxCANCEL|wxCANCEL_DEFAULT|wxICON_WARNING);
+        if (confirm_dialog.ShowModal() != wxID_OK) {
+            return;
+        }
+    }
 
-    PlaylistLoader loader(this, m_playlist, playlist.GetRoot());
+    PlaylistLoader loader(this, m_playlist,open_dialog.GetPath());
+    if (loader.ShowModal() != wxID_OK) {
+        wxMessageBox(fmt::format(L"Error loading playlist:\n"
+                                  "Error reported was: {}",
+                                 std::as_const(loader).get_error_text()));
+        if (m_playlist.count() != m_song_labels.size()) {
+            clear_playlist_window();
+        }
+        return;
+    }
 
-    static_cast<void>(loader.ShowModal());
+    clear_playlist_window();
+    if (m_playlist.count() > 0U) {
+        auto song_id = 1U;
+        m_first_song_id = 1U;
+        auto lock = m_playlist.lock();
+        while (0U != song_id) {
+            auto song_entry = m_playlist.get_playlist_entry(song_id);
+            m_song_labels.emplace_back(playlist_panel, 
+                                       wxID_ANY, 
+                                       song_entry.file_name);
+            auto *const p_label = &m_song_labels.back();
+            playlist_container->Add(p_label, 0, wxALL, 5);
+            m_last_song_id = song_id;
+            song_id = song_entry.next_song_id;
+        }
+        playlist_panel->Layout();
+    }
 }
 
 
@@ -148,6 +180,7 @@ void PlayerWindow::on_save_playlist(wxCommandEvent &event)
 
     playlist_doc.SetRoot(playlist_root);
     auto song_id = m_first_song_id;
+    auto order = 0U;
     while (song_id > 0U) {
         auto playlist_entry = new wxXmlNode(playlist_root, 
                                             wxXML_ELEMENT_NODE, 
@@ -157,14 +190,19 @@ void PlayerWindow::on_save_playlist(wxCommandEvent &event)
         const auto &song = m_playlist.get_playlist_entry(song_id);
         if (song.tempo_detected.has_value()) {
             playlist_entry->AddAttribute(
-                wxT("tempo_detected"),
-                wxString::Format(wxT("%i"), song.tempo_detected.value()));
-            playlist_entry->AddAttribute(
                 wxT("tempo_requested"),
                 wxString::Format(wxT("%i"), song.tempo_requested));
         }
         playlist_entry->AddAttribute(
             wxT("gap"), wxString::FromDouble(song.gap_beats));
+
+        playlist_entry->AddAttribute(
+            wxT("start_bank"),
+            wxString::Format(wxT("%d"), song.starting_config.first + 1U));
+        playlist_entry->AddAttribute(
+            wxT("start_mode"),
+            wxString::Format(wxT("%d"), song.starting_config.second + 1U));
+
         playlist_entry->AddAttribute(
             wxT("pitch"),
             wxString::Format(wxT("%i"), song.delta_pitch));
@@ -177,6 +215,10 @@ void PlayerWindow::on_save_playlist(wxCommandEvent &event)
         playlist_entry->AddChild(new wxXmlNode(wxXML_TEXT_NODE, 
                                                wxT(""), 
                                                song.file_name));
+
+        playlist_entry->AddAttribute(
+            wxT("order"),
+            wxString::Format(wxT("%u"), ++order));
 
         song_id = song.next_song_id;
     }
@@ -253,22 +295,28 @@ void PlayerWindow::on_open_midi(wxCommandEvent &event)
     song_entry.delta_pitch = import_dialog.pitch_change->GetValue();
     song_entry.play_next = import_dialog.play_next_checkbox->IsChecked();
 
+    importer->set_bank_config(song_entry.starting_config.first,
+                              song_entry.starting_config.second);
+    
+    importer->adjust_tempo(song_entry.tempo_requested);
+    importer->adjust_key(song_entry.delta_pitch);
+
     song_entry.midi_events = importer->get_events(
         song_entry.gap_beats, song_entry.last_note_multiplier);
 
     if (0U == m_first_song_id) {
         m_first_song_id = song_entry.current_song_id;
-        playlist_label->SetLabel(song_entry.file_name);
+        playlist_label->Show(false);
     } else {
         auto &prev_song = m_playlist.get_playlist_entry(m_last_song_id);
         prev_song.next_song_id = song_entry.current_song_id;
-        m_song_labels.emplace_back(playlist_panel, 
-                                   wxID_ANY, 
-                                   song_entry.file_name);
-        auto *const p_label = &m_song_labels.back();
-        playlist_container->Add(p_label, 0, wxALL, 5);
     }
 
+    m_song_labels.emplace_back(playlist_panel, 
+                               wxID_ANY, 
+                               song_entry.file_name);
+    auto *const p_label = &m_song_labels.back();
+    playlist_container->Add(p_label, 0, wxALL, 5);
     playlist_panel->Layout();
     m_last_song_id = song_entry.current_song_id;
 }
@@ -377,6 +425,21 @@ void PlayerWindow::send_manual_message(const SyndyneBankCommands value)
     if (!port_open) {
         m_midi_out.closePort();
     }
+}
+
+
+void PlayerWindow::clear_playlist_window()
+{
+    std::for_each(m_song_labels.begin(), m_song_labels.end(),
+                  [=](wxStaticText &label) {
+        playlist_container->Detach(&label);
+    });
+
+    m_song_labels.clear();
+    playlist_label->Show(true);
+    playlist_panel->Layout();
+    m_first_song_id = 0U;
+    m_last_song_id = 0U;
 }
 
 

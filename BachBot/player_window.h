@@ -96,6 +96,11 @@ private:
      */
     void send_manual_message(const SyndyneBankCommands value);
 
+    /**
+     * @brief Clear the playlist window GUI
+     */
+    void clear_playlist_window();
+
     uint32_t m_counter;
     std::unique_ptr<PlayerThread> m_player_thread;
     std::list<wxMenuItem> m_midi_devices;

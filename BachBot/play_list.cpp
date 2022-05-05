@@ -107,5 +107,13 @@ PlayListEntry &PlayList::get_playlist_entry(const uint32_t song_id)
 }
 
 
+void PlayList::clear()
+{
+    wxMutexLocker lock(*m_mutex);
+    m_next_song_id = 1U;
+    m_play_list.clear();
+}
+
+
 
 }

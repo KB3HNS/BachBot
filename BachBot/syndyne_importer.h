@@ -55,7 +55,7 @@ namespace bach_bot {
 /**
  * @brief Class that contains all logic to translate a MIDI file into an
  *        organ MIDI event sequence.
-*/
+ */
 class SyndineImporter
 {
 public:
