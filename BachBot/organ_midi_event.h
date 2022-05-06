@@ -92,6 +92,14 @@ struct OrganMidiEvent
                    const int8_t byte2=-1);
 
     /**
+     * @brief Construct an pure metadata event
+     * @param metadata_value value to assign to metadata
+     * @param src copy non-midi parameters from instance
+     */
+    OrganMidiEvent(const int metadata_value,
+                   const OrganMidiEvent *const src = nullptr);
+    
+    /**
      * @brief Send this event to the organ.
      * @param player MIDI device Output reference.
      */
@@ -141,6 +149,7 @@ struct OrganMidiEvent
     double m_delta_time;  ///<  Delta seconds since last event.
     std::optional<uint8_t> m_byte1;  ///<  MIDI event payload first byte
     std::optional<uint8_t> m_byte2;  ///<  MIDI event payload second byte
+    std::optional<int> m_metadata;  ///< Optional metadata associated with event
     int m_midi_time;  ///<  Midi event MIDI ticks time.
     int m_delta;  ///<  Midi ticks since last event.
     OrganMidiEvent *m_partner;  ///< Partner event (for event pairs)

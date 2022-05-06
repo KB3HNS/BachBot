@@ -20,10 +20,8 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	m_panel5 = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxSize( -1,75 ), wxTAB_TRAVERSAL );
 	m_panel5->SetMaxSize( wxSize( -1,70 ) );
 
-	wxFlexGridSizer* fgSizer1;
-	fgSizer1 = new wxFlexGridSizer( 0, 2, 0, 180 );
-	fgSizer1->SetFlexibleDirection( wxBOTH );
-	fgSizer1->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
+	wxBoxSizer* bSizer12;
+	bSizer12 = new wxBoxSizer( wxHORIZONTAL );
 
 	wxGridSizer* gSizer1;
 	gSizer1 = new wxGridSizer( 2, 1, 0, 0 );
@@ -35,7 +33,10 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	gSizer1->Add( stop_button, 0, wxALL, 5 );
 
 
-	fgSizer1->Add( gSizer1, 1, wxALIGN_CENTER, 0 );
+	bSizer12->Add( gSizer1, 1, wxALIGN_CENTER, 0 );
+
+
+	bSizer12->Add( 0, 0, 1, wxEXPAND, 5 );
 
 	wxGridSizer* gSizer2;
 	gSizer2 = new wxGridSizer( 2, 3, 0, 0 );
@@ -69,12 +70,12 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	gSizer2->Add( mode_label, 0, wxALL, 5 );
 
 
-	fgSizer1->Add( gSizer2, 1, wxEXPAND, 5 );
+	bSizer12->Add( gSizer2, 0, wxEXPAND|wxRIGHT, 5 );
 
 
-	m_panel5->SetSizer( fgSizer1 );
+	m_panel5->SetSizer( bSizer12 );
 	m_panel5->Layout();
-	bSizer2->Add( m_panel5, 1, wxALL|wxEXPAND, 5 );
+	bSizer2->Add( m_panel5, 0, wxALL|wxEXPAND, 5 );
 
 	event_count = new wxGauge( this, wxID_ANY, 100, wxDefaultPosition, wxDefaultSize, wxGA_HORIZONTAL );
 	event_count->SetValue( 0 );
@@ -84,7 +85,18 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	track_label->Wrap( -1 );
 	bSizer2->Add( track_label, 0, wxALL, 5 );
 
-	playlist_panel = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxSize( -1,500 ), wxTAB_TRAVERSAL );
+	sbSizer1 = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, wxT("Up Next") ), wxHORIZONTAL );
+
+	sbSizer1->SetMinSize( wxSize( -1,35 ) );
+	next_label = new wxStaticText( sbSizer1->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	next_label->Wrap( -1 );
+	sbSizer1->Add( next_label, 0, wxALL, 5 );
+
+
+	bSizer2->Add( sbSizer1, 0, wxALL|wxEXPAND, 5 );
+
+	playlist_panel = new wxScrolledWindow( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL );
+	playlist_panel->SetScrollRate( 5, 5 );
 	playlist_panel->SetMinSize( wxSize( -1,500 ) );
 
 	playlist_container = new wxBoxSizer( wxVERTICAL );
@@ -96,6 +108,7 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 
 	playlist_panel->SetSizer( playlist_container );
 	playlist_panel->Layout();
+	playlist_container->Fit( playlist_panel );
 	bSizer2->Add( playlist_panel, 1, wxALL|wxEXPAND|wxFIXED_MINSIZE, 5 );
 
 

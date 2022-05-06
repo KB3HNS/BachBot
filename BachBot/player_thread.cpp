@@ -61,6 +61,8 @@ PlayerThread::PlayerThread(ui::PlayerWindow* const frame, const uint32_t port_id
     m_mutex(),
     m_event_queue(),
     m_midi_event_queue(),
+    m_precache(),
+    m_test_precache{false},
     m_first_song_id{0U},
     m_playing_test_pattern{false},
     m_bank_number{0U},
@@ -116,10 +118,10 @@ bool PlayerThread::run_song()
     auto run = true;
     auto i = 0U;
     m_current_time.Start();
+    m_test_precache = false;
     while (run && (m_midi_event_queue.size() > 0U)) {
         auto message = wait_for_message();
-        switch (message.first)
-        {
+        switch (message.first) {
         case MessageId::ADVANCE_MESSAGE:
             force_advance();
             process_notes();
@@ -144,6 +146,9 @@ bool PlayerThread::run_song()
         }
     }
 
+    wxThreadEvent end_event(wxEVT_THREAD, PlayerEvents::SONG_END_EVENT);
+    end_event.SetInt(int(run));
+    wxQueueEvent(m_frame, end_event.Clone());
     return run;
 }
 
@@ -153,7 +158,16 @@ void PlayerThread::run_playlist()
     auto song_id = m_first_song_id;
     auto &playlist = m_frame->m_playlist;
     while (song_id > 0U) {
-        m_midi_event_queue = playlist.get_song_events(song_id);
+        if (m_precache.size() > 0U) {
+            const auto midi_event = m_precache.front();
+            if (midi_event->m_song_id == song_id) {
+                m_midi_event_queue = std::move(m_precache);
+            }
+        }
+        if (m_midi_event_queue.size() == 0U) {
+            //  Pre-cached data was invalid, slow copy-construct
+            m_midi_event_queue = playlist.get_song_events(song_id);
+        }
 
         wxThreadEvent tick_event(wxEVT_THREAD, PlayerEvents::SONG_START_EVENT);
         tick_event.SetInt(int(song_id));
@@ -231,6 +245,11 @@ void PlayerThread::process_notes()
     do {
         const auto &midi_event = m_midi_event_queue.front();
         const auto timestamp = midi_event->get_us();
+        if ((midi_event->m_metadata.has_value()) &&
+            (midi_event->m_metadata.value() == LAST_NOTE_META_CODE) &&
+            !m_test_precache) {
+                precache_next_song(midi_event->m_song_id);
+        }
         if (timestamp > time_now) {
             break;
         }
@@ -331,6 +350,21 @@ double PlayerThread::generate_test_pattern(const SyndyneKeyboards keyboard,
     }
 
     return start_time;
+}
+
+
+void PlayerThread::precache_next_song(const uint32_t song_id)
+{
+    m_test_precache = true;
+    m_precache.clear();
+
+    auto lock  = m_frame->m_playlist.lock();
+    const auto &song = m_frame->m_playlist.get_playlist_entry(song_id);
+    const auto next_song_id = song.next_song_id;
+    lock.reset();
+    if (0U != next_song_id) {
+        m_precache = m_frame->m_playlist.get_song_events(next_song_id);
+    }
 }
 
 

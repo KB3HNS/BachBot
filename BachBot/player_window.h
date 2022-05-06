@@ -40,7 +40,7 @@
 //  local includes
 #include "main_window.h"  //  MainWindow
 #include "common_defs.h"  //  SyndyneBankCommands
-#include "play_list.h"  //  PlayList
+#include "play_list.h"  //  PlayList, PlayListEntry
 
 
 namespace bach_bot {
@@ -86,9 +86,15 @@ private:
     //  Locally bound UI events
     void on_thread_tick(wxThreadEvent &event);
     void on_thread_exit(wxThreadEvent &event);
-    void on_device_changed(const uint32_t device_id);
     void on_bank_changed(wxThreadEvent &event);
     void on_song_starts_playing(wxThreadEvent &event);
+    void on_song_done_playing(wxThreadEvent &event);
+
+    /**
+     * @brief Internal device changed handler
+     * @param device_id new MIDI out device ID selected
+     */
+    void on_device_changed(const uint32_t device_id);
 
     /**
      * @brief Manually send an explicit bank-change message
@@ -109,6 +115,7 @@ private:
     PlayList m_playlist;
     size_t m_current_song_event_count;
     uint32_t m_current_song_id;
+    uint32_t m_next_song_id;
     uint32_t m_first_song_id;
     uint32_t m_last_song_id;
     std::list<wxStaticText> m_song_labels;

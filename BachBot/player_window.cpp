@@ -65,6 +65,7 @@ PlayerWindow::PlayerWindow() :
     m_playlist(),
     m_current_song_event_count{0U},
     m_current_song_id{0U},
+    m_next_song_id{0U},
     m_first_song_id{0U},
     m_last_song_id{0U},
     m_song_labels()
@@ -88,7 +89,7 @@ void PlayerWindow::on_play_advance(wxCommandEvent &event)
 {
     if (nullptr == m_player_thread) {
         m_player_thread = std::make_unique<PlayerThread>(this, m_current_device_id);
-        m_player_thread->play(m_first_song_id);
+        m_player_thread->play(m_next_song_id);
         std::for_each(m_midi_devices.begin(), m_midi_devices.end(), 
                       [](wxMenuItem &i) { i.Enable(false); });
     } else {
@@ -147,9 +148,14 @@ void PlayerWindow::on_load_playlist(wxCommandEvent &event)
     if (m_playlist.count() > 0U) {
         auto song_id = 1U;
         m_first_song_id = 1U;
+        m_next_song_id = 1U;
         auto lock = m_playlist.lock();
+        playlist_label->Show(false);
         while (0U != song_id) {
-            auto song_entry = m_playlist.get_playlist_entry(song_id);
+            auto &song_entry = m_playlist.get_playlist_entry(song_id);
+            if (song_entry.current_song_id == m_first_song_id) {
+                next_label->SetLabelText(song_entry.file_name);
+            }
             m_song_labels.emplace_back(playlist_panel, 
                                        wxID_ANY, 
                                        song_entry.file_name);
@@ -251,8 +257,8 @@ void PlayerWindow::on_open_midi(wxCommandEvent &event)
     }
 
     LoadMidiDialog import_dialog(this);
-    import_dialog.file_name_label->SetLabel(open_dialog.GetPath());
-    import_dialog.tempo_label->SetLabel(fmt::format(L"{}bpm", tempo));
+    import_dialog.file_name_label->SetLabelText(open_dialog.GetPath());
+    import_dialog.tempo_label->SetLabelText(fmt::format(L"{}bpm", tempo));
     import_dialog.select_tempo->SetValue(tempo);
 
     auto test = [](double &dest, wxTextCtrl *const box) -> bool {
@@ -306,6 +312,8 @@ void PlayerWindow::on_open_midi(wxCommandEvent &event)
 
     if (0U == m_first_song_id) {
         m_first_song_id = song_entry.current_song_id;
+        m_next_song_id = m_first_song_id;
+        next_label->SetLabelText(song_entry.file_name);
         playlist_label->Show(false);
     } else {
         auto &prev_song = m_playlist.get_playlist_entry(m_last_song_id);
@@ -357,7 +365,7 @@ void PlayerWindow::on_thread_exit(wxThreadEvent &event)
     m_current_song_id = 0U;
 
     event_count->SetValue(0);
-    track_label->SetLabel(L"Not Playing");
+    track_label->SetLabelText(L"Not Playing");
     std::for_each(m_midi_devices.begin(), m_midi_devices.end(),
                   [](wxMenuItem& i) { i.Enable(); });
 }
@@ -374,8 +382,8 @@ void PlayerWindow::on_bank_changed(wxThreadEvent &event)
     const auto current_setting = uint32_t(event.GetInt());
     const auto bank = current_setting % 8U;
     const auto mode = current_setting / 8U;
-    bank_label->SetLabel(wxString(fmt::format(L"{}", bank + 1U)));
-    mode_label->SetLabel(wxString(fmt::format(L"{}", mode + 1U)));
+    bank_label->SetLabelText(wxString(fmt::format(L"{}", bank + 1U)));
+    mode_label->SetLabelText(wxString(fmt::format(L"{}", mode + 1U)));
 }
 
 
@@ -389,8 +397,26 @@ void PlayerWindow::on_song_starts_playing(wxThreadEvent &event)
 
         m_current_song_event_count = song_data.midi_events.size();
         event_count->SetRange(int(m_current_song_event_count));
-        m_current_song_id = song_id;
-        track_label->SetLabel(song_data.file_name);
+        m_current_song_id = song_data.current_song_id;
+        track_label->SetLabelText(song_data.file_name);
+        m_next_song_id = song_data.next_song_id;
+        if (0U != m_next_song_id) {
+            const auto &next_song = m_playlist.get_playlist_entry(m_next_song_id);
+            next_label->SetLabelText(next_song.file_name);
+        } else {
+            next_label->SetLabelText(wxT(""));
+        }
+    }
+}
+
+
+void PlayerWindow::on_song_done_playing(wxThreadEvent &event)
+{
+    if (event.GetInt() == 0) {
+        m_next_song_id = m_current_song_id;
+        auto lock = m_playlist.lock();
+        const auto &song = m_playlist.get_playlist_entry(m_current_song_id);
+        next_label->SetLabelText(song.file_name);
     }
 }
 
@@ -436,10 +462,12 @@ void PlayerWindow::clear_playlist_window()
     });
 
     m_song_labels.clear();
+    next_label->SetLabelText(wxT(""));
     playlist_label->Show(true);
     playlist_panel->Layout();
     m_first_song_id = 0U;
     m_last_song_id = 0U;
+    m_next_song_id = 0U;
 }
 
 
@@ -457,6 +485,8 @@ wxBEGIN_EVENT_TABLE(PlayerWindow, wxFrame)
     EVT_THREAD(PlayerEvents::SONG_START_EVENT, 
                PlayerWindow::on_song_starts_playing)
     EVT_THREAD(PlayerEvents::BANK_CHANGE_EVENT, PlayerWindow::on_bank_changed)
+    EVT_THREAD(PlayerEvents::SONG_END_EVENT, 
+               PlayerWindow::on_song_done_playing)
     EVT_THREAD(PlayerEvents::EXIT_EVENT, PlayerWindow::on_thread_exit)
 wxEND_EVENT_TABLE()
 

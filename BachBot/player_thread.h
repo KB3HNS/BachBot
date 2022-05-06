@@ -80,6 +80,11 @@ enum PlayerEvents : int
      * "Int" value is formatted as `(mode << 3) | bank`
      */
     BANK_CHANGE_EVENT,
+    /**
+     * @brief Song ended
+     * @note "Int" 0 -> do not anadvance, != 0 advance to next song
+     */
+    SONG_END_EVENT,
     EXIT_EVENT  ///< On thread exit message "Int" is return code.
 };
 
@@ -221,11 +226,23 @@ private:
     double generate_test_pattern(const SyndyneKeyboards keyboard, 
                                  double start_time);
 
+    /**
+     * @brief Pre-cache the events for the next song during the final duration
+     *        of the current one.  This _may_ be the longest note in the song.
+     *        and therefore it's a good time to attempt to pre-load the next
+     *        song's events.
+     * @param song_id current song ID
+     */
+    void precache_next_song(const uint32_t song_id);
+
     wxMutex m_mutex;  ///< Shared data are protected by mutex
 
     std::list<Message> m_event_queue;  ///< Current Thread-Safe event queue
     std::list<OrganNote> m_midi_event_queue;  ///< List of midi events
-    uint32_t m_first_song_id;
+    std::list<OrganNote> m_precache;  ///< Cache of next song's events
+    /** Flag that we have already checked the cache for the next song */
+    bool m_test_precache;
+    uint32_t m_first_song_id;  ///< Song ID to start playing at
 
     bool m_playing_test_pattern;  ///<  Are we playing the test pattern?
 

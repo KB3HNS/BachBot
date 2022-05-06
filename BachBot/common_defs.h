@@ -93,7 +93,7 @@ using SyndyneMidiEventTable = std::array<std::array<T, 127U>,
 
 /**
  * @brief The official command set for General Midi
-*/
+ */
 enum MidiCommands : uint8_t
 {
     NOTE_OFF = 0x8U,
@@ -118,7 +118,12 @@ constexpr uint8_t make_midi_command_byte(const uint8_t chan,
     return (command << 4U) | (chan & 0x0FU);
 }
 
-/* Midi timing magic constants */
+
+/*! @addtogroup magic_constants
+ * Midi timing magic constants
+ * @{
+ */
+
 /** Minimum gap between notes */
 constexpr const auto MINIMUM_NOTE_GAP_S = 0.09;
 /** Minimum length of one note */
@@ -131,5 +136,19 @@ constexpr const auto MINIMUM_NOTE_LENGTH_S = 0.065;
  *       like, just don't do it!
  */
 constexpr const auto MINIMUM_BANK_CHANGE_INTERVAL_MS = 250L;
+/*! @} */
+
+
+/*! @addtogroup metadata events
+ * Global set of metadata constants.  These should be able to slot in with
+ * the user space of signal integers.  Most classes will have their own set
+ * starting at 1001.  Negative values are OK for events that don't generate a
+ * signal event.
+ * @{
+ */
+
+/** Last duration in a song set by the syndyne importer */
+static constexpr const auto LAST_NOTE_META_CODE = -900;
+/*! @} */
 
 }  //  end bach_bot

@@ -393,8 +393,13 @@ std::list<OrganNote> SyndineImporter::get_events(
 
     for (auto i = m_file_events.rbegin(); m_file_events.rend() != i; ++i) {
         if ((*i)->m_delta > 0) {
+            auto meta_event = OrganNote(
+                new OrganMidiEvent(LAST_NOTE_META_CODE, i->get()));
+            meta_event->m_delta_time *= extend_final_duration;
             //  Find last non-zero delta midi time MIDI event
-            (*i)->m_delta_time *= extend_final_duration;
+            (*i)->m_delta_time = 0.0;
+            ++i;
+            m_file_events.insert(i.base(), meta_event);
             ++i;
             auto next_event_time = (*i)->m_seconds;
             do {

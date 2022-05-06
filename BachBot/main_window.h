@@ -22,6 +22,8 @@
 #include <wx/stattext.h>
 #include <wx/panel.h>
 #include <wx/gauge.h>
+#include <wx/statbox.h>
+#include <wx/scrolwin.h>
 #include <wx/statusbr.h>
 #include <wx/menu.h>
 #include <wx/frame.h>
@@ -55,7 +57,9 @@ namespace bach_bot
 				wxStaticText* mode_label;
 				wxGauge* event_count;
 				wxStaticText* track_label;
-				wxPanel* playlist_panel;
+				wxStaticBoxSizer* sbSizer1;
+				wxStaticText* next_label;
+				wxScrolledWindow* playlist_panel;
 				wxBoxSizer* playlist_container;
 				wxStaticText* playlist_label;
 				wxStatusBar* m_statusBar1;

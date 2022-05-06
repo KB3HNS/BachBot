@@ -30,9 +30,10 @@
 //  system includes
 #include <cstdint>  //  uint32_t
 #include <list>  //  std::list
-#include <memory>  //  std::shared_ptr
+#include <memory>  //  std::shared_ptr, std::unique_ptr
 #include <unordered_map>  //  std::unordered_map
 #include <optional>  //  std::optional
+#include <atomic>  //  std::atomic_bool
 #include <wx/wx.h>  //  wxString
 
 //  module includes
@@ -75,16 +76,17 @@ class PlayList;  //  Forward declare the type
  */
 class PlayListMutex
 {
-    friend class PlayList;
 public:
     PlayListMutex(const PlayListMutex&) = delete;
+
+    PlayListMutex(std::shared_ptr<wxMutex> mutex,
+                  std::atomic_bool *const lock_flag);
+
     ~PlayListMutex();
 
 private:
-    PlayListMutex(std::shared_ptr<wxMutex> mutex, bool *const lock_flag);
-
     std::shared_ptr<wxMutex> m_mutex;
-    bool *const m_lock_flag;
+    std::atomic_bool *const m_lock_flag;
 };
 
 
@@ -104,7 +106,7 @@ public:
      * @brief Aquire external persistent lock
      * @return Lock object
      */
-    PlayListMutex lock();
+    std::unique_ptr<PlayListMutex> lock();
     
     /**
      * @brief Get an existing song
@@ -139,7 +141,7 @@ private:
     std::unordered_map<uint32_t, PlayListEntry> m_play_list;
     uint32_t m_next_song_id;
     std::shared_ptr<wxMutex> m_mutex;  ///< Access is protected by mutex
-    bool m_is_locked;
+    std::atomic_bool m_is_locked;
 };
 
 

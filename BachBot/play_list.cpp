@@ -35,7 +35,8 @@
 
 
 namespace bach_bot {
-PlayListMutex::PlayListMutex(std::shared_ptr<wxMutex> mutex, bool *const lock_flag) :
+PlayListMutex::PlayListMutex(std::shared_ptr<wxMutex> mutex,
+                             std::atomic_bool *const lock_flag) :
     m_mutex(mutex),
     m_lock_flag{lock_flag}
 {
@@ -64,9 +65,9 @@ PlayList::PlayList() :
 }
 
 
-PlayListMutex PlayList::lock()
+std::unique_ptr<PlayListMutex> PlayList::lock()
 {
-    return PlayListMutex(m_mutex, &m_is_locked);
+    return std::make_unique<PlayListMutex>(m_mutex, &m_is_locked);
 }
 
 
@@ -113,7 +114,5 @@ void PlayList::clear()
     m_next_song_id = 1U;
     m_play_list.clear();
 }
-
-
 
 }

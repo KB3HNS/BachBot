@@ -236,6 +236,15 @@ bool PlaylistLoader::load_playlist_config(
              playlist_node->GetAttribute(wxT("pitch")),
              -MIDI_NOTES_IN_OCTAVE, MIDI_NOTES_IN_OCTAVE);
 
+    int play_next;
+    test_int(play_next,
+             playlist_node->GetAttribute(wxT("auto_play_next")),
+             std::numeric_limits<int>::min(),
+             std::numeric_limits<int>::max());
+    if (valid) {
+        song_entry.play_next = (0U != play_next);
+    }
+
     test_double(song_entry.last_note_multiplier,
                 playlist_node->GetAttribute(wxT("last_note_multiplier")));
 

@@ -46,6 +46,7 @@ OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent& midi_event,
     m_delta_time{0.0},
     m_byte1(),
     m_byte2(),
+    m_metadata(),
     m_midi_time{midi_event.tick},
     m_delta{0},
     m_partner{nullptr},
@@ -82,6 +83,7 @@ OrganMidiEvent::OrganMidiEvent(const MidiCommands command,
     m_delta_time{0.0},
     m_byte1(),
     m_byte2(),
+    m_metadata(),
     m_midi_time{0},
     m_delta{0},
     m_partner{nullptr},
@@ -96,17 +98,45 @@ OrganMidiEvent::OrganMidiEvent(const MidiCommands command,
 }
 
 
-OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent &midi_event,
-                               const BankConfig& cfg) :
-    m_event_code{make_midi_command_byte(uint8_t(midi_event.getChannel()),
-                                        MidiCommands::SPECIAL)},
-    m_seconds{midi_event.seconds},
-    m_mode_change_event{true},
-    m_desired_bank_number{cfg.first},
-    m_desired_mode_number{cfg.second},
+OrganMidiEvent::OrganMidiEvent(const int metadata_value,
+                               const OrganMidiEvent *const src) :
+    m_event_code{make_midi_command_byte(0U, MidiCommands::SPECIAL)},
+    m_mode_change_event{false},
+    m_desired_bank_number{0U},
+    m_desired_mode_number{0U},
+    m_seconds{0.0},
     m_delta_time{0.0},
     m_byte1(),
     m_byte2(),
+    m_metadata(metadata_value),
+    m_midi_time{0},
+    m_delta{0},
+    m_partner{nullptr},
+    m_song_id{std::numeric_limits<uint32_t>::max()}
+{
+    if (nullptr != src) {
+        set_bank_config(src->get_bank_config());
+        m_seconds = src->m_seconds;
+        m_delta_time = src->m_delta_time;
+        m_midi_time = src->m_midi_time;
+        m_delta = src->m_delta;
+        m_song_id = src->m_song_id;
+    }
+}
+
+
+OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent &midi_event,
+                               const BankConfig &cfg) :
+    m_event_code{make_midi_command_byte(uint8_t(midi_event.getChannel()),
+                                        MidiCommands::SPECIAL)},
+    m_mode_change_event{true},
+    m_desired_bank_number{cfg.first},
+    m_desired_mode_number{cfg.second},
+    m_seconds{midi_event.seconds},
+    m_delta_time{0.0},
+    m_byte1(),
+    m_byte2(),
+    m_metadata(),
     m_midi_time{midi_event.tick},
     m_delta{0},
     m_partner{nullptr},
