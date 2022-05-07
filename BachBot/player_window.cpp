@@ -82,6 +82,8 @@ PlayerWindow::PlayerWindow() :
         );
     }
     m_midi_devices.front().Check();
+    header_container->Show(false);
+    layout_scroll_panel();
 }
 
 
@@ -156,15 +158,11 @@ void PlayerWindow::on_load_playlist(wxCommandEvent &event)
             if (song_entry.current_song_id == m_first_song_id) {
                 next_label->SetLabelText(song_entry.file_name);
             }
-            m_song_labels.emplace_back(playlist_panel, 
-                                       wxID_ANY, 
-                                       song_entry.file_name);
-            auto *const p_label = &m_song_labels.back();
-            playlist_container->Add(p_label, 0, wxALL, 5);
+            add_playlist_entry(song_entry);
             m_last_song_id = song_id;
             song_id = song_entry.next_song_id;
         }
-        playlist_panel->Layout();
+        layout_scroll_panel();
     }
 }
 
@@ -320,12 +318,8 @@ void PlayerWindow::on_open_midi(wxCommandEvent &event)
         prev_song.next_song_id = song_entry.current_song_id;
     }
 
-    m_song_labels.emplace_back(playlist_panel, 
-                               wxID_ANY, 
-                               song_entry.file_name);
-    auto *const p_label = &m_song_labels.back();
-    playlist_container->Add(p_label, 0, wxALL, 5);
-    playlist_panel->Layout();
+    add_playlist_entry(song_entry);
+    layout_scroll_panel();
     m_last_song_id = song_entry.current_song_id;
 }
 
@@ -374,6 +368,11 @@ void PlayerWindow::on_thread_exit(wxThreadEvent &event)
 void PlayerWindow::on_device_changed(const uint32_t device_id)
 {
     m_current_device_id = device_id;
+}
+
+
+void PlayerWindow::on_autoplay_checked(PlaylistEntryPanel *const panel)
+{
 }
 
 
@@ -457,17 +456,36 @@ void PlayerWindow::send_manual_message(const SyndyneBankCommands value)
 void PlayerWindow::clear_playlist_window()
 {
     std::for_each(m_song_labels.begin(), m_song_labels.end(),
-                  [=](wxStaticText &label) {
-        playlist_container->Detach(&label);
+                  [=](std::pair<const uint32_t, PlaylistEntryType> &label) {
+        playlist_container->Detach(label.second.get());
     });
 
     m_song_labels.clear();
     next_label->SetLabelText(wxT(""));
     playlist_label->Show(true);
-    playlist_panel->Layout();
+    layout_scroll_panel();
     m_first_song_id = 0U;
     m_last_song_id = 0U;
     m_next_song_id = 0U;
+    header_container->Show(false);
+}
+
+
+void PlayerWindow::add_playlist_entry(const PlayListEntry &song)
+{
+    auto p_label = std::make_unique<PlaylistEntryControl>(playlist_panel, song);
+    playlist_container->Add(p_label.get(), 0, wxALL, 5);
+    header_container->Show(true);
+    m_song_labels[song.current_song_id] = std::move(p_label);
+}
+
+
+void PlayerWindow::layout_scroll_panel() const
+{
+    playlist_panel->Layout();
+    const auto size = playlist_panel->GetBestVirtualSize();
+    playlist_panel->SetVirtualSize(size);
+    playlist_panel->Refresh();
 }
 
 
@@ -477,17 +495,19 @@ PlayerWindow::~PlayerWindow()
     on_stop(e);
     std::for_each(m_midi_devices.begin(), m_midi_devices.end(), 
                   [=](wxMenuItem &i) { device_select->Remove(&i); });
+
+    clear_playlist_window();
 }
 
 
 wxBEGIN_EVENT_TABLE(PlayerWindow, wxFrame)
-    EVT_THREAD(PlayerEvents::TICK_EVENT, PlayerWindow::on_thread_tick)
-    EVT_THREAD(PlayerEvents::SONG_START_EVENT, 
+    EVT_THREAD(PlayerWindowEvents::TICK_EVENT, PlayerWindow::on_thread_tick)
+    EVT_THREAD(PlayerWindowEvents::SONG_START_EVENT, 
                PlayerWindow::on_song_starts_playing)
-    EVT_THREAD(PlayerEvents::BANK_CHANGE_EVENT, PlayerWindow::on_bank_changed)
-    EVT_THREAD(PlayerEvents::SONG_END_EVENT, 
+    EVT_THREAD(PlayerWindowEvents::BANK_CHANGE_EVENT, PlayerWindow::on_bank_changed)
+    EVT_THREAD(PlayerWindowEvents::SONG_END_EVENT, 
                PlayerWindow::on_song_done_playing)
-    EVT_THREAD(PlayerEvents::EXIT_EVENT, PlayerWindow::on_thread_exit)
+    EVT_THREAD(PlayerWindowEvents::EXIT_EVENT, PlayerWindow::on_thread_exit)
 wxEND_EVENT_TABLE()
 
 }  //  end ui

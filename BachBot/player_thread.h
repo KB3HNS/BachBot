@@ -47,7 +47,7 @@
 //  local includes
 #include "player_window.h"
 #include "common_defs.h"
-#include "organ_midi_event.h"
+#include "organ_midi_event.h"  //  OrganNote
 
 namespace bach_bot {
 
@@ -58,35 +58,6 @@ namespace bach_bot {
  */
 void send_bank_change_message(RtMidiOut &midi_out, 
                               const SyndyneBankCommands value);
-
-
-/**
- * @brief wx Events issues by this class
- */
-enum PlayerEvents : int
-{
-    /**
-     * @brief Periodic message sent to UI to refresh screen.
-     * @note
-     * "Int" value contains events remaining. 
-     */
-    TICK_EVENT = 1001,
-    SONG_START_EVENT,  ///< On start playing song, "Int" is song id.
-    SONG_LYRIC_EVENT,  ///< Update lyrics, int is string number (future)
-    SONG_META_EVENT,  ///< Future use
-    /**
-     * @brief Sent on bank change format same as tick
-     * @note
-     * "Int" value is formatted as `(mode << 3) | bank`
-     */
-    BANK_CHANGE_EVENT,
-    /**
-     * @brief Song ended
-     * @note "Int" 0 -> do not anadvance, != 0 advance to next song
-     */
-    SONG_END_EVENT,
-    EXIT_EVENT  ///< On thread exit message "Int" is return code.
-};
 
 
 /**

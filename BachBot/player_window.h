@@ -31,6 +31,7 @@
 #include <cstdint>  //  uint32_t
 #include <list>  //  std::list
 #include <memory>  //  std::unique_ptr
+#include <unordered_map>  //  std::unordered_map
 #include <wx/wx.h>  //  wxLog, wxThread, etc
 #include <RtMidi.h>  //  RtMidiOut
 
@@ -41,13 +42,44 @@
 #include "main_window.h"  //  MainWindow
 #include "common_defs.h"  //  SyndyneBankCommands
 #include "play_list.h"  //  PlayList, PlayListEntry
-
+#include "playlist_entry_control.h"  //  PlaylistEntryControl
 
 namespace bach_bot {
 //  Forward declare this class to prevent circular dependencies
 class PlayerThread;
 
 namespace ui {
+
+/**
+ * @brief wx Events handled by this class
+ */
+enum PlayerWindowEvents : int
+{
+    //  Player thread events
+    /**
+     * @brief Periodic message sent to UI to refresh screen.
+     * @note
+     * "Int" value contains events remaining. 
+     */
+    TICK_EVENT = 1001,
+    SONG_START_EVENT,  ///< On start playing song, "Int" is song id.
+    SONG_LYRIC_EVENT,  ///< Update lyrics, int is string number (future)
+    SONG_META_EVENT,  ///< Future use
+    /**
+     * @brief Sent on bank change format same as tick
+     * @note
+     * "Int" value is formatted as `(mode << 3) | bank`
+     */
+    BANK_CHANGE_EVENT,
+    /**
+     * @brief Song ended
+     * @note "Int" 0 -> do not anadvance, != 0 advance to next song
+     */
+    SONG_END_EVENT,
+    EXIT_EVENT,  ///< On thread exit message "Int" is return code.
+
+    //  Playlist entry events
+};
 
 
 /**
@@ -57,6 +89,7 @@ class PlayerWindow : public MainWindow, private wxLog
 {
     //  Allow the player thread to directly access the midi interface
     friend class PlayerThread;
+    using PlaylistEntryType = std::unique_ptr<PlaylistEntryControl>;
 
 public:
 
@@ -96,6 +129,8 @@ private:
      */
     void on_device_changed(const uint32_t device_id);
 
+    void on_autoplay_checked(PlaylistEntryPanel *const panel);
+
     /**
      * @brief Manually send an explicit bank-change message
      * @param value message to send
@@ -106,6 +141,10 @@ private:
      * @brief Clear the playlist window GUI
      */
     void clear_playlist_window();
+
+    void add_playlist_entry(const PlayListEntry &song);
+
+    void layout_scroll_panel() const;
 
     uint32_t m_counter;
     std::unique_ptr<PlayerThread> m_player_thread;
@@ -118,7 +157,7 @@ private:
     uint32_t m_next_song_id;
     uint32_t m_first_song_id;
     uint32_t m_last_song_id;
-    std::list<wxStaticText> m_song_labels;
+    std::unordered_map<uint32_t, PlaylistEntryType> m_song_labels;
 
     wxDECLARE_EVENT_TABLE();
 

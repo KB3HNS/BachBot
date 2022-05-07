@@ -94,9 +94,10 @@ wxThread::ExitCode PlayerThread::Entry()
 
     if (m_playing_test_pattern) {
         generate_test_pattern();
-        wxThreadEvent tick_event(wxEVT_THREAD, PlayerEvents::SONG_START_EVENT);
-        tick_event.SetInt(0);
-        wxQueueEvent(m_frame, tick_event.Clone());
+        wxThreadEvent start_event(wxEVT_THREAD,
+                                  ui::PlayerWindowEvents::SONG_START_EVENT);
+        start_event.SetInt(0);
+        wxQueueEvent(m_frame, start_event.Clone());
         static_cast<void>(run_song());
     } else {
         run_playlist();
@@ -105,7 +106,8 @@ wxThread::ExitCode PlayerThread::Entry()
     timeKillEvent(timer_id);
     const auto end_result = timeEndPeriod(1U);
 
-    wxThreadEvent exit_event(wxEVT_THREAD, PlayerEvents::EXIT_EVENT);
+    wxThreadEvent exit_event(wxEVT_THREAD,
+                             ui::PlayerWindowEvents::EXIT_EVENT);
     exit_event.SetInt(int(end_result));
     wxQueueEvent(m_frame, exit_event.Clone());
 
@@ -134,7 +136,8 @@ bool PlayerThread::run_song()
         case MessageId::TICK_MESSAGE:
             if (++i >= TICKS_PER_UI_REFRESH) {
                 i = 0U;
-                wxThreadEvent tick_event(wxEVT_THREAD, PlayerEvents::TICK_EVENT);
+                wxThreadEvent tick_event(wxEVT_THREAD,
+                                         ui::PlayerWindowEvents::TICK_EVENT);
                 tick_event.SetInt(int(m_midi_event_queue.size()));
                 wxQueueEvent(m_frame, tick_event.Clone());
             }
@@ -146,7 +149,8 @@ bool PlayerThread::run_song()
         }
     }
 
-    wxThreadEvent end_event(wxEVT_THREAD, PlayerEvents::SONG_END_EVENT);
+    wxThreadEvent end_event(wxEVT_THREAD,
+                            ui::PlayerWindowEvents::SONG_END_EVENT);
     end_event.SetInt(int(run));
     wxQueueEvent(m_frame, end_event.Clone());
     return run;
@@ -169,7 +173,8 @@ void PlayerThread::run_playlist()
             m_midi_event_queue = playlist.get_song_events(song_id);
         }
 
-        wxThreadEvent tick_event(wxEVT_THREAD, PlayerEvents::SONG_START_EVENT);
+        wxThreadEvent tick_event(wxEVT_THREAD,
+                                 ui::PlayerWindowEvents::SONG_START_EVENT);
         tick_event.SetInt(int(song_id));
         wxQueueEvent(m_frame, tick_event.Clone());
 
@@ -286,7 +291,8 @@ void PlayerThread::do_mode_check()
 {
     auto send_change = [&](const SyndyneBankCommands value) {
         send_bank_change_message(m_midi_out, value);
-        wxThreadEvent tick_event(wxEVT_THREAD, PlayerEvents::BANK_CHANGE_EVENT);
+        wxThreadEvent tick_event(wxEVT_THREAD,
+                                 ui::PlayerWindowEvents::BANK_CHANGE_EVENT);
         tick_event.SetInt(int((m_mode_number * 8U) + m_bank_number));
         wxQueueEvent(m_frame, tick_event.Clone());
         m_bank_change_delay.Start();

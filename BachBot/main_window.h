@@ -23,6 +23,7 @@
 #include <wx/panel.h>
 #include <wx/gauge.h>
 #include <wx/statbox.h>
+#include <wx/statline.h>
 #include <wx/scrolwin.h>
 #include <wx/statusbr.h>
 #include <wx/menu.h>
@@ -31,6 +32,7 @@
 #include <wx/textctrl.h>
 #include <wx/checkbox.h>
 #include <wx/dialog.h>
+#include <wx/radiobut.h>
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -61,7 +63,12 @@ namespace bach_bot
 				wxStaticText* next_label;
 				wxScrolledWindow* playlist_panel;
 				wxBoxSizer* playlist_container;
+				wxBoxSizer* header_container;
+				wxStaticText* m_staticText25;
+				wxStaticText* m_staticText26;
+				wxStaticText* m_staticText27;
 				wxStaticText* playlist_label;
+				wxStaticLine* m_staticline1;
 				wxStatusBar* m_statusBar1;
 				wxMenuBar* m_menubar1;
 				wxMenu* m_menu1;
@@ -87,7 +94,7 @@ namespace bach_bot
 
 			public:
 
-				MainWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Main Window"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 429,410 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
+				MainWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("BachBot Player"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 430,410 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
 
 				~MainWindow();
 
@@ -110,9 +117,6 @@ namespace bach_bot
 				wxStaticText* m_staticText22;
 				wxStaticText* m_staticText15;
 				wxStaticText* m_staticText18;
-				wxStdDialogButtonSizer* m_sdbSizer1;
-				wxButton* m_sdbSizer1OK;
-				wxButton* m_sdbSizer1Cancel;
 
 			public:
 				wxStaticText* file_name_label;
@@ -126,6 +130,9 @@ namespace bach_bot
 				wxStaticText* extended_ending_label;
 				wxTextCtrl* extend_ending_textbox;
 				wxCheckBox* play_next_checkbox;
+				wxStdDialogButtonSizer* m_sdbSizer1;
+				wxButton* m_sdbSizer1OK;
+				wxButton* m_sdbSizer1Cancel;
 
 				LoadMidiDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Import MIDI File"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 400,286 ), long style = wxDEFAULT_DIALOG_STYLE );
 
@@ -149,6 +156,42 @@ namespace bach_bot
 				LoadingPopup( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Loading Playlist..."), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxCAPTION );
 
 				~LoadingPopup();
+
+		};
+
+		///////////////////////////////////////////////////////////////////////////////
+		/// Class PlaylistEntryPanel
+		///////////////////////////////////////////////////////////////////////////////
+		class PlaylistEntryPanel : public wxPanel
+		{
+			private:
+
+			protected:
+				wxBoxSizer* bSizer11;
+				wxRadioButton* now_playing;
+				wxStaticText* song_label;
+				wxButton* configure_button;
+				wxCheckBox* auto_play;
+				wxMenu* context_menu;
+
+				// Virtual event handlers, override them in your derived class
+				virtual void on_configure_clicked( wxCommandEvent& event ) { event.Skip(); }
+				virtual void on_checkbox_checked( wxCommandEvent& event ) { event.Skip(); }
+				virtual void on_set_next( wxCommandEvent& event ) { event.Skip(); }
+				virtual void on_move_up( wxCommandEvent& event ) { event.Skip(); }
+				virtual void on_move_down( wxCommandEvent& event ) { event.Skip(); }
+
+
+			public:
+
+				PlaylistEntryPanel( wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 375,43 ), long style = wxTAB_TRAVERSAL, const wxString& name = wxEmptyString );
+
+				~PlaylistEntryPanel();
+
+				void PlaylistEntryPanelOnContextMenu( wxMouseEvent &event )
+				{
+					this->PopupMenu( context_menu, event.GetPosition() );
+				}
 
 		};
 
