@@ -77,6 +77,7 @@ namespace bach_bot
 				wxMenu* m_menu2;
 
 				// Virtual event handlers, override them in your derived class
+				virtual void on_close( wxCloseEvent& event ) { event.Skip(); }
 				virtual void on_play_advance( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_stop( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_bank_change_next( wxMouseEvent& event ) { event.Skip(); }
@@ -167,7 +168,7 @@ namespace bach_bot
 			private:
 
 			protected:
-				wxBoxSizer* bSizer11;
+				wxBoxSizer* layout;
 				wxRadioButton* now_playing;
 				wxStaticText* song_label;
 				wxButton* configure_button;

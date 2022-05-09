@@ -147,8 +147,17 @@ constexpr const auto MINIMUM_BANK_CHANGE_INTERVAL_MS = 250L;
  * @{
  */
 
+ /** Meta event added to set first-note initial delay. */
+constexpr const auto EMPTY_FIRST_META_EVENT = -900;
+
 /** Last duration in a song set by the syndyne importer */
-static constexpr const auto LAST_NOTE_META_CODE = -900;
+constexpr const auto LAST_NOTE_META_CODE = -901;
+/** 
+ * @brief Meta code for an event generated that indicates sequence is that of
+ *        the test pattern.
+ */
+constexpr const auto TEST_PATTERN_META_CODE = -902;
+
 /*! @} */
 
 }  //  end bach_bot

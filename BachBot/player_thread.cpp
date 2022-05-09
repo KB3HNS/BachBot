@@ -31,10 +31,18 @@
 
 //  local includes
 #include "player_thread.h"  //   local include
+#include "player_window.h"  //  PlayerWindowEvents
 
 
 namespace {
 constexpr const auto TICKS_PER_UI_REFRESH = 500U;
+
+
+constexpr int make_bank_message_int(const uint8_t bank, const uint32_t mode)
+{
+    return (int(mode) * 8) + int(bank);
+}
+
 }
 
 
@@ -56,33 +64,30 @@ void send_bank_change_message(RtMidiOut &midi_out,
 }
 
 
-PlayerThread::PlayerThread(ui::PlayerWindow* const frame, const uint32_t port_id) :
+PlayerThread::PlayerThread(wxFrame* const frame, RtMidiOut &intf) :
     wxThread(wxTHREAD_JOINABLE),
     m_mutex(),
     m_event_queue(),
     m_midi_event_queue(),
     m_precache(),
     m_test_precache{false},
-    m_first_song_id{0U},
     m_playing_test_pattern{false},
     m_bank_number{0U},
     m_mode_number{0U},
     m_frame{frame},
-    m_midi_out(frame->m_midi_out),
+    m_midi_out(intf),
     m_waiting{nullptr},
     m_current_time(),
     m_bank_change_delay(),
     m_power_control(wxPOWER_RESOURCE_SYSTEM, "BachBot Playing"),
     m_screen_control(wxPOWER_RESOURCE_SCREEN, "BachBot Playing")
 {
-    m_midi_out.openPort(port_id);
-    m_bank_change_delay.Start();
+    m_bank_change_delay.Start(MINIMUM_BANK_CHANGE_INTERVAL_MS);
 }
 
 
 wxThread::ExitCode PlayerThread::Entry()
 {
-    wxMutexLocker lock(m_mutex);
     [[maybe_unused]] const auto start_result = timeBeginPeriod(1U);
 
     auto timer_callback = [](UINT, UINT, DWORD_PTR dwUser, DWORD_PTR, DWORD_PTR) {
@@ -92,15 +97,10 @@ wxThread::ExitCode PlayerThread::Entry()
     const auto timer_id = timeSetEvent(
         1U, 1U, timer_callback, DWORD_PTR(this), TIME_PERIODIC);
 
-    if (m_playing_test_pattern) {
-        generate_test_pattern();
-        wxThreadEvent start_event(wxEVT_THREAD,
-                                  ui::PlayerWindowEvents::SONG_START_EVENT);
-        start_event.SetInt(0);
-        wxQueueEvent(m_frame, start_event.Clone());
-        static_cast<void>(run_song());
-    } else {
-        run_playlist();
+    while (load_next_song()) {
+        if (!run_song()) {
+            break;
+        }
     }
 
     timeKillEvent(timer_id);
@@ -121,6 +121,14 @@ bool PlayerThread::run_song()
     auto i = 0U;
     m_current_time.Start();
     m_test_precache = false;
+    m_playing_test_pattern = false;
+
+    const auto song_id = m_midi_event_queue.front().m_song_id;
+    wxThreadEvent start_event(wxEVT_THREAD,
+                              ui::PlayerWindowEvents::SONG_START_EVENT);
+    start_event.SetInt(int(song_id));
+    wxQueueEvent(m_frame, start_event.Clone());
+
     while (run && (m_midi_event_queue.size() > 0U)) {
         auto message = wait_for_message();
         switch (message.first) {
@@ -157,41 +165,9 @@ bool PlayerThread::run_song()
 }
 
 
-void PlayerThread::run_playlist()
-{
-    auto song_id = m_first_song_id;
-    auto &playlist = m_frame->m_playlist;
-    while (song_id > 0U) {
-        if (m_precache.size() > 0U) {
-            const auto midi_event = m_precache.front();
-            if (midi_event->m_song_id == song_id) {
-                m_midi_event_queue = std::move(m_precache);
-            }
-        }
-        if (m_midi_event_queue.size() == 0U) {
-            //  Pre-cached data was invalid, slow copy-construct
-            m_midi_event_queue = playlist.get_song_events(song_id);
-        }
-
-        wxThreadEvent tick_event(wxEVT_THREAD,
-                                 ui::PlayerWindowEvents::SONG_START_EVENT);
-        tick_event.SetInt(int(song_id));
-        wxQueueEvent(m_frame, tick_event.Clone());
-
-        if (!run_song()) {
-            break;
-        }
-
-        //  Need to re-check song config here in case UI changed the playlist.
-        auto lock  = playlist.lock();
-        const auto &song = playlist.get_playlist_entry(song_id);
-        song_id = (song.play_next ? song.next_song_id : 0U);
-    }
-}
-
-
 PlayerThread::Message PlayerThread::wait_for_message()
 {
+    wxMutexLocker lock(m_mutex);
     if (m_event_queue.size() == 0U) {
         wxCondition signal(m_mutex);
         m_waiting = &signal;
@@ -227,14 +203,8 @@ void PlayerThread::post_message(const MessageId msg_id, const uintptr_t value)
 }
 
 
-void PlayerThread::play(const uint32_t song_id)
+void PlayerThread::play()
 {
-    if (0U == song_id) {
-        m_playing_test_pattern = true;
-    } else {
-        m_first_song_id = song_id;
-        m_playing_test_pattern = false;
-    }
     if (Create() != wxTHREAD_NO_ERROR) {
         wxLogError(wxT("Can't create thread!"));
         return;
@@ -244,26 +214,39 @@ void PlayerThread::play(const uint32_t song_id)
 }
 
 
+void PlayerThread::enqueue_next_song(std::list<OrganMidiEvent> song_events)
+{
+    wxMutexLocker lock(m_mutex);
+    m_test_precache = true;
+    m_precache = std::move(song_events);
+}
+
+
 void PlayerThread::process_notes()
 {
     const auto time_now = m_current_time.TimeInMicro();
     do {
         const auto &midi_event = m_midi_event_queue.front();
-        const auto timestamp = midi_event->get_us();
-        if ((midi_event->m_metadata.has_value()) &&
-            (midi_event->m_metadata.value() == LAST_NOTE_META_CODE) &&
-            !m_test_precache) {
-                precache_next_song(midi_event->m_song_id);
-        }
+        const auto timestamp = midi_event.get_us();
         if (timestamp > time_now) {
             break;
         }
 
-        midi_event->send_event(m_midi_out);
+        midi_event.send_event(m_midi_out);
         if (m_playing_test_pattern) {
-            m_bank_number = (midi_event->m_event_code & 0x0FU) - 1U;
-            m_mode_number = midi_event->m_byte1.value() - 1U;
+            const auto bank_number = (midi_event.m_event_code & 0x0FU) - 1U;
+            const auto mode_number = midi_event.m_byte1.value() - 1U;
+            wxThreadEvent bank_event(wxEVT_THREAD,
+                                     ui::PlayerWindowEvents::BANK_CHANGE_EVENT);
+            bank_event.SetInt(make_bank_message_int(uint8_t(bank_number),
+                                                    mode_number));
+            wxQueueEvent(m_frame, bank_event.Clone());
         }
+
+        if (midi_event.m_metadata.has_value()) {
+            handle_meta_event(midi_event.m_metadata.value());
+        }
+
         m_midi_event_queue.pop_front();
     } while (m_midi_event_queue.size() > 0U);
 }
@@ -272,7 +255,7 @@ void PlayerThread::process_notes()
 void PlayerThread::force_advance()
 {
     const auto &current_event = m_midi_event_queue.front();
-    const auto ms = current_event->get_us().GetValue();
+    const auto ms = current_event.get_us().GetValue();
     m_current_time.Start(long(ms / 1000LL));
 }
 
@@ -289,16 +272,17 @@ void PlayerThread::set_bank_config(const uint8_t current_bank,
 
 void PlayerThread::do_mode_check()
 {
+    wxMutexLocker lock(m_mutex);
     auto send_change = [&](const SyndyneBankCommands value) {
         send_bank_change_message(m_midi_out, value);
-        wxThreadEvent tick_event(wxEVT_THREAD,
+        wxThreadEvent bank_event(wxEVT_THREAD,
                                  ui::PlayerWindowEvents::BANK_CHANGE_EVENT);
-        tick_event.SetInt(int((m_mode_number * 8U) + m_bank_number));
-        wxQueueEvent(m_frame, tick_event.Clone());
+        bank_event.SetInt(make_bank_message_int(m_bank_number, m_mode_number));
+        wxQueueEvent(m_frame, bank_event.Clone());
         m_bank_change_delay.Start();
     };
 
-    const auto desired_mode = m_midi_event_queue.front()->get_bank_config();
+    const auto desired_mode = m_midi_event_queue.front().get_bank_config();
     if ((desired_mode.second < m_mode_number && m_bank_number > 0U) || 
         (desired_mode.second == m_mode_number && 0U == desired_mode.first))
     {
@@ -307,6 +291,15 @@ void PlayerThread::do_mode_check()
         // piston mode.
         m_bank_number = 0U;
         send_change(SyndyneBankCommands::GENERAL_CANCEL);
+    } else if (desired_mode.second > m_mode_number ||
+               desired_mode.first > m_bank_number) {
+        //  We need to go up, no shortcuts available.
+        ++m_bank_number;
+        if (m_bank_number >= 8U) {
+            m_bank_number = 0U;
+            ++m_mode_number;
+        }
+        send_change(SyndyneBankCommands::NEXT_BANK);
     } else if (desired_mode.second < m_mode_number || 
                desired_mode.first < m_bank_number) {
         //  Either at the bottom of this piston mode and need to step down to
@@ -318,58 +311,48 @@ void PlayerThread::do_mode_check()
         }
         --m_bank_number;
         send_change(SyndyneBankCommands::PREV_BANK);
-    } else if (desired_mode.second > m_mode_number ||
-               desired_mode.first > m_bank_number) {
-        //  We need to go up, no shortcuts available.
-        ++m_bank_number;
-        if (m_bank_number >= 8U) {
-            m_bank_number = 0U;
-            ++m_mode_number;
-        }
-        send_change(SyndyneBankCommands::NEXT_BANK);
     }
-}
-
-
-void PlayerThread::generate_test_pattern()
-{
-    auto midi_time = 0.0;
-    midi_time = generate_test_pattern(SyndyneKeyboards::PETAL, midi_time);
-    midi_time = generate_test_pattern(SyndyneKeyboards::MANUAL1_GREAT, 
-                                      midi_time);
-    generate_test_pattern(SyndyneKeyboards::MANUAL2_SWELL, midi_time);
-}
-
-
-double PlayerThread::generate_test_pattern(const SyndyneKeyboards keyboard, 
-                                           double start_time)
-{
-    for (uint8_t i = 1U; i <= 127U; ++i) {
-        m_midi_event_queue.emplace_back(
-            new OrganMidiEvent(MidiCommands::NOTE_ON, keyboard,
-                               i, SYNDYNE_NOTE_ON_VELOCITY));
-        m_midi_event_queue.back()->m_seconds = start_time;
-        start_time += 1.0;
-        m_midi_event_queue.emplace_back(
-            new OrganMidiEvent(MidiCommands::NOTE_OFF, keyboard, i, 0U));
-        m_midi_event_queue.back()->m_seconds = start_time;
-    }
-
-    return start_time;
 }
 
 
 void PlayerThread::precache_next_song(const uint32_t song_id)
 {
-    m_test_precache = true;
-    m_precache.clear();
+    //  Nothing done here anymore.  This is just a stub in case I want to do
+    // something else before the last note.
+    static_cast<void>(song_id);
+}
 
-    auto lock  = m_frame->m_playlist.lock();
-    const auto &song = m_frame->m_playlist.get_playlist_entry(song_id);
-    const auto next_song_id = song.next_song_id;
-    lock.reset();
-    if (0U != next_song_id) {
-        m_precache = m_frame->m_playlist.get_song_events(next_song_id);
+
+bool PlayerThread::load_next_song()
+{
+    wxMutexLocker lock(m_mutex);
+    const auto song_size = m_precache.size();
+    if (song_size > 0U) {
+        m_midi_event_queue = std::move(m_precache);
+    }
+
+    return (song_size > 0U);
+}
+
+
+void PlayerThread::handle_meta_event(const int meta_event_id)
+{
+    switch (meta_event_id) {
+    case LAST_NOTE_META_CODE:
+        precache_next_song(m_midi_event_queue.front().m_song_id);
+        break;
+
+    case TEST_PATTERN_META_CODE:
+        m_playing_test_pattern = true;
+        break;
+
+    default:
+        if (meta_event_id > 0) {
+            wxThreadEvent meta_event(wxEVT_THREAD,
+                                     ui::PlayerWindowEvents::SONG_META_EVENT);
+            meta_event.SetInt(meta_event_id);
+            wxQueueEvent(m_frame, meta_event.Clone());
+        }
     }
 }
 

@@ -35,6 +35,7 @@
 //  system includes
 #include <cstdint>  //  uint32_t, uintptr_t, etc
 #include <list>  //  std::list
+#include <deque>  //  std::deque
 #include <utility>  //  std::pair
 #include <RtMidi.h>  //  RtMidiOut
 #include <wx/wx.h>  //  wxCondition, wxThread, etc
@@ -45,7 +46,6 @@
 // -none-
 
 //  local includes
-#include "player_window.h"
 #include "common_defs.h"
 #include "organ_midi_event.h"  //  OrganNote
 
@@ -86,9 +86,9 @@ public:
     /**
      * @brief Constructor
      * @param frame reference to main window 
-     * @param port_id MIDI port to open to send events to
+     * @param[in] intf Midi interface to send events to
      */
-    PlayerThread(ui::PlayerWindow *const frame, const uint32_t port_id);
+    PlayerThread(wxFrame *const frame, RtMidiOut &intf);
 
     /**
      * @brief Thread-safe call to send MIDI stop to.
@@ -116,15 +116,20 @@ public:
 
     /**
      * @brief Play music, upon completion `EXIT_EVENT` will be issued.
-     * @param song_id play songs starting with this ID
      * @note 
      * Currently there is no check to prevent this from re-triggering.
      * Therefore, external logic should prevent this from being called until
      * after the `EXIT_EVENT` has been issued.
      * @sa PlayerEvents
      */
-    void play(const uint32_t song_id);
+    void play();
 
+    /**
+     * @brief Enqueue the events for the next song to be played
+     * @param song_events song events
+     */
+    void enqueue_next_song(std::list<OrganMidiEvent> song_events);
+    
     /**
      * @brief Set the current state of the organ bank externally.
      * @param current_bank current bank (1-8)
@@ -147,11 +152,6 @@ private:
      */
     bool run_song();
     
-    /**
-     * @brief Run player walking through the playlist.
-     */
-    void run_playlist();
-
     /**
      * @brief Callback to post timer tick events.
      */
@@ -190,30 +190,42 @@ private:
     void do_mode_check();
 
     /**
-     * @brief Generate the test pattern as a sequence to be played.
+    * @brief Pre-cache the events for the next song during the final duration
+    *        of the current one.  This _may_ be the longest note in the song.
+    *        and therefore it's a good time to attempt to pre-load the next
+    *        song's events.
+    * @param song_id current song ID
     */
-    void generate_test_pattern();
-
-    double generate_test_pattern(const SyndyneKeyboards keyboard, 
-                                 double start_time);
-
-    /**
-     * @brief Pre-cache the events for the next song during the final duration
-     *        of the current one.  This _may_ be the longest note in the song.
-     *        and therefore it's a good time to attempt to pre-load the next
-     *        song's events.
-     * @param song_id current song ID
-     */
     void precache_next_song(const uint32_t song_id);
 
-    wxMutex m_mutex;  ///< Shared data are protected by mutex
+    /**
+     * @brief Move enqueued song to the MIDI event queue.
+     * @retval `true` events now in m_midi_event_queue
+     * @retval `false` event queue empty
+     */
+    bool load_next_song();
 
-    std::list<Message> m_event_queue;  ///< Current Thread-Safe event queue
-    std::list<OrganNote> m_midi_event_queue;  ///< List of midi events
-    std::list<OrganNote> m_precache;  ///< Cache of next song's events
+    /**
+     * @brief Handling of internal "metadata" events
+     * @param meta_event_id metadata event id / code.
+     */
+    void handle_meta_event(const int meta_event_id);
+
+    /**
+     * @brief Shared data are protected by mutex
+     * @p
+     * *Items protected by the shared mutex:*
+     * 1. `m_event_queue`
+     * 1. `m_precache`
+     * 1. `m_bank_number`/`m_mode_number`
+     */
+    wxMutex m_mutex;
+
+    std::deque<Message> m_event_queue;  ///< Current Thread-Safe event queue
+    std::list<OrganMidiEvent> m_midi_event_queue;  ///< List of midi events
+    std::list<OrganMidiEvent> m_precache;  ///< Cache of next song's events
     /** Flag that we have already checked the cache for the next song */
     bool m_test_precache;
-    uint32_t m_first_song_id;  ///< Song ID to start playing at
 
     bool m_playing_test_pattern;  ///<  Are we playing the test pattern?
 
@@ -228,7 +240,7 @@ private:
      */
     uint32_t m_mode_number;
 
-    ui::PlayerWindow *const m_frame;  ///<  Pointer to parent window
+    wxFrame *const m_frame;  ///<  Pointer to parent window
     RtMidiOut &m_midi_out;  ///<  Reference to MIDI port
     
     /**

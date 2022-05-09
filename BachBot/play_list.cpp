@@ -24,6 +24,7 @@
 
 
 //  system includes
+#include <algorithm>  //  std::for_each
 #include <stdexcept>  //  std::logic_error
 #include <fmt/format.h>  //  fmt::format
 
@@ -71,16 +72,20 @@ std::unique_ptr<PlayListMutex> PlayList::lock()
 }
 
 
-std::list<OrganNote> PlayList::get_song_events(const uint32_t song_id) const
+std::list<OrganMidiEvent> PlayList::get_song_events(const uint32_t song_id) const
 {
-    PlayListEntry song;
+    std::list<OrganMidiEvent> events;
     wxMutexLocker lock(*m_mutex);
     const auto entry = m_play_list.find(song_id);
     if (m_play_list.end() != entry) {
-        song = entry->second;
+        std::for_each(entry->second.midi_events.begin(),
+                      entry->second.midi_events.end(),
+                      [&events](const OrganNote &event) {
+            events.emplace_back(event.clone());
+        });
     }
 
-    return std::move(song.midi_events);
+    return events;
 }
 
 

@@ -150,6 +150,8 @@ void PlaylistEntryControl::setup_widgets()
                                             m_filename.Right(width - 3U));
         song_label->SetLabelText(label);
     }
+
+    Layout();
 }
 
 

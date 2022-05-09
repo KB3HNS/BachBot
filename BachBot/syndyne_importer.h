@@ -53,6 +53,12 @@
 namespace bach_bot {
 
 /**
+ * @brief Generate the test pattern as a sequence to be played.
+ */
+std::list<OrganMidiEvent> generate_test_pattern();
+
+
+/**
  * @brief Class that contains all logic to translate a MIDI file into an
  *        organ MIDI event sequence.
  */

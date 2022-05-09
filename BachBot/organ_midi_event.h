@@ -99,6 +99,8 @@ struct OrganMidiEvent
     OrganMidiEvent(const int metadata_value,
                    const OrganMidiEvent *const src = nullptr);
     
+    OrganMidiEvent(OrganMidiEvent &&) = default;
+    
     /**
      * @brief Send this event to the organ.
      * @param player MIDI device Output reference.
@@ -205,6 +207,11 @@ public:
     */
     OrganNote& operator-=(const OrganNote &rhs);
 
+    /**
+     * @brief Create a copy of the OrgeNMidiEvent payload.
+     * @returns copy of the payload
+     */
+    OrganMidiEvent clone() const;
 };
 
 

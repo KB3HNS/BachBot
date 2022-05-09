@@ -113,7 +113,7 @@ public:
      * @param song_id sing ID to get
      * @return Playlist song's events
      */
-    std::list<OrganNote> get_song_events(const uint32_t song_id) const;
+    std::list<OrganMidiEvent> get_song_events(const uint32_t song_id) const;
 
     /**
      * @brief Get a mutable song entry

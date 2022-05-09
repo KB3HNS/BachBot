@@ -252,4 +252,11 @@ OrganNote& OrganNote::operator-=(const OrganNote &rhs)
 }
 
 
+OrganMidiEvent OrganNote::clone() const
+{
+    auto cloned_event = *get();
+    cloned_event.m_partner = nullptr;
+    return cloned_event;
+}
+
 }  //  end bach_bot

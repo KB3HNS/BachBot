@@ -140,10 +140,52 @@ const std::array<uint8_t, 16U> g_channel_mapping = {
     SyndyneKeyboards::MANUAL2_SWELL, SyndyneKeyboards::MANUAL1_GREAT, SyndyneKeyboards::PETAL
 };
 
+/**
+ * @brief Internally generate the test pattern for a keyboard
+ * @param keyboard Keyboard to generate notes from
+ * @param start_time time of first "note_on" event
+ * @param event_queue[in/out] add events to list
+ * @returns time of last "note_off" event
+ */
+double generate_test_pattern(const SyndyneKeyboards keyboard, 
+                             double start_time,
+                             std::list<bach_bot::OrganMidiEvent> &event_queue)
+{
+    for (uint8_t i = 1U; i <= 127U; ++i) {
+        event_queue.emplace_back(bach_bot::MidiCommands::NOTE_ON, keyboard,
+                                 i, bach_bot::SYNDYNE_NOTE_ON_VELOCITY);
+        event_queue.back().m_seconds = start_time;
+        event_queue.back().m_song_id = 0U;
+        start_time += 1.0;
+        event_queue.emplace_back(bach_bot::MidiCommands::NOTE_OFF, keyboard, 
+                                 i, 0U);
+        event_queue.back().m_seconds = start_time;
+        event_queue.back().m_song_id = 0U;
+    }
+
+    return start_time;
+}
+
 }  //  end anonymous namespace
 
 
 namespace bach_bot {
+
+std::list<OrganMidiEvent> generate_test_pattern()
+{
+    std::list<OrganMidiEvent> event_queue;
+    auto midi_time = 0.0;
+    midi_time = ::generate_test_pattern(SyndyneKeyboards::PETAL,
+                                        midi_time, event_queue);
+    midi_time = ::generate_test_pattern(SyndyneKeyboards::MANUAL1_GREAT, 
+                                        midi_time, event_queue);
+    ::generate_test_pattern(SyndyneKeyboards::MANUAL2_SWELL,
+                            midi_time, event_queue);
+
+    event_queue.emplace_front(TEST_PATTERN_META_CODE, &event_queue.front());
+    return event_queue;
+}
+
 
 SyndineImporter::SyndineImporter(const std::string &file_name, 
                                  const uint32_t song_id) :
@@ -285,6 +327,7 @@ void SyndineImporter::update_bank_event(const int note)
 void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_list)
 {
     std::list<OrganNote> events;
+    auto current_config = m_current_config;
 
     //  1st pass: Process all events
     for (auto i = 0; i < event_list.size(); ++i) {
@@ -317,12 +360,11 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
 
     //  4th pass: update bank config, build output events
     m_file_events.clear();
-    auto current_config = events.front();
     for (auto &i: events) {
         if (i->is_mode_change_event()) {
-            current_config = i;
+            current_config = i->get_bank_config();
         } else {
-            i->set_bank_config(current_config->get_bank_config());
+            i->set_bank_config(current_config);
             m_file_events.push_back(i);
         }
     }
@@ -380,11 +422,17 @@ std::list<OrganNote> SyndineImporter::get_events(
             static_cast<void>(get_tempo());
         }
         const auto spb = 60.0 / double(m_bpm);  //  Seconds/beat
+        const auto initial_delay = spb * initial_delay_beats;
+        auto first_entry = m_file_events.front();
+        OrganNote blank_note(new OrganMidiEvent(EMPTY_FIRST_META_EVENT,
+                                                first_entry.get()));
+        first_entry->m_delta_time = initial_delay;
         std::for_each(m_file_events.begin(), 
                       m_file_events.end(), 
                       [=](OrganNote &evt) {
             evt->m_seconds += spb * initial_delay_beats;
         });
+        m_file_events.push_front(blank_note);
     }
 
     if (m_file_events.size() < 2) {
@@ -393,12 +441,12 @@ std::list<OrganNote> SyndineImporter::get_events(
 
     for (auto i = m_file_events.rbegin(); m_file_events.rend() != i; ++i) {
         if ((*i)->m_delta > 0) {
+            (*i)->m_delta_time *= extend_final_duration;
+            //  Find last non-zero delta midi time MIDI event
+            ++i;
             auto meta_event = OrganNote(
                 new OrganMidiEvent(LAST_NOTE_META_CODE, i->get()));
-            meta_event->m_delta_time *= extend_final_duration;
-            //  Find last non-zero delta midi time MIDI event
-            (*i)->m_delta_time = 0.0;
-            ++i;
+            meta_event->m_delta_time = 0.0;
             m_file_events.insert(i.base(), meta_event);
             ++i;
             auto next_event_time = (*i)->m_seconds;

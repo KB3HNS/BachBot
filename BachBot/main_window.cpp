@@ -198,6 +198,7 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	this->Centre( wxBOTH );
 
 	// Connect Events
+	this->Connect( wxEVT_CLOSE_WINDOW, wxCloseEventHandler( MainWindow::on_close ) );
 	play_advance_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_play_advance ), NULL, this );
 	stop_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_stop ), NULL, this );
 	bank_label->Connect( wxEVT_LEFT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_next ), NULL, this );
@@ -216,6 +217,7 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 MainWindow::~MainWindow()
 {
 	// Disconnect Events
+	this->Disconnect( wxEVT_CLOSE_WINDOW, wxCloseEventHandler( MainWindow::on_close ) );
 	play_advance_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_play_advance ), NULL, this );
 	stop_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_stop ), NULL, this );
 	bank_label->Disconnect( wxEVT_LEFT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_next ), NULL, this );
@@ -426,26 +428,26 @@ LoadingPopup::~LoadingPopup()
 
 PlaylistEntryPanel::PlaylistEntryPanel( wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name ) : wxPanel( parent, id, pos, size, style, name )
 {
-	bSizer11 = new wxBoxSizer( wxHORIZONTAL );
+	layout = new wxBoxSizer( wxHORIZONTAL );
 
 	now_playing = new wxRadioButton( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
-	bSizer11->Add( now_playing, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	layout->Add( now_playing, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
 	song_label = new wxStaticText( this, wxID_ANY, wxT("*.mid"), wxDefaultPosition, wxDefaultSize, 0 );
 	song_label->Wrap( -1 );
-	bSizer11->Add( song_label, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	layout->Add( song_label, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
 
-	bSizer11->Add( 0, 0, 1, wxEXPAND, 5 );
+	layout->Add( 0, 0, 1, wxEXPAND, 5 );
 
 	configure_button = new wxButton( this, wxID_ANY, wxT("Configure"), wxDefaultPosition, wxDefaultSize, 0 );
-	bSizer11->Add( configure_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	layout->Add( configure_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
 	auto_play = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
-	bSizer11->Add( auto_play, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	layout->Add( auto_play, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
 
-	this->SetSizer( bSizer11 );
+	this->SetSizer( layout );
 	this->Layout();
 	context_menu = new wxMenu();
 	wxMenuItem* m_menuItem10;

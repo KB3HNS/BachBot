@@ -43,6 +43,7 @@
 #include "common_defs.h"  //  SyndyneBankCommands
 #include "play_list.h"  //  PlayList, PlayListEntry
 #include "playlist_entry_control.h"  //  PlaylistEntryControl
+#include "organ_midi_event.h"  //  BankConfig
 
 namespace bach_bot {
 //  Forward declare this class to prevent circular dependencies
@@ -114,6 +115,7 @@ protected:
     virtual void on_manual_advance(wxCommandEvent &event) override final;
     virtual void on_manual_prev(wxCommandEvent &event) override final;
     virtual void on_manual_cancel(wxCommandEvent &event) override final;
+    virtual void on_close(wxCloseEvent& event) override final;
 
 private:
     //  Locally bound UI events
@@ -158,6 +160,7 @@ private:
     uint32_t m_first_song_id;
     uint32_t m_last_song_id;
     std::unordered_map<uint32_t, PlaylistEntryType> m_song_labels;
+    BankConfig m_current_config;
 
     wxDECLARE_EVENT_TABLE();
 
