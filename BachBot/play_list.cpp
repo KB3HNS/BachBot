@@ -1,6 +1,6 @@
 /**
- * @file syndyne_importer.cpp
- * @brief MIDI -> Syndyne Sequence conversion.
+ * @file play_list.cpp
+ * @brief Playlist storage container
  * @copyright
  * 2022 Andrew Buettner (ABi)
  *

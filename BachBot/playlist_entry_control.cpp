@@ -24,6 +24,7 @@
 
 //  system includes
 #include <fmt/xchar.h>  //  fmt::format(L
+#include <utility>  //  std::swap
 
 //  module includes
 // -none-
@@ -97,6 +98,23 @@ void PlaylistEntryControl::set_autoplay(const bool autoplay_enabled)
 }
 
 
+void PlaylistEntryControl::swap(PlaylistEntryControl *const other)
+{
+    auto update_ui = [](PlaylistEntryControl *const control) {
+        control->auto_play->SetValue(control->m_autoplay);
+        control->setup_widgets();
+    };
+
+    std::swap(m_song_id, other->m_song_id);
+    std::swap(m_filename, other->m_filename);
+    std::swap(m_autoplay, other->m_autoplay);
+    std::swap(m_playing, other->m_playing);
+
+    update_ui(other);
+    update_ui(this);
+}
+
+
 void PlaylistEntryControl::on_configure_clicked(wxCommandEvent &event)
 {
     configure_event(m_song_id, this, false);
@@ -141,6 +159,7 @@ void PlaylistEntryControl::setup_widgets()
     } else {
         now_playing->SetLabelText(wxT(""));
     }
+    static_cast<void>(configure_button->Enable(m_playing));
     now_playing->SetValue(m_up_next);
 
     if (m_filename.length() < width) {

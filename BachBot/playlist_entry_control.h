@@ -103,6 +103,12 @@ public:
     /** Set next song bool: unused (always true) */
     CallBack set_next_event;
 
+    /**
+     * @brief Swap this control with another
+     * @param other other control to swap with
+     */
+    void swap(PlaylistEntryControl *const other);
+
 protected:
     virtual void on_configure_clicked(wxCommandEvent& event) override final;
     virtual void on_checkbox_checked(wxCommandEvent &event) override final;
@@ -123,8 +129,8 @@ private:
     static void dummy_event(uint32_t, PlaylistEntryControl*, bool);
 
     wxWindow *const m_parent;
-    const uint32_t m_song_id;
-    const wxString m_filename;
+    uint32_t m_song_id;
+    wxString m_filename;
     bool m_autoplay;
     bool m_up_next;
     bool m_playing;

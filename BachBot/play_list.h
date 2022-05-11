@@ -68,9 +68,6 @@ struct PlayListEntry
 };
 
 
-class PlayList;  //  Forward declare the type
-
-
 /**
  * @brief Lock semantic for the playlist
  */

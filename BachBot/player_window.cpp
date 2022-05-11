@@ -28,7 +28,7 @@
 #include <array>  //  std::array
 #include <stdexcept>  //  std::runtime_error
 #include <string>  //  std::string
-#include <string_view>  //  sv
+#include <string_view>  //  sv, std::swap
 #include <utility>  //  std::as_const
 #include <fmt/xchar.h>  //  fmt::format(L
 #include <fmt/format.h>  //  fmt::format
@@ -79,8 +79,7 @@ PlayerWindow::PlayerWindow() :
         device_select->Append(&m_midi_devices.back());
         device_select->Bind(wxEVT_COMMAND_MENU_SELECTED, 
                             [=](wxCommandEvent&) { on_device_changed(i); },
-                            m_midi_devices.back().GetId()
-        );
+                            m_midi_devices.back().GetId());
     }
     m_midi_devices.front().Check();
     header_container->Show(false);
@@ -516,6 +515,15 @@ void PlayerWindow::add_playlist_entry(const PlayListEntry &song)
     auto p_label = std::make_unique<PlaylistEntryControl>(playlist_panel, song);
     playlist_container->Add(p_label.get(), 0, wxALL, 5);
     header_container->Show(true);
+    const auto next_song_id = song.next_song_id;
+    
+    p_label->move_event = [=](uint32_t song_id,
+                              PlaylistEntryControl *control,
+                              bool direction) {
+        control->swap(m_song_labels[next_song_id].get());
+        std::swap(m_song_labels[song_id], m_song_labels[next_song_id]);
+    };
+
     m_song_labels[song.current_song_id] = std::move(p_label);
 }
 
