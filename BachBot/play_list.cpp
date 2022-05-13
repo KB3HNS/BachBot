@@ -24,9 +24,9 @@
 
 
 //  system includes
-#include <algorithm>  //  std::for_each
-#include <stdexcept>  //  std::logic_error
+#include <stdexcept>  //  std::out_of_range
 #include <fmt/format.h>  //  fmt::format
+#include <memory>  //  std::make_unique
 
 //  module includes
 // -none-
@@ -36,88 +36,180 @@
 
 
 namespace bach_bot {
-PlayListMutex::PlayListMutex(std::shared_ptr<wxMutex> mutex,
-                             std::atomic_bool *const lock_flag) :
-    m_mutex(mutex),
-    m_lock_flag{lock_flag}
+
+bool PlayListEntry::import_midi()
 {
-    m_mutex->Lock();
-    if (*m_lock_flag) {
-        throw std::logic_error("Attempting double lock!");
+    //  Keep large structure off of stack
+    auto importer = std::make_unique<SyndineImporter>(
+        file_name.ToStdString(), song_id);
+    tempo_detected = importer->get_tempo();
+
+    importer->set_bank_config(starting_config.first,
+                              starting_config.second);
+
+    importer->adjust_tempo(tempo_requested);
+    importer->adjust_key(delta_pitch);
+
+    midi_events = importer->get_events(gap_beats, last_note_multiplier);
+
+    return (midi_events.size() > 0U);
+}
+
+
+bool PlayListEntry::load_config(const wxXmlNode *const playlist_node)
+{
+    auto valid = true;
+    auto test_double = [&](double &dest, const wxString &str) {
+        auto test_value = std::numeric_limits<double>::max();
+        const auto ok = str.ToDouble(&test_value);
+        if (ok) {
+            dest = test_value;
+        } else {
+            valid = false;
+        }
+    };
+
+    auto test_int = [&](int &dest, 
+                        const wxString &str,
+                        const int min,
+                        const int max) {
+        auto test_value = std::numeric_limits<long>::max();
+        const auto ok = str.ToCLong(&test_value);
+        if (ok && (test_value >= long(min)) && (test_value <= long(max))) {
+            dest = int(test_value);
+        } else {
+            valid = false;
+        }
+
+    };
+
+    file_name = playlist_node->GetNodeContent();
+    if (file_name.length() == 0U) {
+        throw std::out_of_range(fmt::format("Invalid filename line {}", 
+                                            playlist_node->GetLineNumber()));
     }
 
-    *m_lock_flag = true;
-}
+    if (playlist_node->HasAttribute(wxT("tempo_requested"))) {
+        const auto desired = playlist_node->GetAttribute(wxT("tempo_requested"));
 
-
-PlayListMutex::~PlayListMutex()
-{
-    *m_lock_flag = false;
-    m_mutex->Unlock();
-}
-
-
-PlayList::PlayList() :
-    m_play_list(),
-    m_next_song_id{1U},
-    m_mutex(new wxMutex(wxMUTEX_DEFAULT)),
-    m_is_locked{false}
-{
-}
-
-
-std::unique_ptr<PlayListMutex> PlayList::lock()
-{
-    return std::make_unique<PlayListMutex>(m_mutex, &m_is_locked);
-}
-
-
-std::list<OrganMidiEvent> PlayList::get_song_events(const uint32_t song_id) const
-{
-    std::list<OrganMidiEvent> events;
-    wxMutexLocker lock(*m_mutex);
-    const auto entry = m_play_list.find(song_id);
-    if (m_play_list.end() != entry) {
-        std::for_each(entry->second.midi_events.begin(),
-                      entry->second.midi_events.end(),
-                      [&events](const OrganNote &event) {
-            events.emplace_back(event.clone());
-        });
+        test_int(tempo_requested, desired, 1, 1000);
     }
 
-    return events;
+    test_double(gap_beats, playlist_node->GetAttribute(wxT("gap")));
+    if (gap_beats < 0.0) {
+        valid = false;
+    }
+
+    int start_bank;
+    int start_mode;
+    test_int(start_bank, playlist_node->GetAttribute(wxT("start_bank")), 1, 8);
+    test_int(start_mode, playlist_node->GetAttribute(wxT("start_mode")), 1, 100);
+    if (valid) {
+        starting_config = std::make_pair(uint8_t(start_bank - 1), 
+                                                    uint32_t(start_mode - 1));
+    }
+
+    test_int(delta_pitch,
+             playlist_node->GetAttribute(wxT("pitch")),
+             -MIDI_NOTES_IN_OCTAVE, MIDI_NOTES_IN_OCTAVE);
+
+    int autoplay;
+    test_int(autoplay,
+             playlist_node->GetAttribute(wxT("auto_play_next")),
+             std::numeric_limits<int>::min(),
+             std::numeric_limits<int>::max());
+    if (valid) {
+        play_next = (0U != autoplay);
+    }
+
+    test_double(last_note_multiplier,
+                playlist_node->GetAttribute(wxT("last_note_multiplier")));
+
+    return (valid && (last_note_multiplier > 0.0));
 }
 
 
-PlayListEntry &PlayList::get_playlist_entry(const uint32_t song_id)
+bool PlayListEntry::load_config(const ui::LoadMidiDialog &dialog,
+                                SyndineImporter *importer)
 {
-    if (!m_is_locked) {
-        throw std::runtime_error("Error: lock not aquired");
+    auto test = [](double &dest, wxTextCtrl *const box) -> bool {
+        auto test_value = std::numeric_limits<double>::max();
+        const auto ok = box->GetValue().ToDouble(&test_value);
+        if (ok) {
+            dest = test_value;
+        }
+
+        return ok;
+    };
+
+    if (!test(last_note_multiplier,
+              dialog.extend_ending_textbox)) {
+        throw std::out_of_range(fmt::format(
+            "Error in field: {}",
+            dialog.extended_ending_label->GetLabelText().ToStdString()));
     }
 
-    auto entry = m_play_list.find(song_id);
-    if (m_play_list.end() != entry) {
-        return entry->second;
+    if (!test(gap_beats, dialog.initial_gap_text_box)) {
+        throw std::out_of_range(fmt::format(
+            "Error in field: {}",
+            dialog.initial_gap_label->GetLabelText().ToStdString()));
     }
 
-    if (song_id > 0U) {
-        throw std::runtime_error(fmt::format("Error: song id {} not found", 
-                                 song_id));
+    std::unique_ptr<SyndineImporter> local_importer;
+    if (nullptr == importer) {
+        local_importer = std::make_unique<SyndineImporter>(
+            file_name.ToStdString(), song_id);
+        importer = local_importer.get();
     }
 
-    const auto new_song_id = m_next_song_id;
-    ++m_next_song_id;
-    auto &song = m_play_list[new_song_id];
-    song.current_song_id = new_song_id;
-    return song;
+    tempo_requested = dialog.select_tempo->GetValue();
+    starting_config = std::make_pair(
+        uint8_t(dialog.bank_select->GetValue() - 1), 
+        uint32_t(dialog.mode_select->GetValue() - 1));
+    delta_pitch = dialog.pitch_change->GetValue();
+    play_next = dialog.play_next_checkbox->IsChecked();
+
+    importer->set_bank_config(starting_config.first,
+                              starting_config.second);
+
+    importer->adjust_tempo(tempo_requested);
+    importer->adjust_key(delta_pitch);
+
+    midi_events = importer->get_events(gap_beats, last_note_multiplier);
+
+    return (midi_events.size() > 0U);
 }
 
 
-void PlayList::clear()
+void PlayListEntry::save_config(wxXmlNode *const playlist_node) const
 {
-    wxMutexLocker lock(*m_mutex);
-    m_next_song_id = 1U;
-    m_play_list.clear();
+    if (tempo_detected.has_value()) {
+        playlist_node->AddAttribute(
+            wxT("tempo_requested"),
+            wxString::Format(wxT("%i"), tempo_requested));
+    }
+    playlist_node->AddAttribute(
+        wxT("gap"), wxString::FromDouble(gap_beats));
+
+    playlist_node->AddAttribute(
+        wxT("start_bank"),
+        wxString::Format(wxT("%d"), starting_config.first + 1U));
+    playlist_node->AddAttribute(
+        wxT("start_mode"),
+        wxString::Format(wxT("%d"), starting_config.second + 1U));
+
+    playlist_node->AddAttribute(
+        wxT("pitch"),
+        wxString::Format(wxT("%i"), delta_pitch));
+    playlist_node->AddAttribute(
+        wxT("last_note_multiplier"), 
+        wxString::FromDouble(last_note_multiplier));
+    playlist_node->AddAttribute(
+        wxT("auto_play_next"),
+        wxString::Format(wxT("%i"), int(play_next)));
+    playlist_node->AddChild(new wxXmlNode(wxXML_TEXT_NODE, 
+                                           wxT(""), 
+                                           file_name));
 }
 
 }

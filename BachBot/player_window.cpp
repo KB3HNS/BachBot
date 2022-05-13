@@ -26,7 +26,7 @@
 //  system includes
 #include <algorithm>  //  std::foreach
 #include <array>  //  std::array
-#include <stdexcept>  //  std::runtime_error
+#include <stdexcept>  //  std::runtime_error. std::out_of_range
 #include <string>  //  std::string
 #include <string_view>  //  sv, std::swap
 #include <utility>  //  std::as_const
@@ -62,12 +62,10 @@ PlayerWindow::PlayerWindow() :
     m_midi_devices(),
     m_midi_out(),
     m_current_device_id{0U},
-    m_playlist(),
     m_current_song_event_count{0U},
     m_current_song_id{0U},
     m_next_song_id{0U},
-    m_first_song_id{0U},
-    m_last_song_id{0U},
+    m_song_list(0U, 0U),
     m_song_labels(),
     m_current_config{0U, 0U}
 {
@@ -96,8 +94,9 @@ void PlayerWindow::on_play_advance(wxCommandEvent &event)
                                          m_current_config.second);
         
         if (0U != m_next_song_id) {
+        auto control = m_song_labels[m_next_song_id].get();
             m_player_thread->enqueue_next_song(
-                m_playlist.get_song_events(m_next_song_id));
+                control->get_song_events());
         } else {
             m_player_thread->enqueue_next_song(
                 generate_test_pattern());
@@ -122,7 +121,6 @@ void PlayerWindow::on_stop(wxCommandEvent &event)
 
 void PlayerWindow::on_new_playlist(wxCommandEvent &event)
 {
-    m_playlist.clear();
     clear_playlist_window();
 }
 
@@ -137,7 +135,7 @@ void PlayerWindow::on_load_playlist(wxCommandEvent &event)
         return;
     }
 
-    if (m_playlist.count() > 0U) {
+    if (m_song_labels.size() > 0U) {
         wxMessageDialog confirm_dialog(
             this,  wxT("Clear current playlist?"), wxT("Confirm clear"),
             wxOK|wxCANCEL|wxCANCEL_DEFAULT|wxICON_WARNING);
@@ -146,32 +144,19 @@ void PlayerWindow::on_load_playlist(wxCommandEvent &event)
         }
     }
 
-    PlaylistLoader loader(this, m_playlist,open_dialog.GetPath());
+    PlaylistLoader loader(this, open_dialog.GetPath());
     if (loader.ShowModal() != wxID_OK) {
         wxMessageBox(fmt::format(L"Error loading playlist:\n"
                                   "Error reported was: {}",
                                  std::as_const(loader).get_error_text()));
-        if (m_playlist.count() != m_song_labels.size()) {
-            clear_playlist_window();
-        }
         return;
     }
 
     clear_playlist_window();
-    if (m_playlist.count() > 0U) {
-        auto song_id = 1U;
-        m_first_song_id = 1U;
-        m_next_song_id = 1U;
-        auto lock = m_playlist.lock();
-        playlist_label->Show(false);
-        while (0U != song_id) {
-            auto &song_entry = m_playlist.get_playlist_entry(song_id);
-            if (song_entry.current_song_id == m_first_song_id) {
-                next_label->SetLabelText(song_entry.file_name);
-            }
-            add_playlist_entry(song_entry);
-            m_last_song_id = song_id;
-            song_id = song_entry.next_song_id;
+    const auto playlist = loader.get_playlist();
+    if (playlist.size() > 0U) {
+        for (const auto &i: playlist) {
+            add_playlist_entry(i);
         }
         layout_scroll_panel();
     }
@@ -194,48 +179,19 @@ void PlayerWindow::on_save_playlist(wxCommandEvent &event)
                                        wxT("BachBot_Playlist"));
 
     playlist_doc.SetRoot(playlist_root);
-    auto song_id = m_first_song_id;
+    auto song_id = m_song_list.first;
     auto order = 0U;
     while (song_id > 0U) {
         auto playlist_entry = new wxXmlNode(playlist_root, 
                                             wxXML_ELEMENT_NODE, 
                                             wxT("song"));
 
-        auto lock = m_playlist.lock();
-        const auto &song = m_playlist.get_playlist_entry(song_id);
-        if (song.tempo_detected.has_value()) {
-            playlist_entry->AddAttribute(
-                wxT("tempo_requested"),
-                wxString::Format(wxT("%i"), song.tempo_requested));
-        }
-        playlist_entry->AddAttribute(
-            wxT("gap"), wxString::FromDouble(song.gap_beats));
+        const auto *const song = m_song_labels[song_id].get();
+        song->save_config(playlist_entry);
+        playlist_entry->AddAttribute(wxT("order"),
+                                     wxString::Format(wxT("%u"), ++order));
 
-        playlist_entry->AddAttribute(
-            wxT("start_bank"),
-            wxString::Format(wxT("%d"), song.starting_config.first + 1U));
-        playlist_entry->AddAttribute(
-            wxT("start_mode"),
-            wxString::Format(wxT("%d"), song.starting_config.second + 1U));
-
-        playlist_entry->AddAttribute(
-            wxT("pitch"),
-            wxString::Format(wxT("%i"), song.delta_pitch));
-        playlist_entry->AddAttribute(
-            wxT("last_note_multiplier"), 
-            wxString::FromDouble(song.last_note_multiplier));
-        playlist_entry->AddAttribute(
-            wxT("auto_play_next"),
-            wxString::Format(wxT("%i"), int(song.play_next)));
-        playlist_entry->AddChild(new wxXmlNode(wxXML_TEXT_NODE, 
-                                               wxT(""), 
-                                               song.file_name));
-
-        playlist_entry->AddAttribute(
-            wxT("order"),
-            wxString::Format(wxT("%u"), ++order));
-
-        song_id = song.next_song_id;
+        song_id = song->get_sequence().second;
     }
 
     playlist_doc.Save(save_dialog.GetPath());
@@ -252,11 +208,10 @@ void PlayerWindow::on_open_midi(wxCommandEvent &event)
         return;
     }
 
-    auto lock = m_playlist.lock();
-    auto &song_entry = m_playlist.get_playlist_entry();
-
+    PlayListEntry song_entry;
+    song_entry.song_id = uint32_t(m_song_labels.size()) + 1U;
     auto importer = std::make_unique<SyndineImporter>(
-        open_dialog.GetPath().ToStdString(), song_entry.current_song_id);
+        open_dialog.GetPath().ToStdString(), song_entry.song_id);
 
     song_entry.file_name = open_dialog.GetPath();
     song_entry.tempo_detected = importer->get_tempo();
@@ -270,21 +225,10 @@ void PlayerWindow::on_open_midi(wxCommandEvent &event)
     import_dialog.tempo_label->SetLabelText(fmt::format(L"{}bpm", tempo));
     import_dialog.select_tempo->SetValue(tempo);
 
-    auto test = [](double &dest, wxTextCtrl *const box) -> bool {
-        auto test_value = std::numeric_limits<double>::max();
-        const auto ok = box->GetValue().ToDouble(&test_value);
-        if (ok) {
-            dest = test_value;
-        }
-
-        return ok;
-    };
-
     wxString error_text;
     do {
         if (error_text.size() > 0U) {
-            wxMessageBox(fmt::format(L"Error in field: {}", error_text),
-                         "Form Error", wxOK | wxICON_INFORMATION);
+            wxMessageBox(error_text, "Form Error", wxOK | wxICON_INFORMATION);
         }
 
         if (import_dialog.ShowModal() == wxID_CANCEL) {
@@ -292,46 +236,16 @@ void PlayerWindow::on_open_midi(wxCommandEvent &event)
         }
 
         error_text.clear();
-        if (!test(song_entry.last_note_multiplier,
-                  import_dialog.extend_ending_textbox)) {
-            error_text = import_dialog.extended_ending_label->GetLabelText();
-        }
-
-        if (!test(song_entry.gap_beats, import_dialog.initial_gap_text_box)) {
-            error_text = import_dialog.initial_gap_label->GetLabelText();
+        try {
+            song_entry.load_config(import_dialog, importer.get());
+        } catch (std::out_of_range &e) {
+            error_text = e.what();
         }
     } while (error_text.size() > 0U);
 
-
-    song_entry.tempo_requested = import_dialog.select_tempo->GetValue();
-    song_entry.starting_config = std::make_pair(
-        uint8_t(import_dialog.bank_select->GetValue() - 1), 
-        uint32_t(import_dialog.mode_select->GetValue() - 1));
-    song_entry.delta_pitch = import_dialog.pitch_change->GetValue();
-    song_entry.play_next = import_dialog.play_next_checkbox->IsChecked();
-
-    importer->set_bank_config(song_entry.starting_config.first,
-                              song_entry.starting_config.second);
-    
-    importer->adjust_tempo(song_entry.tempo_requested);
-    importer->adjust_key(song_entry.delta_pitch);
-
-    song_entry.midi_events = importer->get_events(
-        song_entry.gap_beats, song_entry.last_note_multiplier);
-
-    if (0U == m_first_song_id) {
-        m_first_song_id = song_entry.current_song_id;
-        m_next_song_id = m_first_song_id;
-        next_label->SetLabelText(song_entry.file_name);
-        playlist_label->Show(false);
-    } else {
-        auto &prev_song = m_playlist.get_playlist_entry(m_last_song_id);
-        prev_song.next_song_id = song_entry.current_song_id;
-    }
-
     add_playlist_entry(song_entry);
     layout_scroll_panel();
-    m_last_song_id = song_entry.current_song_id;
+    m_song_list.second = song_entry.song_id;
 }
 
 
@@ -407,42 +321,65 @@ void PlayerWindow::on_song_starts_playing(wxThreadEvent &event)
     }
 
     if (song_id > 0U) {
-        auto lock = m_playlist.lock();
-        const auto &song_data = m_playlist.get_playlist_entry(song_id);
+        auto *const song_data = m_song_labels[song_id].get();
 
-        m_current_song_event_count = song_data.midi_events.size();
-        m_next_song_id = song_data.next_song_id;
-        const auto autoplay = song_data.play_next;
-        lock.reset();
+        m_current_song_event_count = song_data->get_song_events().size();
 
         m_current_song_id = song_id;
         event_count->SetRange(int(m_current_song_event_count));
-        auto song_control = m_song_labels[m_current_song_id].get();
-        track_label->SetLabelText(song_control->get_filename());
-        song_control->set_playing();
+        track_label->SetLabelText(song_data->get_filename());
+        song_data->set_playing();
+        set_next_song(song_data->get_sequence().second);
 
-        if (0U != m_next_song_id) {
-            const auto next_song = m_song_labels[m_next_song_id].get();
-            next_label->SetLabelText(next_song->get_filename());
-            next_song->set_next();
-            if (autoplay) {
-                m_player_thread->enqueue_next_song(
-                    m_playlist.get_song_events(m_next_song_id));
-            }
-        } else {
-            next_label->SetLabelText(wxT(""));
-        }
     }
 }
 
 
 void PlayerWindow::on_song_done_playing(wxThreadEvent &event)
 {
+    m_song_labels[m_current_song_id]->reset_status();
     if (event.GetInt() == 0) {
         m_next_song_id = m_current_song_id;
-        auto lock = m_playlist.lock();
-        const auto &song = m_playlist.get_playlist_entry(m_current_song_id);
-        next_label->SetLabelText(song.file_name);
+        const auto *const song = m_song_labels[m_current_song_id].get();
+        next_label->SetLabelText(song->get_filename());
+    }
+}
+
+
+void PlayerWindow::on_move_event(const uint32_t song_id,
+                                 PlaylistEntryControl *control, 
+                                 const bool direction)
+{
+    const auto sequence = control->get_sequence();
+    const auto next_song_id = (direction ? sequence.first : sequence.second);
+    auto other_control = m_song_labels[next_song_id].get();
+    control->swap(other_control);
+    std::swap(m_song_labels[song_id], m_song_labels[next_song_id]);
+    if (direction) {
+        std::swap(control, other_control);
+    }
+
+    //  order is now prev -> control -> other_control -> next
+    const auto prev_sequence = control->get_sequence().first;
+    const auto next_sequence = other_control->get_sequence().second;
+    if (0U != prev_sequence) {
+        m_song_labels[prev_sequence]->set_sequence(-1, control->get_song_id());
+    } else {
+        m_song_list.first = control->get_song_id();
+    }
+
+    if (0U != next_sequence) {
+        m_song_labels[next_sequence]->set_sequence(other_control->get_song_id());
+    } else {
+        m_song_list.second = other_control->get_song_id();
+    }
+
+    if (0U != m_current_song_id) {
+        const auto sequence = m_song_labels[m_current_song_id]->get_sequence();
+        if (sequence.second != m_next_song_id) {
+            m_song_labels[m_next_song_id]->reset_status();
+            set_next_song(sequence.second);
+        }
     }
 }
 
@@ -501,30 +438,42 @@ void PlayerWindow::clear_playlist_window()
 
     m_song_labels.clear();
     next_label->SetLabelText(wxT(""));
-    playlist_label->Show(true);
+    static_cast<void>(playlist_label->Show(true));
     layout_scroll_panel();
-    m_first_song_id = 0U;
-    m_last_song_id = 0U;
+    m_song_list = std::make_pair(0U, 0U);
     m_next_song_id = 0U;
-    header_container->Show(false);
+    static_cast<void>(header_container->Show(false));
 }
 
 
 void PlayerWindow::add_playlist_entry(const PlayListEntry &song)
 {
+    const auto playing_last = (m_current_song_id == m_song_list.second);
     auto p_label = std::make_unique<PlaylistEntryControl>(playlist_panel, song);
-    playlist_container->Add(p_label.get(), 0, wxALL, 5);
+    if (0U == m_song_list.first) {
+        m_song_list.first = song.song_id;
+        static_cast<void>(playlist_label->Show(false));
+    } else {
+        auto *const prev_song = m_song_labels[m_song_list.second].get();
+        prev_song->set_sequence(-1, int(song.song_id));
+    }
+
+    static_cast<void>(playlist_container->Add(p_label.get(), 0, wxALL, 5));
     header_container->Show(true);
-    const auto next_song_id = song.next_song_id;
-    
+    p_label->set_sequence(int(m_song_list.second));
+    m_song_list.second = song.song_id;
+
     p_label->move_event = [=](uint32_t song_id,
                               PlaylistEntryControl *control,
                               bool direction) {
-        control->swap(m_song_labels[next_song_id].get());
-        std::swap(m_song_labels[song_id], m_song_labels[next_song_id]);
+        on_move_event(song_id, control, direction);
     };
 
-    m_song_labels[song.current_song_id] = std::move(p_label);
+    m_song_labels[song.song_id] = std::move(p_label);
+
+    if ((song.song_id == m_song_list.first) || playing_last) {
+        set_next_song(song.song_id);
+    }
 }
 
 
@@ -534,6 +483,26 @@ void PlayerWindow::layout_scroll_panel() const
     const auto size = playlist_panel->GetBestVirtualSize();
     playlist_panel->SetVirtualSize(size);
     playlist_panel->Refresh();
+}
+
+
+void PlayerWindow::set_next_song(const uint32_t song_id)
+{
+    m_next_song_id = song_id;
+    if (0U != song_id) {
+        const auto next_song = m_song_labels[m_next_song_id].get();
+        next_label->SetLabelText(next_song->get_filename());
+        next_song->set_next();
+        const auto cur_song = m_song_labels.find(m_current_song_id);
+        if ((m_song_labels.end() != cur_song) && 
+            cur_song->second->get_autoplay())
+        {
+            m_player_thread->enqueue_next_song(
+                next_song->get_song_events());
+        }
+    } else {
+        next_label->SetLabelText(wxT(""));
+    }
 }
 
 

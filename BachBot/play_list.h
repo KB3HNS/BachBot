@@ -30,18 +30,17 @@
 //  system includes
 #include <cstdint>  //  uint32_t
 #include <list>  //  std::list
-#include <memory>  //  std::shared_ptr, std::unique_ptr
-#include <unordered_map>  //  std::unordered_map
 #include <optional>  //  std::optional
-#include <atomic>  //  std::atomic_bool
 #include <wx/wx.h>  //  wxString
+#include <wx/xml/xml.h>  //  wxXml API
 
 //  module includes
 // -none-
 
 //  local includes
-#include "organ_midi_event.h"  //  OrganNote
-
+#include "organ_midi_event.h"  //  OrganNote, BankConfig
+#include "main_window.h"  //  ui::LoadMidiDialog
+#include "syndyne_importer.h"  //  SyndineImporter
 
 namespace bach_bot {
 
@@ -50,12 +49,10 @@ namespace bach_bot {
  */
 struct PlayListEntry
 {
-    uint32_t current_song_id;
-    uint32_t next_song_id;
+    uint32_t song_id;
 
     //  Configuration items
     wxString file_name;
-    std::optional<int> tempo_detected;
     int tempo_requested;
     double gap_beats;
     BankConfig starting_config;
@@ -64,81 +61,42 @@ struct PlayListEntry
     bool play_next;
 
     //  Actual song data
+    std::optional<int> tempo_detected;
     std::list<OrganNote> midi_events;
-};
-
-
-/**
- * @brief Lock semantic for the playlist
- */
-class PlayListMutex
-{
-public:
-    PlayListMutex(const PlayListMutex&) = delete;
-
-    PlayListMutex(std::shared_ptr<wxMutex> mutex,
-                  std::atomic_bool *const lock_flag);
-
-    ~PlayListMutex();
-
-private:
-    std::shared_ptr<wxMutex> m_mutex;
-    std::atomic_bool *const m_lock_flag;
-};
-
-
-/**
- * @brief Actual playlist container - container is thread-safe.
- */
-class PlayList
-{
-public:
-    
-    /**
-     * @brief Default constructor
-     */
-    PlayList();
 
     /**
-     * @brief Aquire external persistent lock
-     * @return Lock object
+     * @brief Load MIDI file and import events
+     * @retval `false` song not loaded
+     * @retval `true` song loaded successfully
      */
-    std::unique_ptr<PlayListMutex> lock();
-    
-    /**
-     * @brief Get an existing song
-     * @param song_id sing ID to get
-     * @return Playlist song's events
-     */
-    std::list<OrganMidiEvent> get_song_events(const uint32_t song_id) const;
+    bool import_midi();
 
     /**
-     * @brief Get a mutable song entry
-     * @param song_id song ID to get (default: new song entry)
-     * @return Playlist entry
-     * @throws std::runtime_error if song_id is specified and does not exist.
+     * @brief Load the playlist configuration into the song_entry structure
+     * @param playlist_node XML node for data
+     * @throws std::out_of_rang if a field contains an invalid value
+     * @retval `true` data loaded
+     * @retval `false` parse error
      */
-    PlayListEntry& get_playlist_entry(const uint32_t song_id=0U);
+    bool load_config(const wxXmlNode *const playlist_node);
 
     /**
-     * @brief Clear all entries in the playlist and reset state.
+     * @brief Load configuration from a dialog box
+     * @param dialog dialog box
+     * @param importer optionally provide an allready allocated SyndineImporter
+     *        instance to use to load events
+     * @throws std::out_of_rang if a field contains an invalid value
+     * @retval `true` data loaded
+     * @retval `false` parse error
      */
-    void clear();
+    bool load_config(const ui::LoadMidiDialog &dialog,
+                     SyndineImporter *importer=nullptr);
 
     /**
-     * @brief Get the number of items in the playlist.
-     * @return number of items in playlist
+     * @brief Save current entry to XML structure
+     * @param playlist_node store config into XML node
      */
-    size_t count() const
-    {
-        return m_play_list.size();
-    }
-
-private:
-    std::unordered_map<uint32_t, PlayListEntry> m_play_list;
-    uint32_t m_next_song_id;
-    std::shared_ptr<wxMutex> m_mutex;  ///< Access is protected by mutex
-    std::atomic_bool m_is_locked;
+    void save_config(wxXmlNode *const playlist_node) const;
 };
 
 

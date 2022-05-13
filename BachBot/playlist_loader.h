@@ -57,11 +57,9 @@ public:
     /**
      * @brief Constructor
      * @param parent Parent window (main window)
-     * @param playlist reference to playlist container
      * @param filename file to load
      */
     PlaylistLoader(wxFrame *const parent,
-                   PlayList &playlist,
                    const wxString &filename);
 
     int ShowModal() override;
@@ -77,6 +75,12 @@ public:
      * @return error text (valid only if ShowModal doesn't return wxID_OK)
      */
     wxString get_error_text();
+
+    /**
+     * @brief Get playlist entries (moves from internal storage)
+     * @returns playlist entries
+     */
+    std::list<PlayListEntry> get_playlist();
 
 protected:
     virtual ExitCode Entry() override;
@@ -104,24 +108,7 @@ private:
      * @retval <= 0 indicates error
      */
     int count_children(const wxXmlNode *const playlist_root);
-
-    /**
-     * @brief Load the playlist configuration into the song_entry structure
-     * @param song_entry[in/out] update with song entry data
-     * @param playlist_node XML node for data
-     * @retval `true` data loaded
-     * @retval `false` parse error
-     */
-    bool load_playlist_config(PlayListEntry &song_entry, 
-                              const wxXmlNode *const playlist_node) const;
     
-    /**
-     * @brief Load MIDI file and import events
-     * @param song_entry[in/out] update with events
-     * @retval `false` song not loaded
-     * @retval `true` song loaded successfully
-     */
-    bool import_midi(PlayListEntry &song_entry) const;
 
     //  Events in event table
     void on_start_event(wxThreadEvent &event);
@@ -129,7 +116,7 @@ private:
     void on_close_event(wxThreadEvent &event);
 
     wxMutex m_mutex;
-    PlayList &m_playlist;
+    std::list<PlayListEntry> m_playlist;
     wxString m_error_text;
     wxXmlDocument m_playlist_doc;
     const wxString m_filename;

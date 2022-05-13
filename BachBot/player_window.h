@@ -31,6 +31,7 @@
 #include <cstdint>  //  uint32_t
 #include <list>  //  std::list
 #include <memory>  //  std::unique_ptr
+#include <utility>  //  std::pair
 #include <unordered_map>  //  std::unordered_map
 #include <wx/wx.h>  //  wxLog, wxThread, etc
 #include <RtMidi.h>  //  RtMidiOut
@@ -124,6 +125,11 @@ private:
     void on_bank_changed(wxThreadEvent &event);
     void on_song_starts_playing(wxThreadEvent &event);
     void on_song_done_playing(wxThreadEvent &event);
+    
+    
+    void on_move_event(const uint32_t song_id,
+                       PlaylistEntryControl *control,
+                       const bool direction);
 
     /**
      * @brief Internal device changed handler
@@ -144,21 +150,32 @@ private:
      */
     void clear_playlist_window();
 
+    /**
+     * @brief Add entry `song` to the end of the playlist
+     * @param song song data entry
+     */
     void add_playlist_entry(const PlayListEntry &song);
 
+    /**
+     * @brief Reset the layout of the scroll panel
+     */
     void layout_scroll_panel() const;
+
+    /**
+     * @brief Set the next song ID (update GUI and player thread)
+     * @param song_id song ID that is "next"
+     */
+    void set_next_song(const uint32_t song_id);
 
     uint32_t m_counter;
     std::unique_ptr<PlayerThread> m_player_thread;
     std::list<wxMenuItem> m_midi_devices;
     RtMidiOut m_midi_out;
     uint32_t m_current_device_id;
-    PlayList m_playlist;
     size_t m_current_song_event_count;
     uint32_t m_current_song_id;
     uint32_t m_next_song_id;
-    uint32_t m_first_song_id;
-    uint32_t m_last_song_id;
+    std::pair<uint32_t, uint32_t> m_song_list;  ///< front/end of playlist
     std::unordered_map<uint32_t, PlaylistEntryType> m_song_labels;
     BankConfig m_current_config;
 

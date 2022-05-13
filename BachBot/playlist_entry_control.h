@@ -32,6 +32,7 @@
 
 //  system includes
 #include <cstdint>  //  uint32_t
+#include <utility>  //  std::pair
 #include <functional>  //  std::function
 #include <wx/wx.h>  //  wxString
 
@@ -61,7 +62,7 @@ public:
      * @param parent assigned parent window (scroll panel)
      * @param song song configuration
      */
-    PlaylistEntryControl(wxWindow *const parent, const PlayListEntry &song);
+    PlaylistEntryControl(wxWindow *const parent, PlayListEntry song);
 
     /**
      * @brief Get the filename of this song
@@ -90,6 +91,12 @@ public:
      */
     void set_autoplay(const bool autoplay_enabled);
 
+    /**
+     * @brief Get the auto play next bool
+     * @return auto play/continue to next
+     */
+    bool get_autoplay() const;
+
     //  Allow the player window to set these directly:
     /** Configure button clicked bool: unused (always false) */
     CallBack configure_event;
@@ -108,6 +115,40 @@ public:
      * @param other other control to swap with
      */
     void swap(PlaylistEntryControl *const other);
+
+    /**
+    * @brief Get song events
+    * @return Playlist song's events
+    */
+    std::list<OrganMidiEvent> get_song_events() const;
+
+    /**
+     * @brief Get the sequence (prev song/next song) data
+     * @returns pair<prev song ID, next song ID>
+     */
+    std::pair<uint32_t, uint32_t> get_sequence() const;
+
+    /**
+     * @brief Set this song's sequence
+     * @param prev song ID of the song immediately preceeding this one
+     * @param next song ID of the song immediately following this one
+     * @note if either prev or next are < 0 then parameter is ignored.
+     */
+    void set_sequence(const int prev=-1, const int next=-1);
+
+    /**
+     * @brief Save current entry to XML structure
+     * @param playlist_node store config into XML node
+     */
+    void save_config(wxXmlNode *const playlist_node) const
+    {
+        m_playlist_entry.save_config(playlist_node);
+    }
+
+    uint32_t get_song_id() const
+    {
+        return m_playlist_entry.song_id;
+    }
 
 protected:
     virtual void on_configure_clicked(wxCommandEvent& event) override final;
@@ -129,11 +170,12 @@ private:
     static void dummy_event(uint32_t, PlaylistEntryControl*, bool);
 
     wxWindow *const m_parent;
-    uint32_t m_song_id;
-    wxString m_filename;
-    bool m_autoplay;
     bool m_up_next;
     bool m_playing;
+    uint32_t m_prev_song_id;
+    uint32_t m_next_song_id;
+
+    PlayListEntry m_playlist_entry;
 };
 
 }  //  end ui

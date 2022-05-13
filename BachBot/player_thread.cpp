@@ -282,6 +282,15 @@ void PlayerThread::do_mode_check()
         m_bank_change_delay.Start();
     };
 
+    auto step_down = [=]() {
+        if (0U == m_bank_number) {
+            --m_mode_number;
+            m_bank_number = 8U;
+        }
+        --m_bank_number;
+        send_change(SyndyneBankCommands::PREV_BANK);
+    };
+
     const auto desired_mode = m_midi_event_queue.front().get_bank_config();
     if ((desired_mode.second < m_mode_number && m_bank_number > 0U) || 
         (desired_mode.second == m_mode_number && 0U == desired_mode.first))
@@ -291,6 +300,10 @@ void PlayerThread::do_mode_check()
         // piston mode.
         m_bank_number = 0U;
         send_change(SyndyneBankCommands::GENERAL_CANCEL);
+    } else if (desired_mode.second < m_mode_number) {
+        //  At the bottom of the piston position and need to step down to the
+        // top of the last one.
+        step_down();
     } else if (desired_mode.second > m_mode_number ||
                desired_mode.first > m_bank_number) {
         //  We need to go up, no shortcuts available.
@@ -300,17 +313,9 @@ void PlayerThread::do_mode_check()
             ++m_mode_number;
         }
         send_change(SyndyneBankCommands::NEXT_BANK);
-    } else if (desired_mode.second < m_mode_number || 
-               desired_mode.first < m_bank_number) {
-        //  Either at the bottom of this piston mode and need to step down to
-        // the top of the last one, or we just need to walk down to the desired
-        // bank.
-        if (0U == m_bank_number) {
-            --m_mode_number;
-            m_bank_number = 8U;
-        }
-        --m_bank_number;
-        send_change(SyndyneBankCommands::PREV_BANK);
+    } else if (desired_mode.first < m_bank_number) {
+        // We just need to walk down to the desired bank.
+        step_down();
     }
 }
 
