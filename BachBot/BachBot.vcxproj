@@ -147,6 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="key_combo_catcher.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="main_window.cpp" />
     <ClCompile Include="midi_note_tracker.cpp" />
@@ -160,6 +161,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common_defs.h" />
+    <ClInclude Include="key_combo_catcher.h" />
     <ClInclude Include="main_window.h" />
     <ClInclude Include="midi_note_tracker.h" />
     <ClInclude Include="organ_midi_event.h" />

@@ -338,7 +338,7 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
             if (channel_id < m_current_state.size()) {
                 const auto note = remap_note(midi_event.getKeyNumber(), 
                                              g_keyboard_indexes[channel_id]);
-                midi_event[2] = note;
+                midi_event[1] = note;
                 m_current_state[channel_id][note].add_event(midi_event);
             } else if (midi_event.isNoteOn()) {
                 //  Treat as control event

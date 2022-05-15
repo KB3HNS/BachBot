@@ -20,9 +20,8 @@
 #include <wx/settings.h>
 #include <wx/sizer.h>
 #include <wx/stattext.h>
-#include <wx/panel.h>
-#include <wx/gauge.h>
 #include <wx/statbox.h>
+#include <wx/gauge.h>
 #include <wx/statline.h>
 #include <wx/scrolwin.h>
 #include <wx/statusbr.h>
@@ -33,6 +32,7 @@
 #include <wx/checkbox.h>
 #include <wx/dialog.h>
 #include <wx/radiobut.h>
+#include <wx/panel.h>
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -48,7 +48,6 @@ namespace bach_bot
 			private:
 
 			protected:
-				wxPanel* m_panel5;
 				wxButton* play_advance_button;
 				wxButton* stop_button;
 				wxStaticText* m_staticText3;
@@ -78,6 +77,9 @@ namespace bach_bot
 
 				// Virtual event handlers, override them in your derived class
 				virtual void on_close( wxCloseEvent& event ) { event.Skip(); }
+				virtual void on_drop_midi_file( wxDropFilesEvent& event ) { event.Skip(); }
+				virtual void on_keydown_event( wxKeyEvent& event ) { event.Skip(); }
+				virtual void on_keyup_event( wxKeyEvent& event ) { event.Skip(); }
 				virtual void on_play_advance( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_stop( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_bank_change_next( wxMouseEvent& event ) { event.Skip(); }
@@ -85,6 +87,7 @@ namespace bach_bot
 				virtual void on_new_playlist( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_load_playlist( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_save_playlist( wxCommandEvent& event ) { event.Skip(); }
+				virtual void on_save_as( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_open_midi( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_quit( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_manual_advance( wxCommandEvent& event ) { event.Skip(); }
@@ -95,7 +98,7 @@ namespace bach_bot
 
 			public:
 
-				MainWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("BachBot Player"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 430,410 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
+				MainWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("BachBot Player"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 430,410 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL|wxWANTS_CHARS );
 
 				~MainWindow();
 
@@ -176,6 +179,7 @@ namespace bach_bot
 				wxMenu* context_menu;
 
 				// Virtual event handlers, override them in your derived class
+				virtual void on_radio_selected( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_configure_clicked( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_checkbox_checked( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_set_next( wxCommandEvent& event ) { event.Skip(); }

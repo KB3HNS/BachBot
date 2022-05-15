@@ -212,6 +212,7 @@ OrganNote::OrganNote(OrganMidiEvent *const ptr) :
 {
 }
 
+
 OrganNote::OrganNote(const OrganMidiEvent &rhs) :
     OrganNote(new OrganMidiEvent(rhs))
 {

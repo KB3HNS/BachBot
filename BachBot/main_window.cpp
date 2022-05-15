@@ -13,12 +13,10 @@ using namespace bach_bot::ui;
 MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxFrame( parent, id, title, pos, size, style )
 {
 	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
+	this->DragAcceptFiles( true );
 
 	wxBoxSizer* bSizer2;
 	bSizer2 = new wxBoxSizer( wxVERTICAL );
-
-	m_panel5 = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxSize( -1,75 ), wxTAB_TRAVERSAL );
-	m_panel5->SetMaxSize( wxSize( -1,70 ) );
 
 	wxBoxSizer* bSizer12;
 	bSizer12 = new wxBoxSizer( wxHORIZONTAL );
@@ -26,10 +24,10 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	wxGridSizer* gSizer1;
 	gSizer1 = new wxGridSizer( 2, 1, 0, 0 );
 
-	play_advance_button = new wxButton( m_panel5, wxID_ANY, wxT("Play/Advance"), wxDefaultPosition, wxDefaultSize, 0 );
+	play_advance_button = new wxButton( this, wxID_ANY, wxT("Play/Advance"), wxDefaultPosition, wxDefaultSize, 0 );
 	gSizer1->Add( play_advance_button, 0, wxALL, 5 );
 
-	stop_button = new wxButton( m_panel5, wxID_ANY, wxT("Stop"), wxDefaultPosition, wxDefaultSize, 0 );
+	stop_button = new wxButton( this, wxID_ANY, wxT("Stop"), wxDefaultPosition, wxDefaultSize, 0 );
 	gSizer1->Add( stop_button, 0, wxALL, 5 );
 
 
@@ -38,44 +36,48 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 
 	bSizer12->Add( 0, 0, 1, wxEXPAND, 5 );
 
+	wxStaticBoxSizer* sbSizer2;
+	sbSizer2 = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, wxT("Current Config") ), wxVERTICAL );
+
 	wxGridSizer* gSizer2;
 	gSizer2 = new wxGridSizer( 2, 3, 0, 0 );
 
-	m_staticText3 = new wxStaticText( m_panel5, wxID_ANY, wxT("Bank"), wxDefaultPosition, wxSize( 30,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	m_staticText3 = new wxStaticText( sbSizer2->GetStaticBox(), wxID_ANY, wxT("Bank"), wxDefaultPosition, wxSize( 30,-1 ), wxALIGN_CENTER_HORIZONTAL );
 	m_staticText3->Wrap( -1 );
 	gSizer2->Add( m_staticText3, 0, wxALL, 5 );
 
-	m_staticText4 = new wxStaticText( m_panel5, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText4 = new wxStaticText( sbSizer2->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText4->Wrap( -1 );
 	gSizer2->Add( m_staticText4, 0, wxALL, 5 );
 
-	m_staticText5 = new wxStaticText( m_panel5, wxID_ANY, wxT("Mode"), wxDefaultPosition, wxSize( 30,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	m_staticText5 = new wxStaticText( sbSizer2->GetStaticBox(), wxID_ANY, wxT("Mode"), wxDefaultPosition, wxSize( 30,-1 ), wxALIGN_CENTER_HORIZONTAL );
 	m_staticText5->Wrap( -1 );
 	gSizer2->Add( m_staticText5, 0, wxALL, 5 );
 
-	bank_label = new wxStaticText( m_panel5, wxID_ANY, wxT("1"), wxDefaultPosition, wxSize( 30,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	bank_label = new wxStaticText( sbSizer2->GetStaticBox(), wxID_ANY, wxT("1"), wxDefaultPosition, wxSize( 30,-1 ), wxALIGN_CENTER_HORIZONTAL );
 	bank_label->Wrap( -1 );
 	bank_label->SetFont( wxFont( wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxEmptyString ) );
 
 	gSizer2->Add( bank_label, 0, wxALL, 5 );
 
-	m_staticText7 = new wxStaticText( m_panel5, wxID_ANY, wxT("/"), wxDefaultPosition, wxSize( 25,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	m_staticText7 = new wxStaticText( sbSizer2->GetStaticBox(), wxID_ANY, wxT("/"), wxDefaultPosition, wxSize( 25,-1 ), wxALIGN_CENTER_HORIZONTAL );
 	m_staticText7->Wrap( -1 );
 	gSizer2->Add( m_staticText7, 0, wxALL, 5 );
 
-	mode_label = new wxStaticText( m_panel5, wxID_ANY, wxT("1"), wxDefaultPosition, wxSize( 30,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	mode_label = new wxStaticText( sbSizer2->GetStaticBox(), wxID_ANY, wxT("1"), wxDefaultPosition, wxSize( 30,-1 ), wxALIGN_CENTER_HORIZONTAL );
 	mode_label->Wrap( -1 );
 	mode_label->SetFont( wxFont( wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxEmptyString ) );
 
 	gSizer2->Add( mode_label, 0, wxALL, 5 );
 
 
-	bSizer12->Add( gSizer2, 0, wxEXPAND|wxRIGHT, 5 );
+	sbSizer2->Add( gSizer2, 0, wxEXPAND, 5 );
 
 
-	m_panel5->SetSizer( bSizer12 );
-	m_panel5->Layout();
-	bSizer2->Add( m_panel5, 0, wxALL|wxEXPAND, 5 );
+	bSizer12->Add( sbSizer2, 1, wxEXPAND|wxRIGHT, 10 );
+
+
+	bSizer2->Add( bSizer12, 0, wxEXPAND, 5 );
 
 	event_count = new wxGauge( this, wxID_ANY, 100, wxDefaultPosition, wxDefaultSize, wxGA_HORIZONTAL );
 	event_count->SetValue( 0 );
@@ -83,6 +85,8 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 
 	track_label = new wxStaticText( this, wxID_ANY, wxT("Not Playing"), wxDefaultPosition, wxDefaultSize, 0 );
 	track_label->Wrap( -1 );
+	track_label->SetFont( wxFont( 12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Courier New") ) );
+
 	bSizer2->Add( track_label, 0, wxALL, 5 );
 
 	sbSizer1 = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, wxT("Up Next") ), wxHORIZONTAL );
@@ -90,6 +94,8 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	sbSizer1->SetMinSize( wxSize( -1,35 ) );
 	next_label = new wxStaticText( sbSizer1->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
 	next_label->Wrap( -1 );
+	next_label->SetFont( wxFont( 12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Courier New") ) );
+
 	sbSizer1->Add( next_label, 0, wxALL, 5 );
 
 
@@ -106,6 +112,7 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	m_staticText25 = new wxStaticText( playlist_panel, wxID_ANY, wxT("Now\nPlaying"), wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER_HORIZONTAL );
 	m_staticText25->Wrap( -1 );
 	m_staticText25->SetFont( wxFont( wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxEmptyString ) );
+	m_staticText25->SetToolTip( wxT("Select to control") );
 
 	header_container->Add( m_staticText25, 0, wxALL, 5 );
 
@@ -122,7 +129,7 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	header_container->Add( m_staticText27, 0, wxALL, 5 );
 
 
-	playlist_container->Add( header_container, 0, wxEXPAND, 5 );
+	playlist_container->Add( header_container, 0, wxEXPAND|wxRIGHT, 10 );
 
 	playlist_label = new wxStaticText( playlist_panel, wxID_ANY, wxT("No Tracks Loaded"), wxDefaultPosition, wxDefaultSize, 0 );
 	playlist_label->Wrap( -1 );
@@ -144,7 +151,7 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	m_menubar1 = new wxMenuBar( 0 );
 	m_menu1 = new wxMenu();
 	wxMenuItem* m_menuItem6;
-	m_menuItem6 = new wxMenuItem( m_menu1, wxID_ANY, wxString( wxT("&New Playlist") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menuItem6 = new wxMenuItem( m_menu1, wxID_ANY, wxString( wxT("&New Playlist") ) + wxT('\t') + wxT("Ctrl+N"), wxEmptyString, wxITEM_NORMAL );
 	m_menu1->Append( m_menuItem6 );
 
 	wxMenuItem* m_menuItem2;
@@ -154,6 +161,10 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	wxMenuItem* m_menuItem3;
 	m_menuItem3 = new wxMenuItem( m_menu1, wxID_ANY, wxString( wxT("&Save Playlist") ) + wxT('\t') + wxT("Ctrl+S"), wxEmptyString, wxITEM_NORMAL );
 	m_menu1->Append( m_menuItem3 );
+
+	wxMenuItem* m_menuItem13;
+	m_menuItem13 = new wxMenuItem( m_menu1, wxID_ANY, wxString( wxT("Save Playlist &As") ) + wxT('\t') + wxT("Ctrl+A"), wxEmptyString, wxITEM_NORMAL );
+	m_menu1->Append( m_menuItem13 );
 
 	wxMenuItem* m_menuItem4;
 	m_menuItem4 = new wxMenuItem( m_menu1, wxID_ANY, wxString( wxT("&Import MIDI") ) , wxEmptyString, wxITEM_NORMAL );
@@ -199,13 +210,19 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 
 	// Connect Events
 	this->Connect( wxEVT_CLOSE_WINDOW, wxCloseEventHandler( MainWindow::on_close ) );
+	this->Connect( wxEVT_DROP_FILES, wxDropFilesEventHandler( MainWindow::on_drop_midi_file ) );
+	this->Connect( wxEVT_KEY_DOWN, wxKeyEventHandler( MainWindow::on_keydown_event ) );
+	this->Connect( wxEVT_KEY_UP, wxKeyEventHandler( MainWindow::on_keyup_event ) );
 	play_advance_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_play_advance ), NULL, this );
 	stop_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_stop ), NULL, this );
 	bank_label->Connect( wxEVT_LEFT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_next ), NULL, this );
 	bank_label->Connect( wxEVT_RIGHT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_prev ), NULL, this );
+	playlist_panel->Connect( wxEVT_KEY_DOWN, wxKeyEventHandler( MainWindow::on_keydown_event ), NULL, this );
+	playlist_panel->Connect( wxEVT_KEY_UP, wxKeyEventHandler( MainWindow::on_keyup_event ), NULL, this );
 	m_menu1->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWindow::on_new_playlist ), this, m_menuItem6->GetId());
 	m_menu1->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWindow::on_load_playlist ), this, m_menuItem2->GetId());
 	m_menu1->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWindow::on_save_playlist ), this, m_menuItem3->GetId());
+	m_menu1->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWindow::on_save_as ), this, m_menuItem13->GetId());
 	m_menu1->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWindow::on_open_midi ), this, m_menuItem4->GetId());
 	m_menu1->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWindow::on_quit ), this, m_menuItem5->GetId());
 	m_menu4->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWindow::on_manual_advance ), this, m_menuItem7->GetId());
@@ -218,10 +235,15 @@ MainWindow::~MainWindow()
 {
 	// Disconnect Events
 	this->Disconnect( wxEVT_CLOSE_WINDOW, wxCloseEventHandler( MainWindow::on_close ) );
+	this->Disconnect( wxEVT_DROP_FILES, wxDropFilesEventHandler( MainWindow::on_drop_midi_file ) );
+	this->Disconnect( wxEVT_KEY_DOWN, wxKeyEventHandler( MainWindow::on_keydown_event ) );
+	this->Disconnect( wxEVT_KEY_UP, wxKeyEventHandler( MainWindow::on_keyup_event ) );
 	play_advance_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_play_advance ), NULL, this );
 	stop_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_stop ), NULL, this );
 	bank_label->Disconnect( wxEVT_LEFT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_next ), NULL, this );
 	bank_label->Disconnect( wxEVT_RIGHT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_prev ), NULL, this );
+	playlist_panel->Disconnect( wxEVT_KEY_DOWN, wxKeyEventHandler( MainWindow::on_keydown_event ), NULL, this );
+	playlist_panel->Disconnect( wxEVT_KEY_UP, wxKeyEventHandler( MainWindow::on_keyup_event ), NULL, this );
 
 }
 
@@ -431,10 +453,14 @@ PlaylistEntryPanel::PlaylistEntryPanel( wxWindow* parent, wxWindowID id, const w
 	layout = new wxBoxSizer( wxHORIZONTAL );
 
 	now_playing = new wxRadioButton( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	now_playing->SetFont( wxFont( 12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Courier New") ) );
+
 	layout->Add( now_playing, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
 	song_label = new wxStaticText( this, wxID_ANY, wxT("*.mid"), wxDefaultPosition, wxDefaultSize, 0 );
 	song_label->Wrap( -1 );
+	song_label->SetFont( wxFont( 8, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Courier New") ) );
+
 	layout->Add( song_label, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
 
@@ -455,17 +481,18 @@ PlaylistEntryPanel::PlaylistEntryPanel( wxWindow* parent, wxWindowID id, const w
 	context_menu->Append( m_menuItem10 );
 
 	wxMenuItem* m_menuItem11;
-	m_menuItem11 = new wxMenuItem( context_menu, wxID_ANY, wxString( wxT("Move Up") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menuItem11 = new wxMenuItem( context_menu, wxID_ANY, wxString( wxT("Move Up") ) + wxT('\t') + wxT("Ctrl+Up"), wxEmptyString, wxITEM_NORMAL );
 	context_menu->Append( m_menuItem11 );
 
 	wxMenuItem* m_menuItem12;
-	m_menuItem12 = new wxMenuItem( context_menu, wxID_ANY, wxString( wxT("Move Down") ) , wxEmptyString, wxITEM_NORMAL );
+	m_menuItem12 = new wxMenuItem( context_menu, wxID_ANY, wxString( wxT("Move Down") ) + wxT('\t') + wxT("Ctrl+Down"), wxEmptyString, wxITEM_NORMAL );
 	context_menu->Append( m_menuItem12 );
 
 	this->Connect( wxEVT_RIGHT_DOWN, wxMouseEventHandler( PlaylistEntryPanel::PlaylistEntryPanelOnContextMenu ), NULL, this );
 
 
 	// Connect Events
+	now_playing->Connect( wxEVT_COMMAND_RADIOBUTTON_SELECTED, wxCommandEventHandler( PlaylistEntryPanel::on_radio_selected ), NULL, this );
 	configure_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( PlaylistEntryPanel::on_configure_clicked ), NULL, this );
 	auto_play->Connect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( PlaylistEntryPanel::on_checkbox_checked ), NULL, this );
 	context_menu->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( PlaylistEntryPanel::on_set_next ), this, m_menuItem10->GetId());
@@ -476,6 +503,7 @@ PlaylistEntryPanel::PlaylistEntryPanel( wxWindow* parent, wxWindowID id, const w
 PlaylistEntryPanel::~PlaylistEntryPanel()
 {
 	// Disconnect Events
+	now_playing->Disconnect( wxEVT_COMMAND_RADIOBUTTON_SELECTED, wxCommandEventHandler( PlaylistEntryPanel::on_radio_selected ), NULL, this );
 	configure_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( PlaylistEntryPanel::on_configure_clicked ), NULL, this );
 	auto_play->Disconnect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( PlaylistEntryPanel::on_checkbox_checked ), NULL, this );
 

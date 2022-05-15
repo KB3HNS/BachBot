@@ -97,10 +97,6 @@ public:
      */
     bool get_autoplay() const;
 
-    //  Allow the player window to set these directly:
-    /** Configure button clicked bool: unused (always false) */
-    CallBack configure_event;
-
     /** Autoplay changed event bool: current checkbox state */
     CallBack checkbox_event;
 
@@ -109,6 +105,9 @@ public:
 
     /** Set next song bool: unused (always true) */
     CallBack set_next_event;
+
+    /** Radio checkbox selected bool: current select state */
+    CallBack selected_event;
 
     /**
      * @brief Swap this control with another
@@ -150,12 +149,18 @@ public:
         return m_playlist_entry.song_id;
     }
 
+    /**
+     * @brief Unselect the select radio button.
+     */
+    void deselect();
+
 protected:
     virtual void on_configure_clicked(wxCommandEvent& event) override final;
     virtual void on_checkbox_checked(wxCommandEvent &event) override final;
     virtual void on_set_next(wxCommandEvent &event) override final;
     virtual void on_move_up(wxCommandEvent &event) override final;
     virtual void on_move_down(wxCommandEvent &event) override final;
+    virtual void on_radio_selected(wxCommandEvent& event) override final;
 
 private:
     /**

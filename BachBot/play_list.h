@@ -66,15 +66,17 @@ struct PlayListEntry
 
     /**
      * @brief Load MIDI file and import events
+     * @param importer optionally provide an already allocated SyndineImporter
+     *        instance to use to load events
      * @retval `false` song not loaded
      * @retval `true` song loaded successfully
      */
-    bool import_midi();
+    bool import_midi(SyndineImporter *importer=nullptr);
 
     /**
      * @brief Load the playlist configuration into the song_entry structure
      * @param playlist_node XML node for data
-     * @throws std::out_of_rang if a field contains an invalid value
+     * @throws std::out_of_rang if the filename node is empty
      * @retval `true` data loaded
      * @retval `false` parse error
      */
@@ -83,20 +85,22 @@ struct PlayListEntry
     /**
      * @brief Load configuration from a dialog box
      * @param dialog dialog box
-     * @param importer optionally provide an allready allocated SyndineImporter
-     *        instance to use to load events
-     * @throws std::out_of_rang if a field contains an invalid value
-     * @retval `true` data loaded
-     * @retval `false` parse error
+     * @returns form field name containing invalid data
+     * @retval `false` no errors in form
      */
-    bool load_config(const ui::LoadMidiDialog &dialog,
-                     SyndineImporter *importer=nullptr);
+    std::optional<wxString> load_config(const ui::LoadMidiDialog &dialog);
 
     /**
      * @brief Save current entry to XML structure
      * @param playlist_node store config into XML node
      */
     void save_config(wxXmlNode *const playlist_node) const;
+
+    /**
+     * @brief Populate a configure song dialog box based on configuration.
+     * @param[in] dialog 
+     */
+    void populate_dialog(ui::LoadMidiDialog &dialog) const;
 };
 
 

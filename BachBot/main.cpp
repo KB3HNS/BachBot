@@ -42,8 +42,10 @@ class BachBot : public wxApp
 public:
     virtual bool OnInit() override final
     {
+        bach_bot::ui::initialize_global_accelerator_table();
         m_window = new bach_bot::ui::PlayerWindow();
         m_window->Show(true);
+        SetTopWindow(m_window);
         return true;
     }
 

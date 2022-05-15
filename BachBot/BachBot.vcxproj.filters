@@ -45,6 +45,9 @@
     <ClCompile Include="playlist_entry_control.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="key_combo_catcher.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main_window.h">
@@ -75,6 +78,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="playlist_entry_control.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="key_combo_catcher.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

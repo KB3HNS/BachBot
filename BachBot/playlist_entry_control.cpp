@@ -25,6 +25,7 @@
 //  system includes
 #include <utility>  //  std::swap
 #include <stdexcept>  //  std::runtime_error
+#include <optional>  //  std::optional
 #include <fmt/xchar.h>  //  fmt::format(L
 #include <fmt/format.h>  //  fmt::format
 
@@ -37,7 +38,7 @@
 
 namespace {
     /** The amount of text normally allowed in the filename label */
-    constexpr const auto NORMAL_WIDTH = 36U;
+    constexpr const auto NORMAL_WIDTH = 32U;
 }  //  end anonymous namespace
 
 namespace bach_bot {
@@ -46,10 +47,10 @@ namespace ui {
 PlaylistEntryControl::PlaylistEntryControl(wxWindow *const parent,
                                            PlayListEntry song) :
     PlaylistEntryPanel(parent),
-    configure_event(dummy_event),
     checkbox_event(dummy_event),
     move_event(dummy_event),
     set_next_event(dummy_event),
+    selected_event(dummy_event),
     m_parent{parent},
     m_up_next{false},
     m_playing{false},
@@ -58,7 +59,6 @@ PlaylistEntryControl::PlaylistEntryControl(wxWindow *const parent,
     m_playlist_entry(std::move(song))
 {
     auto_play->SetValue(song.play_next);
-    static_cast<void>(now_playing->Enable(false));
     setup_widgets();
 }
 
@@ -123,6 +123,18 @@ void PlaylistEntryControl::swap(PlaylistEntryControl *const other)
                                              other->get_song_id()));
     }
 
+    if (now_playing->GetValue()) {
+        now_playing->SetValue(false);
+        selected_event(m_playlist_entry.song_id, this, false);
+        other->now_playing->SetValue(true);
+        selected_event(other->m_playlist_entry.song_id, other, true);
+    } else if (other->now_playing->GetValue()) {
+        other->now_playing->SetValue(false);
+        selected_event(other->m_playlist_entry.song_id, other, false);
+        now_playing->SetValue(true);
+        selected_event(m_playlist_entry.song_id, this, true);
+    }
+
     std::swap(m_playlist_entry, other->m_playlist_entry);
     std::swap(m_up_next, other->m_up_next);
     std::swap(m_playing, other->m_playing);
@@ -162,20 +174,49 @@ void PlaylistEntryControl::set_sequence(const int prev, const int next)
 }
 
 
+void PlaylistEntryControl::deselect()
+{
+    now_playing->SetValue(false);
+}
+
+
 void PlaylistEntryControl::on_configure_clicked(wxCommandEvent &event)
 {
-    configure_event(m_playlist_entry.song_id, this, false);
+    LoadMidiDialog update_dialog(m_parent->GetGrandParent());
+    m_playlist_entry.populate_dialog(update_dialog);
+
+    std::optional<wxString> error_text;
+    auto imported = false;
+    do {
+        if (error_text.has_value()) {
+            wxMessageBox(error_text.value(), "Form Error",
+                         wxOK | wxICON_INFORMATION);
+        }
+
+        if (update_dialog.ShowModal() == wxID_CANCEL) {
+            return;
+        }
+
+        error_text = m_playlist_entry.load_config(update_dialog);
+    } while (error_text.has_value());
+
+    if (m_playlist_entry.import_midi()) {
+        auto_play->SetValue(m_playlist_entry.play_next);
+        checkbox_event(m_playlist_entry.song_id, 
+                       this, 
+                       m_playlist_entry.play_next);
+    }
 }
 
 
 void PlaylistEntryControl::on_checkbox_checked(wxCommandEvent &event)
 {
-    wxMessageBox(fmt::format(L"PlayerWindow::on_autoplay_checked: {}",
-                             int(auto_play->IsChecked())),
-                 wxT("Debug"),
-                 wxOK | wxICON_INFORMATION);
-
-    checkbox_event(m_playlist_entry.song_id, this, auto_play->IsChecked());
+    const auto checked = auto_play->IsChecked();
+    const auto changed = (m_playlist_entry.play_next != checked);
+    m_playlist_entry.play_next = checked;
+    if (changed) {
+        checkbox_event(m_playlist_entry.song_id, this, checked);
+    }
 }
 
 
@@ -201,17 +242,22 @@ void PlaylistEntryControl::on_move_down(wxCommandEvent & event)
 }
 
 
+void PlaylistEntryControl::on_radio_selected(wxCommandEvent &event)
+{
+    selected_event(m_playlist_entry.song_id, this, now_playing->GetValue());
+}
+
+
 void PlaylistEntryControl::setup_widgets()
 {
     auto width = NORMAL_WIDTH;
     if (m_playing) {
         now_playing->SetLabelText(wxT("==>"));
-        width -= 4U;
+        width -= 6U;
     } else {
         now_playing->SetLabelText(wxT(""));
     }
-    static_cast<void>(configure_button->Enable(!m_playing));
-    now_playing->SetValue(m_up_next);
+    static_cast<void>(configure_button->Enable(!(m_playing || m_up_next)));
 
     if (m_playlist_entry.file_name.length() < width) {
         song_label->SetLabelText(m_playlist_entry.file_name);
@@ -225,8 +271,14 @@ void PlaylistEntryControl::setup_widgets()
 }
 
 
-void PlaylistEntryControl::dummy_event(uint32_t, PlaylistEntryControl*, bool)
+void PlaylistEntryControl::dummy_event(uint32_t song_id, 
+                                       PlaylistEntryControl*,
+                                       bool value)
 {
+    wxMessageBox(fmt::format(L"PlayerWindow::unhandled_dummy_event {} value: {}",
+                             song_id, int(value)),
+                 wxT("Debug"),
+                 wxOK | wxICON_INFORMATION);
 }
 
 }  //  end ui

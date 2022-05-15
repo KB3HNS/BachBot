@@ -106,6 +106,9 @@ wxThread::ExitCode PlayerThread::Entry()
     timeKillEvent(timer_id);
     const auto end_result = timeEndPeriod(1U);
 
+    //  Sleep a short period of time to allow for syncronization
+    // wxMilliSleep(10UL);
+
     wxThreadEvent exit_event(wxEVT_THREAD,
                              ui::PlayerWindowEvents::EXIT_EVENT);
     exit_event.SetInt(int(end_result));

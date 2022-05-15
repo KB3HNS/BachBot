@@ -26,6 +26,7 @@
 //  system includes
 #include <stdexcept>  //  std::out_of_range
 #include <fmt/format.h>  //  fmt::format
+#include <fmt/xchar.h>  //  fmt::format(L
 #include <memory>  //  std::make_unique
 
 //  module includes
@@ -37,13 +38,16 @@
 
 namespace bach_bot {
 
-bool PlayListEntry::import_midi()
+bool PlayListEntry::import_midi(SyndineImporter *importer)
 {
     //  Keep large structure off of stack
-    auto importer = std::make_unique<SyndineImporter>(
-        file_name.ToStdString(), song_id);
+    std::unique_ptr<SyndineImporter> local_importer;
+    if (nullptr == importer) {
+        local_importer = std::make_unique<SyndineImporter>(
+            file_name.ToStdString(), song_id);
+        importer = local_importer.get();
+    }
     tempo_detected = importer->get_tempo();
-
     importer->set_bank_config(starting_config.first,
                               starting_config.second);
 
@@ -129,8 +133,8 @@ bool PlayListEntry::load_config(const wxXmlNode *const playlist_node)
 }
 
 
-bool PlayListEntry::load_config(const ui::LoadMidiDialog &dialog,
-                                SyndineImporter *importer)
+std::optional<wxString> PlayListEntry::load_config(
+    const ui::LoadMidiDialog &dialog)
 {
     auto test = [](double &dest, wxTextCtrl *const box) -> bool {
         auto test_value = std::numeric_limits<double>::max();
@@ -144,22 +148,13 @@ bool PlayListEntry::load_config(const ui::LoadMidiDialog &dialog,
 
     if (!test(last_note_multiplier,
               dialog.extend_ending_textbox)) {
-        throw std::out_of_range(fmt::format(
-            "Error in field: {}",
-            dialog.extended_ending_label->GetLabelText().ToStdString()));
+        return fmt::format(L"Error in field: {}",
+                           dialog.extended_ending_label->GetLabelText());
     }
 
     if (!test(gap_beats, dialog.initial_gap_text_box)) {
-        throw std::out_of_range(fmt::format(
-            "Error in field: {}",
-            dialog.initial_gap_label->GetLabelText().ToStdString()));
-    }
-
-    std::unique_ptr<SyndineImporter> local_importer;
-    if (nullptr == importer) {
-        local_importer = std::make_unique<SyndineImporter>(
-            file_name.ToStdString(), song_id);
-        importer = local_importer.get();
+        return fmt::format(L"Error in field: {}",
+                           dialog.initial_gap_label->GetLabelText());
     }
 
     tempo_requested = dialog.select_tempo->GetValue();
@@ -169,15 +164,7 @@ bool PlayListEntry::load_config(const ui::LoadMidiDialog &dialog,
     delta_pitch = dialog.pitch_change->GetValue();
     play_next = dialog.play_next_checkbox->IsChecked();
 
-    importer->set_bank_config(starting_config.first,
-                              starting_config.second);
-
-    importer->adjust_tempo(tempo_requested);
-    importer->adjust_key(delta_pitch);
-
-    midi_events = importer->get_events(gap_beats, last_note_multiplier);
-
-    return (midi_events.size() > 0U);
+    return {};
 }
 
 
@@ -210,6 +197,31 @@ void PlayListEntry::save_config(wxXmlNode *const playlist_node) const
     playlist_node->AddChild(new wxXmlNode(wxXML_TEXT_NODE, 
                                            wxT(""), 
                                            file_name));
+}
+
+
+void PlayListEntry::populate_dialog(ui::LoadMidiDialog &dialog) const
+{
+    dialog.file_name_label->SetLabelText(file_name);
+    if (tempo_detected.has_value()) {
+        dialog.tempo_label->SetLabelText(
+            fmt::format(L"{}bpm", tempo_detected.value()));
+        dialog.select_tempo->SetValue(tempo_requested);
+    } else {
+        dialog.tempo_label->SetLabelText(wxT("Tempo not reported"));
+        static_cast<void>(dialog.select_tempo->Enable(false));
+    }
+
+    dialog.initial_gap_text_box->SetValue(
+        wxString::FromDouble(gap_beats));
+    dialog.bank_select->SetValue(
+        int(starting_config.first) + 1);
+    dialog.mode_select->SetValue(
+        int(starting_config.first) + 1);
+    dialog.pitch_change->SetValue(delta_pitch);
+    dialog.extend_ending_textbox->SetValue(
+        wxString::FromDouble(last_note_multiplier));
+    dialog.play_next_checkbox->SetValue(play_next);
 }
 
 }
