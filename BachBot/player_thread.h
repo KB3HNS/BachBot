@@ -34,7 +34,6 @@
 
 //  system includes
 #include <cstdint>  //  uint32_t, uintptr_t, etc
-#include <list>  //  std::list
 #include <deque>  //  std::deque
 #include <utility>  //  std::pair
 #include <RtMidi.h>  //  RtMidiOut
@@ -128,7 +127,7 @@ public:
      * @brief Enqueue the events for the next song to be played
      * @param song_events song events
      */
-    void enqueue_next_song(std::list<OrganMidiEvent> song_events);
+    void enqueue_next_song(std::deque<OrganMidiEvent> song_events);
     
     /**
      * @brief Set the current state of the organ bank externally.
@@ -222,8 +221,8 @@ private:
     wxMutex m_mutex;
 
     std::deque<Message> m_event_queue;  ///< Current Thread-Safe event queue
-    std::list<OrganMidiEvent> m_midi_event_queue;  ///< List of midi events
-    std::list<OrganMidiEvent> m_precache;  ///< Cache of next song's events
+    std::deque<OrganMidiEvent> m_midi_event_queue;  ///< List of midi events
+    std::deque<OrganMidiEvent> m_precache;  ///< Cache of next song's events
     /** Flag that we have already checked the cache for the next song */
     bool m_test_precache;
 

@@ -71,6 +71,8 @@ namespace bach_bot
 				wxStatusBar* m_statusBar1;
 				wxMenuBar* m_menubar1;
 				wxMenu* m_menu1;
+				wxMenuItem* new_playlist_menu;
+				wxMenuItem* load_playlist_menu;
 				wxMenu* device_select;
 				wxMenu* m_menu4;
 				wxMenu* m_menu2;
@@ -78,12 +80,12 @@ namespace bach_bot
 				// Virtual event handlers, override them in your derived class
 				virtual void on_close( wxCloseEvent& event ) { event.Skip(); }
 				virtual void on_drop_midi_file( wxDropFilesEvent& event ) { event.Skip(); }
-				virtual void on_keydown_event( wxKeyEvent& event ) { event.Skip(); }
-				virtual void on_keyup_event( wxKeyEvent& event ) { event.Skip(); }
 				virtual void on_play_advance( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_stop( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_bank_change_next( wxMouseEvent& event ) { event.Skip(); }
 				virtual void on_bank_change_prev( wxMouseEvent& event ) { event.Skip(); }
+				virtual void on_keydown_event( wxKeyEvent& event ) { event.Skip(); }
+				virtual void on_keyup_event( wxKeyEvent& event ) { event.Skip(); }
 				virtual void on_new_playlist( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_load_playlist( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_save_playlist( wxCommandEvent& event ) { event.Skip(); }
@@ -98,7 +100,7 @@ namespace bach_bot
 
 			public:
 
-				MainWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("BachBot Player"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 430,410 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL|wxWANTS_CHARS );
+				MainWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("BachBot Player"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 430,410 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
 
 				~MainWindow();
 

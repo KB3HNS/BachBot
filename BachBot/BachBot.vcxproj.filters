@@ -45,7 +45,10 @@
     <ClCompile Include="playlist_entry_control.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="key_combo_catcher.cpp">
+    <ClCompile Include="thread_loader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="label_animator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -80,7 +83,10 @@
     <ClInclude Include="playlist_entry_control.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="key_combo_catcher.h">
+    <ClInclude Include="thread_loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="label_animator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

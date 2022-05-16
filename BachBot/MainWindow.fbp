@@ -56,12 +56,10 @@
             <property name="two_step_creation">0</property>
             <property name="window_extra_style"></property>
             <property name="window_name"></property>
-            <property name="window_style">wxTAB_TRAVERSAL|wxWANTS_CHARS</property>
+            <property name="window_style">wxTAB_TRAVERSAL</property>
             <property name="xrc_skip_sizer">1</property>
             <event name="OnClose">on_close</event>
             <event name="OnDropFiles">on_drop_midi_file</event>
-            <event name="OnKeyDown">on_keydown_event</event>
-            <event name="OnKeyUp">on_keyup_event</event>
             <object class="wxBoxSizer" expanded="1">
                 <property name="minimum_size"></property>
                 <property name="name">bSizer2</property>
@@ -1302,8 +1300,8 @@
                         <property name="id">wxID_ANY</property>
                         <property name="kind">wxITEM_NORMAL</property>
                         <property name="label">&amp;New Playlist</property>
-                        <property name="name">m_menuItem6</property>
-                        <property name="permission">none</property>
+                        <property name="name">new_playlist_menu</property>
+                        <property name="permission">protected</property>
                         <property name="shortcut">Ctrl+N</property>
                         <property name="unchecked_bitmap"></property>
                         <event name="OnMenuSelection">on_new_playlist</event>
@@ -1316,8 +1314,8 @@
                         <property name="id">wxID_ANY</property>
                         <property name="kind">wxITEM_NORMAL</property>
                         <property name="label">&amp;Load Playlist</property>
-                        <property name="name">m_menuItem2</property>
-                        <property name="permission">none</property>
+                        <property name="name">load_playlist_menu</property>
+                        <property name="permission">protected</property>
                         <property name="shortcut">Ctrl+O</property>
                         <property name="unchecked_bitmap"></property>
                         <event name="OnMenuSelection">on_load_playlist</event>
@@ -3380,7 +3378,7 @@
                     <property name="label">Play Next</property>
                     <property name="name">m_menuItem10</property>
                     <property name="permission">none</property>
-                    <property name="shortcut"></property>
+                    <property name="shortcut">Ctrl+Enter</property>
                     <property name="unchecked_bitmap"></property>
                     <event name="OnMenuSelection">on_set_next</event>
                 </object>

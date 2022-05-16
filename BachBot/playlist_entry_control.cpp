@@ -144,9 +144,9 @@ void PlaylistEntryControl::swap(PlaylistEntryControl *const other)
 }
 
 
-std::list<OrganMidiEvent> PlaylistEntryControl::get_song_events() const
+std::deque<OrganMidiEvent> PlaylistEntryControl::get_song_events() const
 {
-    std::list<OrganMidiEvent> events;
+    std::deque<OrganMidiEvent> events;
     std::for_each(m_playlist_entry.midi_events.begin(),
                   m_playlist_entry.midi_events.end(),
                   [&events](const OrganNote &event) {

@@ -28,7 +28,7 @@
 #include <stdexcept>  //  std::runtime_error. std::out_of_range
 #include <string>  //  std::string
 #include <string_view>  //  sv, std::swap
-#include <utility>  //  std::as_const
+#include <array>  //  std::array
 #include <fmt/xchar.h>  //  fmt::format(L
 #include <fmt/format.h>  //  fmt::format
 #include <wx/xml/xml.h>  //  wxXml API
@@ -48,10 +48,20 @@ namespace {
     using namespace std::literals::string_view_literals;
     constexpr const auto EDITION = L"Ascention"sv;
 
-    constexpr const auto NOW_PLAYING_LEN = 40;
-    constexpr const auto UP_NEXT_LEN = 38;
+    constexpr const auto NOW_PLAYING_LEN = 40U;
+    constexpr const auto UP_NEXT_LEN = 38U;
 
-    wxAcceleratorEntry g_accel_entries[2U];
+    enum AcceleratorEntries : size_t
+    {
+        MOVE_UP_ACCEL = 0U,
+        MOVE_DOWN_ACCEL,
+        PLAY_NEXT_ACCEL1,
+        PLAY_NEXT_ACCEL2,
+        NUM_ACCEL_ENTRIES
+    };
+    
+    //wxAcceleratorEntry g_accel_entries[2U];
+    std::array<wxAcceleratorEntry, NUM_ACCEL_ENTRIES> g_accel_entries;
 }  //  end anonymous namespace
 
 
@@ -60,10 +70,14 @@ namespace ui {
 
 void initialize_global_accelerator_table()
 {
-    g_accel_entries[0].Set(wxACCEL_CTRL, WXK_UP,
-                           PlayerWindowEvents::MOVE_UP_EVENT);
-    g_accel_entries[1].Set(wxACCEL_CTRL, WXK_DOWN,
-                           PlayerWindowEvents::MOVE_DOWN_EVENT);
+    g_accel_entries[MOVE_UP_ACCEL].Set(wxACCEL_CTRL, WXK_UP,
+                                       PlayerWindowEvents::MOVE_UP_EVENT);
+    g_accel_entries[MOVE_DOWN_ACCEL].Set(wxACCEL_CTRL, WXK_DOWN,
+                                         PlayerWindowEvents::MOVE_DOWN_EVENT);
+    g_accel_entries[PLAY_NEXT_ACCEL1].Set(wxACCEL_CTRL, WXK_RETURN,
+                                          PlayerWindowEvents::SET_NEXT_EVENT);
+    g_accel_entries[PLAY_NEXT_ACCEL2].Set(wxACCEL_CTRL, WXK_NUMPAD_ENTER,
+                                          PlayerWindowEvents::SET_NEXT_EVENT);
 }
 
 
@@ -83,15 +97,11 @@ PlayerWindow::PlayerWindow() :
     m_current_config{0U, 0U},
     m_playlist_name(),
     m_playlist_changed{false},
-    m_wait_dialog{nullptr},
     m_selected_control{nullptr},
-    m_move_up({WXK_ALT, WXK_UP},
-              [=](wxKeyEvent &event) { on_move_up_event(event); }),
-    m_move_down({WXK_ALT, WXK_DOWN},
-                [=](wxKeyEvent &event) { on_move_down_event(event); }),
-    m_nav_back({WXK_SHIFT, WXK_TAB},
-                [=](wxKeyEvent &) { Navigate(wxNavigationKeyEvent::IsBackward); }),
-    m_accel_table(WXSIZEOF(g_accel_entries), g_accel_entries)
+    m_accel_table(int(NUM_ACCEL_ENTRIES), g_accel_entries.data()),
+    m_ui_animation_timer(this, PlayerWindowEvents::UI_ANIMATE_TICK),
+    m_up_next_label(next_label, UP_NEXT_LEN),
+    m_playing_label(track_label, NOW_PLAYING_LEN)
 {
     for (auto i = 0U; i < m_midi_out.getPortCount(); ++i) {
         m_midi_devices.emplace_back(
@@ -114,6 +124,7 @@ PlayerWindow::PlayerWindow() :
                          PlayerWindowEvents::MOVE_DOWN_EVENT);
 
     SetAcceleratorTable(m_accel_table);
+    m_ui_animation_timer.Start(LabelAnimator::RECOMMENDED_TICK_MS);
 }
 
 
@@ -121,22 +132,7 @@ void PlayerWindow::on_play_advance(wxCommandEvent &event)
 {
     static_cast<void>(event);
     if (nullptr == m_player_thread.get()) {
-        m_player_thread = std::make_unique<PlayerThread>(this, m_midi_out);
-        m_midi_out.openPort(m_current_device_id);
-        m_player_thread->set_bank_config(m_current_config.first, 
-                                         m_current_config.second);
-        
-        if (0U != m_next_song_id) {
-        auto control = m_song_labels[m_next_song_id].get();
-            m_player_thread->enqueue_next_song(
-                control->get_song_events());
-        } else {
-            m_player_thread->enqueue_next_song(
-                generate_test_pattern());
-        }
-        m_player_thread->play();
-        std::for_each(m_midi_devices.begin(), m_midi_devices.end(), 
-                      [](wxMenuItem &i) { i.Enable(false); });
+        start_player_thread();
     } else {
         m_player_thread->signal_advance();
     }
@@ -192,11 +188,11 @@ void PlayerWindow::on_load_playlist(wxCommandEvent &event)
         }
     }
 
-    PlaylistLoader loader(this, open_dialog.GetPath());
+    PlaylistXmlLoader loader(this, open_dialog.GetPath());
     if (loader.ShowModal() != wxID_OK) {
         wxMessageBox(fmt::format(L"Error loading playlist:\n"
                                   "Error reported was: {}",
-                                 std::as_const(loader).get_error_text()));
+                                 loader.get_error_text().value()));
         return;
     }
 
@@ -307,7 +303,7 @@ void PlayerWindow::on_about(wxCommandEvent &event)
     wxMessageBox(fmt::format(
         L"BachBot MIDI player for Schlicker Organs \"{}\" edition:\n\n"
          "BachBot is a MIDI player intended Schlicker Pipe Organs or other "
-         "Organs using the Syndyne Console Control system\n"
+         "Organs using the Syndyne Console Control system.\n"
          "Written By Andrew Buettner for Zion Lutheran Church and School "
          "Hartland, WI\n"
          "https://www.github.com/KB3HNS/BachBot", EDITION),
@@ -334,17 +330,15 @@ void PlayerWindow::on_thread_exit(wxThreadEvent &event)
     m_current_song_id = 0U;
 
     event_count->SetValue(0);
-    track_label->SetLabelText(L"Not Playing");
+    m_playing_label.set_label_text(L"Not Playing");
     std::for_each(m_midi_devices.begin(), m_midi_devices.end(),
                   [](wxMenuItem& i) { i.Enable(); });
 
+    new_playlist_menu->Enable();
+    load_playlist_menu->Enable();
+
     if (0U != m_next_song_id) {
         m_song_labels[m_next_song_id]->reset_status();
-    }
-
-    if (nullptr != m_wait_dialog) {
-        m_wait_dialog->EndModal(wxID_OK);
-        m_wait_dialog = nullptr;
     }
 }
 
@@ -380,7 +374,7 @@ void PlayerWindow::on_song_starts_playing(wxThreadEvent &event)
         set_next_song(song_data->get_sequence().second);
         m_current_song_event_count = song_data->get_song_events().size();
         event_count->SetRange(int(m_current_song_event_count));
-        track_label->SetLabelText(song_data->get_filename());
+        m_playing_label.set_label_text(song_data->get_filename());
         song_data->set_playing();
 
     }
@@ -399,20 +393,7 @@ void PlayerWindow::on_song_done_playing(wxThreadEvent &event)
 }
 
 
-void PlayerWindow::on_move_up_event(wxKeyEvent &event)
-{
-    static_cast<void>(event);
-    if (nullptr != m_selected_control) {
-        const auto sequence = m_selected_control->get_sequence();
-        if (0U != sequence.first) {
-            on_move_event(m_selected_control->get_song_id(),
-                          m_selected_control, true);
-        }
-    }
-}
-
-
-void PlayerWindow::on_move_down_event(wxKeyEvent &event)
+void PlayerWindow::on_accel_down_event(wxCommandEvent &event)
 {
     static_cast<void>(event);
     if (nullptr != m_selected_control) {
@@ -425,17 +406,33 @@ void PlayerWindow::on_move_down_event(wxKeyEvent &event)
 }
 
 
-void PlayerWindow::on_accel_down_event(wxCommandEvent &event)
+void PlayerWindow::on_accel_up_event(wxCommandEvent & event)
 {
-    wxKeyEvent key_event;
-    on_move_down_event(key_event);
+    static_cast<void>(event);
+    if (nullptr != m_selected_control) {
+        const auto sequence = m_selected_control->get_sequence();
+        if (0U != sequence.first) {
+            on_move_event(m_selected_control->get_song_id(),
+                          m_selected_control, true);
+        }
+    }
 }
 
 
-void PlayerWindow::on_accel_up_event(wxCommandEvent & event)
+void PlayerWindow::on_accel_play_next_event(wxCommandEvent &event)
 {
-    wxKeyEvent key_event;
-    on_move_up_event(key_event);
+    static_cast<void>(event);
+    if (nullptr != m_selected_control) {
+        set_next_song(m_selected_control->get_song_id());
+    }
+}
+
+
+void PlayerWindow::on_timer_tick(wxTimerEvent &event)
+{
+    static_cast<void>(event);
+    m_up_next_label.animate_tick();
+    m_playing_label.animate_tick();
 }
 
 
@@ -470,7 +467,9 @@ void PlayerWindow::on_move_event(const uint32_t song_id,
     if (0U != m_current_song_id) {
         const auto sequence = m_song_labels[m_current_song_id]->get_sequence();
         if (sequence.second != m_next_song_id) {
-            m_song_labels[m_next_song_id]->reset_status();
+            if (0U != m_next_song_id) {
+                m_song_labels[m_next_song_id]->reset_status();
+            }
             set_next_song(sequence.second);
         }
     }
@@ -511,16 +510,9 @@ void PlayerWindow::on_close(wxCloseEvent &event)
     }
 
     if (m_player_thread.get() != nullptr) {
-        // wxMessageDialog cleanup_dialog(this, wxT("Closing"),
-        //                                wxT("Cleaning up..."), 
-        //                                wxSTAY_ON_TOP);
-        // m_wait_dialog = &cleanup_dialog;
         m_player_thread->signal_stop();
-        // static_cast<void>(cleanup_dialog.ShowModal());
         m_player_thread->Wait();
-        // m_player_thread.reset();
         wxMilliSleep(10UL);
-        // m_wait_dialog = nullptr;
     }
 
     MainWindow::on_close(event);
@@ -543,35 +535,25 @@ void PlayerWindow::on_save_as(wxCommandEvent &event)
 }
 
 
-void PlayerWindow::on_keydown_event(wxKeyEvent &event)
-{
-    const auto evt1 = m_move_up.on_key_event(event, true);
-    const auto evt2 = m_move_down.on_key_event(event, true);
-    if (m_nav_back.on_key_event(event, true)) {
-        //  Callback issued
-    } else if (event.GetKeyCode() == WXK_TAB) {
-        Navigate();
-    } else if (!evt1 && !evt2) {
-        MainWindow::on_keydown_event(event);
-    }
-}
-
-
-void PlayerWindow::on_keyup_event(wxKeyEvent & event)
-{
-    static_cast<void>(m_move_up.on_key_event(event, false));
-    static_cast<void>(m_move_down.on_key_event(event, false));
-    static_cast<void>(m_nav_back.on_key_event(event, false));
-    MainWindow::on_keyup_event(event);
-}
-
-
 void PlayerWindow::on_drop_midi_file(wxDropFilesEvent &event)
 {
-    wxMessageBox(fmt::format(L"PlayerWindow::drop event {} count: {}",
-                             *event.GetFiles(), event.GetNumberOfFiles()),
-                 wxT("Debug"),
-                 wxOK | wxICON_INFORMATION);
+    PlaylistDndLoader loader(this, event, uint32_t(m_song_labels.size()) + 1U);
+    if (loader.ShowModal() != wxID_OK) {
+        wxMessageBox(fmt::format(L"Error with import:\n"
+                                 "Error reported was: {}",
+                                 loader.get_error_text().value()));
+        return;
+    }
+
+    const auto playlist = loader.get_playlist();
+    if (playlist.size() > 0U) {
+        std::for_each(playlist.begin(), playlist.end(),
+                      [=](const PlayListEntry &i) {
+            add_playlist_entry(i);
+        });
+        layout_scroll_panel();
+        m_playlist_changed = true;
+    }
 }
 
 
@@ -598,7 +580,7 @@ void PlayerWindow::clear_playlist_window()
     });
 
     m_song_labels.clear();
-    next_label->SetLabelText(wxT(""));
+    m_up_next_label.set_label_text(wxT(""));
     static_cast<void>(playlist_label->Show(true));
     layout_scroll_panel();
     m_song_list = std::make_pair(0U, 0U);
@@ -693,7 +675,7 @@ void PlayerWindow::set_next_song(const uint32_t song_id)
     m_next_song_id = song_id;
     if (0U != song_id) {
         const auto next_song = m_song_labels[song_id].get();
-        next_label->SetLabelText(next_song->get_filename());
+        m_up_next_label.set_label_text(next_song->get_filename());
         const auto cur_song = m_song_labels.find(m_current_song_id);
         if ((m_song_labels.end() != cur_song) && 
             cur_song->second->get_autoplay() &&
@@ -706,7 +688,7 @@ void PlayerWindow::set_next_song(const uint32_t song_id)
             next_song->reset_status();
         }
     } else {
-        next_label->SetLabelText(wxT(""));
+        m_up_next_label.set_label_text(wxT(""));
     }
 }
 
@@ -727,6 +709,31 @@ bool PlayerWindow::pre_close_check(wxCommandEvent &event)
     }
 
     return true;
+}
+
+
+void PlayerWindow::start_player_thread()
+{
+    m_player_thread = std::make_unique<PlayerThread>(this, m_midi_out);
+    m_midi_out.openPort(m_current_device_id);
+    m_player_thread->set_bank_config(m_current_config.first, 
+                                     m_current_config.second);
+
+    if (0U != m_next_song_id) {
+        auto control = m_song_labels[m_next_song_id].get();
+        m_player_thread->enqueue_next_song(
+            control->get_song_events());
+    } else {
+        m_player_thread->enqueue_next_song(
+            generate_test_pattern());
+    }
+
+    m_player_thread->play();
+    std::for_each(m_midi_devices.begin(), m_midi_devices.end(), 
+                  [](wxMenuItem &i) { i.Enable(false); });
+
+    new_playlist_menu->Enable(false);
+    load_playlist_menu->Enable(false);
 }
 
 
@@ -751,6 +758,8 @@ wxBEGIN_EVENT_TABLE(PlayerWindow, wxFrame)
     EVT_THREAD(PlayerWindowEvents::EXIT_EVENT, PlayerWindow::on_thread_exit)
     EVT_MENU(PlayerWindowEvents::MOVE_DOWN_EVENT, PlayerWindow::on_accel_down_event)
     EVT_MENU(PlayerWindowEvents::MOVE_UP_EVENT, PlayerWindow::on_accel_up_event)
+    EVT_MENU(PlayerWindowEvents::SET_NEXT_EVENT, PlayerWindow::on_accel_play_next_event)
+    EVT_TIMER(PlayerWindowEvents::UI_ANIMATE_TICK, PlayerWindow::on_timer_tick)
 wxEND_EVENT_TABLE()
 
 }  //  end ui

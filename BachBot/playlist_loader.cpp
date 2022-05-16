@@ -24,145 +24,60 @@
 
 //  system includes
 #include <cstdint>  //  uint32_t
-#include <list>  //  std::list
-#include <stdexcept>  //  std::out_of_range
 #include <limits>  //  std::numeric_limits
-#include <fmt/format.h>  //  fmt::format
+#include <fmt/xchar.h>  //  fmt::format(L
 
 //  module includes
 // -none-
 
 //  local includes
 #include "playlist_loader.h"  //  local include
-#include "syndyne_importer.h"  //  SyndineImporter
+
 
 namespace bach_bot {
 namespace ui {
 
 
-PlaylistLoader::PlaylistLoader(wxFrame *const parent,
-                               const wxString &filename) :
-    LoadingPopup(parent),
-    wxThread(wxTHREAD_JOINABLE),
-    m_mutex(),
-    m_playlist(),
-    m_error_text(),
+PlaylistXmlLoader::PlaylistXmlLoader(wxFrame *const parent,
+                                     const wxString &filename) :
+    ThreadLoader(parent),
     m_playlist_doc(),
     m_filename{filename},
     m_entries()
 {
 }
 
-
-int PlaylistLoader::ShowModal()
+int PlaylistXmlLoader::count_children()
 {
-    Run();
-    const auto retval = LoadingPopup::ShowModal();
-    Wait();
-    return retval;
-}
-
-
-const wxString& PlaylistLoader::get_error_text() const
-{
-    return m_error_text;
-}
-
-
-wxString PlaylistLoader::get_error_text()
-{
-    wxMutexLocker lock(m_mutex);
-    return m_error_text;
-}
-
-
-std::list<PlayListEntry> PlaylistLoader::get_playlist()
-{
-    return std::move(m_playlist);
-}
-
-
-wxThread::ExitCode PlaylistLoader::Entry()
-{
-    wxMutexLocker lock(m_mutex);
-    m_playlist.clear();
-
+    auto count = -1;
     if (!m_playlist_doc.Load(m_filename)) {
-        m_error_text = wxT("Invalid file format");
-    } else if (count_children(m_playlist_doc.GetRoot()) <= 0) {
-        m_error_text = wxT("Invalid file contents");
-    } else {
-        try {
-            parse_playlist(m_playlist_doc.GetRoot());
-        } catch (std::out_of_range &e) {
-            m_error_text = e.what();
-        }
+        set_error_text(wxT("Invalid file format"));
+        return count;
     }
 
-    wxThreadEvent exit_event(wxEVT_THREAD, LoaderEvents::EXIT_EVENT);
-    if (m_error_text.size() > 0U) {
-        exit_event.SetInt(-1);
-        m_playlist.clear();
-    } else {
-        exit_event.SetInt(wxID_OK);
-    }
-    wxQueueEvent(this, exit_event.Clone());
-
-    return nullptr;
-}
-
-
-void PlaylistLoader::parse_playlist(const wxXmlNode *const playlist_root)
-{
-    m_playlist.clear();
-
+    const auto playlist_root = m_playlist_doc.GetRoot();
     if (playlist_root->GetName() != L"BachBot_Playlist") {
-        throw std::out_of_range("File format not recognized.");
+        set_error_text(wxT("File format not recognized."));
+    } else {
+        count = _count_children(playlist_root);
     }
-    
-    for (auto i = m_entries.cbegin(); m_entries.cend() != i; ++i) {
-        const auto *const child = i->second;
 
-        PlayListEntry song_entry;
-        song_entry.song_id = uint32_t(m_playlist.size()) + 1U;
-        if (!song_entry.load_config(child)) {
-            throw std::out_of_range(fmt::format("Invalid song data line {}", 
-                                                child->GetLineNumber()));
-        }
+    return count;
+}
 
-        if (!song_entry.import_midi()) {
-            throw std::out_of_range(
-                fmt::format("Unable to import song: {}", 
-                            song_entry.file_name.ToStdString()));
-        }
 
-        m_playlist.push_back(std::move(song_entry));
-        wxThreadEvent tick_event(wxEVT_THREAD, LoaderEvents::TICK_EVENT);
-        tick_event.SetInt(int(std::distance(m_entries.cbegin(), i)));
-        wxQueueEvent(this, tick_event.Clone());
+void PlaylistXmlLoader::build_playlist_entry(PlayListEntry &song_entry,
+                                             const uint32_t song_number)
+{
+    const auto *const child = m_entries[song_number - 1U].second;
+    if (!song_entry.load_config(child)) {
+        set_error_text(fmt::format(L"Invalid song data line {}", 
+                                   child->GetLineNumber()));
     }
 }
 
 
-void PlaylistLoader::on_start_event(wxThreadEvent &event)
-{
-    progress_bar->SetRange(event.GetInt());
-}
-
-
-void PlaylistLoader::on_tick_event(wxThreadEvent &event)
-{
-    progress_bar->SetValue(event.GetInt());
-}
-
-
-void PlaylistLoader::on_close_event(wxThreadEvent &event)
-{
-    EndModal(event.GetInt());
-}
-
-
-int PlaylistLoader::count_children(const wxXmlNode *const playlist_root)
+int PlaylistXmlLoader::_count_children(const wxXmlNode *const playlist_root)
 {
     const auto *child = playlist_root->GetChildren();
     while (nullptr != child) {
@@ -180,8 +95,6 @@ int PlaylistLoader::count_children(const wxXmlNode *const playlist_root)
         }
         child = child->GetNext();
     }
-    wxThreadEvent start_event(wxEVT_THREAD, LoaderEvents::TICK_EVENT);
-    start_event.SetInt(m_entries.size());
 
     std::sort(m_entries.begin(), m_entries.end(), [](const SongNode &a,
                                                      const SongNode &b) {
@@ -191,11 +104,40 @@ int PlaylistLoader::count_children(const wxXmlNode *const playlist_root)
 }
 
 
-wxBEGIN_EVENT_TABLE(PlaylistLoader, wxDialog)
-    EVT_THREAD(LoaderEvents::START_EVENT, PlaylistLoader::on_start_event)
-    EVT_THREAD(LoaderEvents::TICK_EVENT, PlaylistLoader::on_tick_event)
-    EVT_THREAD(LoaderEvents::EXIT_EVENT, PlaylistLoader::on_close_event)
-wxEND_EVENT_TABLE()
+PlaylistDndLoader::PlaylistDndLoader(wxFrame *const parent,
+                                     const wxDropFilesEvent &event,
+                                     const uint32_t first_song_id) :
+    ThreadLoader(parent),
+    m_files(size_t(event.GetNumberOfFiles())),
+    m_first_song_id{first_song_id}
+{
+    auto p_filename = event.GetFiles();
+    for (auto i = 0; i < event.GetNumberOfFiles(); ++i) {
+        m_files[size_t(i)] = *p_filename;
+        ++p_filename;
+    }
+}
+
+int PlaylistDndLoader::count_children()
+{
+    return int(m_files.size());
+}
+
+
+void PlaylistDndLoader::build_playlist_entry(PlayListEntry &song_entry,
+                                             const uint32_t song_number)
+{
+    const auto song_index = song_number - 1U;
+    song_entry.file_name = m_files[song_index];
+    song_entry.song_id = song_index + m_first_song_id;
+    song_entry.tempo_requested = -1;
+    song_entry.gap_beats = 0.0;
+    song_entry.starting_config = std::make_pair(uint8_t(0), 0U);
+    song_entry.delta_pitch = 0;
+    song_entry.last_note_multiplier = 1.0;
+    song_entry.play_next = false;
+}
+
 
 }  //  end ui
 }  // end bach_bot

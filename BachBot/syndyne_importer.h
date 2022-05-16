@@ -40,6 +40,7 @@
 #include <string>  //  std::string
 #include <optional>  //  std::optional
 #include <list>  //  std::list
+#include <deque>  //  std::deque
 #include <unordered_map>  //  std::unordered_map
 
 //  module includes
@@ -55,7 +56,7 @@ namespace bach_bot {
 /**
  * @brief Generate the test pattern as a sequence to be played.
  */
-std::list<OrganMidiEvent> generate_test_pattern();
+std::deque<OrganMidiEvent> generate_test_pattern();
 
 
 /**

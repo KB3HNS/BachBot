@@ -217,7 +217,7 @@ void PlayerThread::play()
 }
 
 
-void PlayerThread::enqueue_next_song(std::list<OrganMidiEvent> song_events)
+void PlayerThread::enqueue_next_song(std::deque<OrganMidiEvent> song_events)
 {
     wxMutexLocker lock(m_mutex);
     m_test_precache = true;

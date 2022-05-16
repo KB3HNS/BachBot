@@ -51,7 +51,9 @@ bool PlayListEntry::import_midi(SyndineImporter *importer)
     importer->set_bank_config(starting_config.first,
                               starting_config.second);
 
-    importer->adjust_tempo(tempo_requested);
+    if (tempo_requested > 0) {
+        importer->adjust_tempo(tempo_requested);
+    }
     importer->adjust_key(delta_pitch);
 
     midi_events = importer->get_events(gap_beats, last_note_multiplier);
@@ -171,9 +173,10 @@ std::optional<wxString> PlayListEntry::load_config(
 void PlayListEntry::save_config(wxXmlNode *const playlist_node) const
 {
     if (tempo_detected.has_value()) {
-        playlist_node->AddAttribute(
-            wxT("tempo_requested"),
-            wxString::Format(wxT("%i"), tempo_requested));
+        const auto tempo = (tempo_requested > 0 ?
+                            tempo_requested : tempo_detected.value());
+        playlist_node->AddAttribute(wxT("tempo_requested"),
+                                    wxString::Format(wxT("%i"), tempo));
     }
     playlist_node->AddAttribute(
         wxT("gap"), wxString::FromDouble(gap_beats));
@@ -206,7 +209,8 @@ void PlayListEntry::populate_dialog(ui::LoadMidiDialog &dialog) const
     if (tempo_detected.has_value()) {
         dialog.tempo_label->SetLabelText(
             fmt::format(L"{}bpm", tempo_detected.value()));
-        dialog.select_tempo->SetValue(tempo_requested);
+        dialog.select_tempo->SetValue(
+            (tempo_requested > 0 ? tempo_requested : tempo_detected.value()));
     } else {
         dialog.tempo_label->SetLabelText(wxT("Tempo not reported"));
         static_cast<void>(dialog.select_tempo->Enable(false));

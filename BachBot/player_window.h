@@ -46,7 +46,7 @@
 #include "play_list.h"  //  PlayList, PlayListEntry
 #include "playlist_entry_control.h"  //  PlaylistEntryControl
 #include "organ_midi_event.h"  //  BankConfig
-#include "key_combo_catcher.h"  //  KeyComboCatcher
+#include "label_animator.h"  //  LabelAnimator
 
 
 namespace bach_bot {
@@ -72,7 +72,7 @@ enum PlayerWindowEvents : int
      * @note
      * "Int" value contains events remaining. 
      */
-    TICK_EVENT = 1001,
+    TICK_EVENT = wxID_HIGHEST,
     SONG_START_EVENT,  ///< On start playing song, "Int" is song id.
     SONG_LYRIC_EVENT,  ///< Update lyrics, int is string number (future)
     SONG_META_EVENT,  ///< Future use
@@ -90,8 +90,12 @@ enum PlayerWindowEvents : int
     EXIT_EVENT,  ///< On thread exit message "Int" is return code.
 
     //  Internal events
-    MOVE_DOWN_EVENT,
-    MOVE_UP_EVENT
+    MOVE_DOWN_EVENT,  ///< On Move down accelerator (Ctrl+Down)
+    MOVE_UP_EVENT,  ///< On Move up accelerator (Ctrl+Up)
+    SET_NEXT_EVENT,  ///< On Set next accelerator (Ctrl+Enter
+    UI_ANIMATE_TICK,  ///< Timer tick event
+
+    END_UI_EVENTS  ///< Terminating item, not used by UI
 };
 
 
@@ -101,7 +105,6 @@ enum PlayerWindowEvents : int
 class PlayerWindow : public MainWindow, private wxLog
 {
     //  Allow the player thread to directly access the midi interface
-    friend class PlayerThread;
     using PlaylistEntryType = std::unique_ptr<PlaylistEntryControl>;
 
 public:
@@ -129,8 +132,6 @@ protected:
     virtual void on_manual_cancel(wxCommandEvent &event) override final;
     virtual void on_close(wxCloseEvent &event) override final;
     virtual void on_save_as(wxCommandEvent &event) override final;
-    virtual void on_keydown_event(wxKeyEvent &event) override final;
-    virtual void on_keyup_event(wxKeyEvent &event) override final;
     virtual void on_drop_midi_file(wxDropFilesEvent &event) override final;
 
 private:
@@ -140,10 +141,10 @@ private:
     void on_bank_changed(wxThreadEvent &event);
     void on_song_starts_playing(wxThreadEvent &event);
     void on_song_done_playing(wxThreadEvent &event);
-    void on_move_up_event(wxKeyEvent &event);
-    void on_move_down_event(wxKeyEvent &event);
     void on_accel_down_event(wxCommandEvent &event);
     void on_accel_up_event(wxCommandEvent &event);
+    void on_accel_play_next_event(wxCommandEvent &event);
+    void on_timer_tick(wxTimerEvent &event);
 
     /**
      * @brief Control menu move event handler
@@ -198,6 +199,12 @@ private:
      */
     bool pre_close_check(wxCommandEvent &event);
 
+    /**
+     * @brief Consolidated logic to initialize the player thread and update the
+     *        UI.
+     */
+    void start_player_thread();
+
     uint32_t m_counter;
     std::unique_ptr<PlayerThread> m_player_thread;
     std::list<wxMenuItem> m_midi_devices;
@@ -211,12 +218,11 @@ private:
     BankConfig m_current_config;
     std::optional<wxString> m_playlist_name;
     bool m_playlist_changed;
-    wxDialog *m_wait_dialog;
     PlaylistEntryControl *m_selected_control;
-    KeyComboCatcher m_move_up;
-    KeyComboCatcher m_move_down;
-    KeyComboCatcher m_nav_back;
     wxAcceleratorTable m_accel_table;
+    wxTimer m_ui_animation_timer;
+    LabelAnimator m_up_next_label;
+    LabelAnimator m_playing_label;
 
     wxDECLARE_EVENT_TABLE();
 

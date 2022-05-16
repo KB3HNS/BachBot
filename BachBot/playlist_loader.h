@@ -22,10 +22,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * @section DESCRIPTION
- * Because playlists can cause the loading of several "large" songs, this
- * process can potentially take several seconds on an under-powered machine.
- * Rather than bottling up the UI, do most of the loading in a separate thread
- * and force a top-level modal dialog box during the process.
+ * These are the specializations of the ThreadLoader for specific use-cases.
  */
 
 #pragma once
@@ -41,16 +38,16 @@
 
  //  local includes
 #include "play_list.h"  //  PlayList, PlayListEntry
-#include "main_window.h"  //  LoadingPopup
+#include "thread_loader.h"  //  ThreadLoader
 
 
 namespace bach_bot {
 namespace ui {
 
 /**
- * @brief Loaylist loading in another thread logic.
+ * @brief Load playlist file.
  */
-class PlaylistLoader : public LoadingPopup, wxThread
+class PlaylistXmlLoader : public ThreadLoader
 {
     using SongNode = std::pair<uint32_t, const wxXmlNode*>;
 public:
@@ -59,46 +56,21 @@ public:
      * @param parent Parent window (main window)
      * @param filename file to load
      */
-    PlaylistLoader(wxFrame *const parent,
-                   const wxString &filename);
-
-    int ShowModal() override;
-
-    /**
-     * @brief Get error text
-     * @return error text (valid only if ShowModal doesn't return wxID_OK)
-     */
-    const wxString& get_error_text() const;
-
-    /**
-     * @brief Get error text
-     * @return error text (valid only if ShowModal doesn't return wxID_OK)
-     */
-    wxString get_error_text();
-
-    /**
-     * @brief Get playlist entries (moves from internal storage)
-     * @returns playlist entries
-     */
-    std::list<PlayListEntry> get_playlist();
+    PlaylistXmlLoader(wxFrame *const parent,
+                      const wxString &filename);
 
 protected:
-    virtual ExitCode Entry() override;
+    virtual int count_children() override;
+    virtual void build_playlist_entry(PlayListEntry &song_entry,
+                                      const uint32_t song_number) override;
 
 private:
-    enum LoaderEvents : int
-    {
-        START_EVENT = 1001,
-        TICK_EVENT,
-        EXIT_EVENT
-    };
-
     /**
      * @brief Parse the playlist tree
      * @param playlist_root pointer to root node
      * @throws std::out_of_range on load error
      */
-    void parse_playlist(const wxXmlNode *const playlist_root);
+    void _parse_playlist(const wxXmlNode *const playlist_root);
 
     /**
      * @brief Count children (ie songs) in XML tree and sorts them into the
@@ -107,23 +79,39 @@ private:
      * @return number of children
      * @retval <= 0 indicates error
      */
-    int count_children(const wxXmlNode *const playlist_root);
-    
+    int _count_children(const wxXmlNode *const playlist_root);
 
-    //  Events in event table
-    void on_start_event(wxThreadEvent &event);
-    void on_tick_event(wxThreadEvent &event);
-    void on_close_event(wxThreadEvent &event);
-
-    wxMutex m_mutex;
-    std::list<PlayListEntry> m_playlist;
-    wxString m_error_text;
     wxXmlDocument m_playlist_doc;
     const wxString m_filename;
     std::vector<SongNode> m_entries;
-
-    wxDECLARE_EVENT_TABLE();
 };
+
+/**
+ * @brief Playlist loading from Drag'N'Drop event
+ */
+class PlaylistDndLoader : public ThreadLoader
+{
+public:
+    /**
+     * @brief Constructor
+     * @param parent parent window
+     * @param event Drag&Drop event
+     * @param first_song_id song ID to use for first song
+     */
+    PlaylistDndLoader(wxFrame *const parent,
+                      const wxDropFilesEvent &event,
+                      const uint32_t first_song_id);
+
+protected:
+    virtual int count_children() override;
+    virtual void build_playlist_entry(PlayListEntry &entry,
+                                      const uint32_t song_number) override;
+
+private:
+    std::vector<wxString> m_files;
+    const uint32_t m_first_song_id;
+};
+
 
 }  //  end ui
 }  // end bach_bot

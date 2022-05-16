@@ -149,7 +149,7 @@ const std::array<uint8_t, 16U> g_channel_mapping = {
  */
 double generate_test_pattern(const SyndyneKeyboards keyboard, 
                              double start_time,
-                             std::list<bach_bot::OrganMidiEvent> &event_queue)
+                             std::deque<bach_bot::OrganMidiEvent> &event_queue)
 {
     for (uint8_t i = 1U; i <= 127U; ++i) {
         event_queue.emplace_back(bach_bot::MidiCommands::NOTE_ON, keyboard,
@@ -171,9 +171,9 @@ double generate_test_pattern(const SyndyneKeyboards keyboard,
 
 namespace bach_bot {
 
-std::list<OrganMidiEvent> generate_test_pattern()
+std::deque<OrganMidiEvent> generate_test_pattern()
 {
-    std::list<OrganMidiEvent> event_queue;
+    std::deque<OrganMidiEvent> event_queue;
     auto midi_time = 0.0;
     midi_time = ::generate_test_pattern(SyndyneKeyboards::PETAL,
                                         midi_time, event_queue);

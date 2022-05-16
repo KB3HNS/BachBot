@@ -34,6 +34,7 @@
 #include <cstdint>  //  uint32_t
 #include <utility>  //  std::pair
 #include <functional>  //  std::function
+#include <deque>  //  std::deque
 #include <wx/wx.h>  //  wxString
 
  //  module includes
@@ -119,7 +120,7 @@ public:
     * @brief Get song events
     * @return Playlist song's events
     */
-    std::list<OrganMidiEvent> get_song_events() const;
+    std::deque<OrganMidiEvent> get_song_events() const;
 
     /**
      * @brief Get the sequence (prev song/next song) data
