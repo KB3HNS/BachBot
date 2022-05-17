@@ -50,12 +50,16 @@ namespace bach_bot
 			protected:
 				wxButton* play_advance_button;
 				wxButton* stop_button;
+				wxButton* bank_up_button;
 				wxStaticText* m_staticText3;
 				wxStaticText* m_staticText4;
 				wxStaticText* m_staticText5;
+				wxButton* mode_up_button;
+				wxButton* bank_down_button;
 				wxStaticText* bank_label;
 				wxStaticText* m_staticText7;
 				wxStaticText* mode_label;
+				wxButton* mode_down_button;
 				wxGauge* event_count;
 				wxStaticText* track_label;
 				wxStaticBoxSizer* sbSizer1;
@@ -82,8 +86,12 @@ namespace bach_bot
 				virtual void on_drop_midi_file( wxDropFilesEvent& event ) { event.Skip(); }
 				virtual void on_play_advance( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_stop( wxCommandEvent& event ) { event.Skip(); }
+				virtual void on_bank_up_button_clicked( wxCommandEvent& event ) { event.Skip(); }
+				virtual void on_mode_up_button_clicked( wxCommandEvent& event ) { event.Skip(); }
+				virtual void on_bank_down_button_clicked( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_bank_change_next( wxMouseEvent& event ) { event.Skip(); }
 				virtual void on_bank_change_prev( wxMouseEvent& event ) { event.Skip(); }
+				virtual void on_mode_down_button_clicked( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_keydown_event( wxKeyEvent& event ) { event.Skip(); }
 				virtual void on_keyup_event( wxKeyEvent& event ) { event.Skip(); }
 				virtual void on_new_playlist( wxCommandEvent& event ) { event.Skip(); }

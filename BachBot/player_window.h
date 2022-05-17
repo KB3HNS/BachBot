@@ -93,6 +93,7 @@ enum PlayerWindowEvents : int
     MOVE_DOWN_EVENT,  ///< On Move down accelerator (Ctrl+Down)
     MOVE_UP_EVENT,  ///< On Move up accelerator (Ctrl+Up)
     SET_NEXT_EVENT,  ///< On Set next accelerator (Ctrl+Enter
+    PLAY_ACTIVATE_EVENT,   ///< On Play/Activate accelerator (F5)
     UI_ANIMATE_TICK,  ///< Timer tick event
 
     END_UI_EVENTS  ///< Terminating item, not used by UI
@@ -133,6 +134,10 @@ protected:
     virtual void on_close(wxCloseEvent &event) override final;
     virtual void on_save_as(wxCommandEvent &event) override final;
     virtual void on_drop_midi_file(wxDropFilesEvent &event) override final;
+    virtual void on_bank_up_button_clicked(wxCommandEvent &event) override final;
+    virtual void on_bank_down_button_clicked(wxCommandEvent &event) override final;
+    virtual void on_mode_up_button_clicked(wxCommandEvent &event) override final;
+    virtual void on_mode_down_button_clicked(wxCommandEvent &event) override final;
 
 private:
     //  Locally bound UI events
@@ -223,7 +228,13 @@ private:
      */
     void scroll_to_widget(const PlaylistEntryControl *const widget);
 
-    uint32_t m_counter;
+    /**
+     * @brief Update the "Current Config" section of the UI
+     * @param send_update set `false` to not notify the player thread of the
+     *                    current config
+     */
+    void update_config_ui(const bool send_update=true);
+
     std::unique_ptr<PlayerThread> m_player_thread;
     std::list<wxMenuItem> m_midi_devices;
     RtMidiOut m_midi_out;

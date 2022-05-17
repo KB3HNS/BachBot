@@ -57,6 +57,7 @@ namespace {
         MOVE_DOWN_ACCEL,
         PLAY_NEXT_ACCEL1,
         PLAY_NEXT_ACCEL2,
+        PLAY_ACTIVATE_ACCEL,
         NUM_ACCEL_ENTRIES
     };
     
@@ -78,13 +79,14 @@ void initialize_global_accelerator_table()
                                           PlayerWindowEvents::SET_NEXT_EVENT);
     g_accel_entries[PLAY_NEXT_ACCEL2].Set(wxACCEL_CTRL, WXK_NUMPAD_ENTER,
                                           PlayerWindowEvents::SET_NEXT_EVENT);
+    g_accel_entries[PLAY_ACTIVATE_ACCEL].Set(
+        0, WXK_F5, PlayerWindowEvents::PLAY_ACTIVATE_EVENT);
 }
 
 
 PlayerWindow::PlayerWindow() :
     MainWindow(nullptr),
     wxLog(),
-    m_counter{0U},
     m_player_thread(),
     m_midi_devices(),
     m_midi_out(),
@@ -316,7 +318,6 @@ void PlayerWindow::on_about(wxCommandEvent &event)
 
 void PlayerWindow::on_thread_tick(wxThreadEvent &event)
 {
-    ++m_counter;
     auto events_complete = 0;
     if (m_current_song_event_count > 0U) {
         events_complete = int(m_current_song_event_count)-event.GetInt();
@@ -357,9 +358,8 @@ void PlayerWindow::on_bank_changed(wxThreadEvent &event)
     const auto current_setting = uint32_t(event.GetInt());
     const auto bank = current_setting % 8U;
     const auto mode = current_setting / 8U;
-    bank_label->SetLabelText(wxString(fmt::format(L"{}", bank + 1U)));
-    mode_label->SetLabelText(wxString(fmt::format(L"{}", mode + 1U)));
     m_current_config = std::make_pair(uint8_t(bank), mode);
+    update_config_ui(false);
 }
 
 
@@ -582,6 +582,42 @@ void PlayerWindow::on_drop_midi_file(wxDropFilesEvent &event)
 }
 
 
+void PlayerWindow::on_bank_up_button_clicked(wxCommandEvent &event)
+{
+    if (m_current_config.first < 7U) {
+        ++m_current_config.first;
+    }
+    update_config_ui();
+}
+
+
+void PlayerWindow::on_bank_down_button_clicked(wxCommandEvent & event)
+{
+    if (m_current_config.first > 0U) {
+        --m_current_config.first;
+    }
+    update_config_ui();
+}
+
+
+void PlayerWindow::on_mode_up_button_clicked(wxCommandEvent & event)
+{
+    if (m_current_config.second < 99U) {
+        ++m_current_config.second;
+    }
+    update_config_ui();
+}
+
+
+void PlayerWindow::on_mode_down_button_clicked(wxCommandEvent & event)
+{
+    if (m_current_config.second > 0U) {
+        --m_current_config.second;
+    }
+    update_config_ui();
+}
+
+
 void PlayerWindow::send_manual_message(const SyndyneBankCommands value)
 {
     const auto port_open = m_midi_out.isPortOpen();
@@ -772,6 +808,35 @@ void PlayerWindow::scroll_to_widget(const PlaylistEntryControl *const widget)
 }
 
 
+void PlayerWindow::update_config_ui(const bool send_update)
+{
+    if (m_current_config.first >= 7U) {
+        m_current_config.first = 7U;
+        static_cast<void>(bank_up_button->Enable(false));
+    } else {
+        static_cast<void>(bank_up_button->Enable());
+    }
+    static_cast<void>(bank_down_button->Enable((0U != m_current_config.first)));
+
+    if (m_current_config.second >= 100U) {
+        m_current_config.second = 100U;
+        static_cast<void>(mode_up_button->Enable(false));
+    } else {
+        static_cast<void>(mode_up_button->Enable());
+    }
+    static_cast<void>(mode_down_button->Enable((0U != m_current_config.second)));
+
+    bank_label->SetLabelText(wxString::Format(wxT("%d"),
+                                              m_current_config.first + 1U));
+    mode_label->SetLabelText(wxString::Format(wxT("%u"),
+                                              m_current_config.second + 1U));
+    if ((m_player_thread.get() != nullptr) && send_update) {
+        m_player_thread->set_bank_config(m_current_config.first,
+                                         m_current_config.second);
+    }
+}
+
+
 PlayerWindow::~PlayerWindow()
 {
     wxCommandEvent e;
@@ -794,6 +859,7 @@ wxBEGIN_EVENT_TABLE(PlayerWindow, wxFrame)
     EVT_MENU(PlayerWindowEvents::MOVE_DOWN_EVENT, PlayerWindow::on_accel_down_event)
     EVT_MENU(PlayerWindowEvents::MOVE_UP_EVENT, PlayerWindow::on_accel_up_event)
     EVT_MENU(PlayerWindowEvents::SET_NEXT_EVENT, PlayerWindow::on_accel_play_next_event)
+    EVT_MENU(PlayerWindowEvents::PLAY_ACTIVATE_EVENT, PlayerWindow::on_play_advance)
     EVT_TIMER(PlayerWindowEvents::UI_ANIMATE_TICK, PlayerWindow::on_timer_tick)
 wxEND_EVENT_TABLE()
 
