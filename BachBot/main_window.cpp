@@ -253,7 +253,7 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 	fgSizer3->SetMinSize( wxSize( 360,-1 ) );
 	file_name_label = new wxStaticText( this, wxID_ANY, wxT("foo.mid"), wxDefaultPosition, wxSize( 380,-1 ), 0 );
 	file_name_label->Wrap( -1 );
-	file_name_label->SetFont( wxFont( wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxEmptyString ) );
+	file_name_label->SetFont( wxFont( 12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Courier New") ) );
 
 	fgSizer3->Add( file_name_label, 0, wxALL, 5 );
 
@@ -425,6 +425,12 @@ LoadingPopup::LoadingPopup( wxWindow* parent, wxWindowID id, const wxString& tit
 	m_staticText22->SetFont( wxFont( 16, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxEmptyString ) );
 
 	bSizer9->Add( m_staticText22, 0, wxALL|wxEXPAND, 5 );
+
+	filename_label = new wxStaticText( this, wxID_ANY, wxT("Preparing..."), wxDefaultPosition, wxDefaultSize, 0 );
+	filename_label->Wrap( -1 );
+	filename_label->SetFont( wxFont( wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Courier New") ) );
+
+	bSizer9->Add( filename_label, 0, wxALL|wxEXPAND, 5 );
 
 	progress_bar = new wxGauge( this, wxID_ANY, 100, wxDefaultPosition, wxDefaultSize, wxGA_HORIZONTAL );
 	progress_bar->SetValue( 0 );

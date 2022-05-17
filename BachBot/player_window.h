@@ -158,6 +158,13 @@ private:
                        const bool direction);
 
     /**
+     * @brief on checkbox clicked event handler for playlist controls
+     * @param song_id song ID associated with playlist entry
+     * @param checked new state of auto play next checkbox
+     */
+    void on_checkbox_event(const uint32_t song_id, const bool checked);
+
+    /**
      * @brief Internal device changed handler
      * @param device_id new MIDI out device ID selected
      */
@@ -187,9 +194,14 @@ private:
 
     /**
      * @brief Set the next song ID (update GUI and player thread)
+     * @note This function may not actually change the selection of next song
+     *       if the order changed because of reordering the playlist and the
+     *       user has already told us to "play *THIS* song next.
      * @param song_id song ID that is "next"
+     * @param priority set `true` when requested through the UI as opposed to
+     *        playback / reordering action.
      */
-    void set_next_song(const uint32_t song_id);
+    void set_next_song(const uint32_t song_id, const bool priority=false);
 
     /**
      * @brief check to see if the application should be closed
@@ -205,6 +217,12 @@ private:
      */
     void start_player_thread();
 
+    /**
+     * @brief Scroll the playlist container to (roughly) center on a widget
+     * @param widget widget to center on
+     */
+    void scroll_to_widget(const PlaylistEntryControl *const widget);
+
     uint32_t m_counter;
     std::unique_ptr<PlayerThread> m_player_thread;
     std::list<wxMenuItem> m_midi_devices;
@@ -212,7 +230,7 @@ private:
     uint32_t m_current_device_id;
     size_t m_current_song_event_count;
     uint32_t m_current_song_id;
-    uint32_t m_next_song_id;
+    std::pair<uint32_t, bool> m_next_song_id;
     std::pair<uint32_t, uint32_t> m_song_list;  ///< front/end of playlist
     std::unordered_map<uint32_t, PlaylistEntryType> m_song_labels;
     BankConfig m_current_config;

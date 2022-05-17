@@ -54,9 +54,11 @@ LabelAnimator::LabelAnimator(wxStaticText *const label, const uint32_t max_len) 
 
 void LabelAnimator::set_label_text(const wxString &text)
 {
-    m_state = 0U;
-    m_label_text = text;
-    animate_tick();
+    if (text != m_label_text) {
+        m_state = 0U;
+        m_label_text = text;
+        animate_tick();
+    }
 }
 
 

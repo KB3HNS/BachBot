@@ -30,7 +30,11 @@
 
 //  local includes
 #include "thread_loader.h"  //  local include
+#include "playlist_entry_control.h"  //  set_label_filename
 
+namespace {
+    constexpr const size_t MAX_FILENAME_LEN = 52U;
+}
 
 namespace bach_bot {
 namespace ui {
@@ -76,7 +80,7 @@ wxThread::ExitCode ThreadLoader::Entry()
     m_error_text.reset();
 
     const auto count = count_children();
-    wxThreadEvent start_event(wxEVT_THREAD, LoaderEvents::TICK_EVENT);
+    wxThreadEvent start_event(wxEVT_THREAD, LoaderEvents::START_EVENT);
     start_event.SetInt(count);
     wxQueueEvent(this, start_event.Clone());
 
@@ -107,7 +111,6 @@ void ThreadLoader::set_error_text(const wxString &error)
     }
 }
 
-
 void ThreadLoader::on_start_event(wxThreadEvent &event)
 {
     const auto value = event.GetInt();
@@ -132,10 +135,15 @@ void ThreadLoader::on_close_event(wxThreadEvent &event)
 }
 
 
+void ThreadLoader::on_filename_event(wxThreadEvent &event)
+{
+    set_label_filename(filename_label, event.GetString(), MAX_FILENAME_LEN);
+}
+
+
 void ThreadLoader::parse_playlist()
 {
     for (auto song_id = 1U; song_id <= m_count; ++song_id) {
-
         PlayListEntry song_entry;
         song_entry.song_id = song_id;
         build_playlist_entry(song_entry, song_id);
@@ -143,6 +151,11 @@ void ThreadLoader::parse_playlist()
         if (m_error_text.has_value()) {
             break;
         }
+
+        wxThreadEvent file_event(wxEVT_THREAD, LoaderEvents::SET_FILENAME_EVENT);
+        file_event.SetInt(int(song_entry.file_name.length()));
+        file_event.SetString(song_entry.file_name);
+        wxQueueEvent(this, file_event.Clone());
 
         if (!song_entry.import_midi()) {
             set_error_text(fmt::format(L"Unable to import song: {}", 
@@ -159,6 +172,7 @@ void ThreadLoader::parse_playlist()
 
 wxBEGIN_EVENT_TABLE(ThreadLoader, wxDialog)
     EVT_THREAD(LoaderEvents::START_EVENT, ThreadLoader::on_start_event)
+    EVT_THREAD(LoaderEvents::SET_FILENAME_EVENT, ThreadLoader::on_filename_event)
     EVT_THREAD(LoaderEvents::TICK_EVENT, ThreadLoader::on_tick_event)
     EVT_THREAD(LoaderEvents::EXIT_EVENT, ThreadLoader::on_close_event)
 wxEND_EVENT_TABLE()

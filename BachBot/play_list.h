@@ -101,6 +101,8 @@ struct PlayListEntry
      * @param[in] dialog 
      */
     void populate_dialog(ui::LoadMidiDialog &dialog) const;
+
+    static constexpr const auto CFGMIDI_DIALOG_MAX_LEN = 36U;
 };
 
 

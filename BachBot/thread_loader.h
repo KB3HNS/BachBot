@@ -105,6 +105,7 @@ private:
     enum LoaderEvents : int
     {
         START_EVENT = wxID_HIGHEST,
+        SET_FILENAME_EVENT,
         TICK_EVENT,
         EXIT_EVENT
     };
@@ -113,6 +114,7 @@ private:
     void on_start_event(wxThreadEvent &event);
     void on_tick_event(wxThreadEvent &event);
     void on_close_event(wxThreadEvent &event);
+    void on_filename_event(wxThreadEvent &event);
 
     /**
      * @brief Internal loop functionb to call playlist entry building.

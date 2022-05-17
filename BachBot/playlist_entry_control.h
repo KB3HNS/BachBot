@@ -48,6 +48,18 @@ namespace bach_bot {
 namespace ui {
 
 /**
+ * @brief Utility to set a playlist entry string so that the right part is
+ *        visible (usually containing the filename and not the path).
+ * @param label Label to set
+ * @param filename filename to store in label
+ * @param max_len maximum number of characters label will support
+ */
+void set_label_filename(wxStaticText *const label,
+                        const wxString &filename,
+                        const size_t max_len);
+
+
+/**
  * @brief On-screen control represenging an item in the playlist.
  */
 class PlaylistEntryControl : public PlaylistEntryPanel

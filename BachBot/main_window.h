@@ -155,6 +155,7 @@ namespace bach_bot
 
 			protected:
 				wxStaticText* m_staticText22;
+				wxStaticText* filename_label;
 				wxGauge* progress_bar;
 
 			public:

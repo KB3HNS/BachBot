@@ -44,6 +44,19 @@ namespace {
 namespace bach_bot {
 namespace ui {
 
+void set_label_filename(wxStaticText *const label,
+                        const wxString &filename,
+                        const size_t max_len)
+{
+    if (filename.length() > max_len) {
+        label->SetLabelText(fmt::format(L"...{}",
+                                        filename.Right(max_len - 3U)));
+    } else {
+        label->SetLabelText(filename);
+    }
+}
+
+
 PlaylistEntryControl::PlaylistEntryControl(wxWindow *const parent,
                                            PlayListEntry song) :
     PlaylistEntryPanel(parent),
@@ -259,13 +272,7 @@ void PlaylistEntryControl::setup_widgets()
     }
     static_cast<void>(configure_button->Enable(!(m_playing || m_up_next)));
 
-    if (m_playlist_entry.file_name.length() < width) {
-        song_label->SetLabelText(m_playlist_entry.file_name);
-    } else {
-        const wxString &label = fmt::format(
-            L"...{}", m_playlist_entry.file_name.Right(width - 3U));
-        song_label->SetLabelText(label);
-    }
+    set_label_filename(song_label, m_playlist_entry.file_name, width);
 
     Layout();
 }
