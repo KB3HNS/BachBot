@@ -241,18 +241,6 @@ bool OrganNote::operator< (const OrganNote& rhs) const
 }
 
 
-OrganNote& OrganNote::operator-=(const OrganNote &rhs)
-{
-    auto *const this_event = get();
-    if (nullptr == this_event || nullptr == rhs.get()) {
-        throw std::runtime_error("operator-= on null instance");
-    }
-    this_event->m_seconds -= rhs->m_seconds;
-    this_event->m_midi_time -= rhs->m_midi_time;
-    return *this;
-}
-
-
 OrganMidiEvent OrganNote::clone() const
 {
     auto cloned_event = *get();

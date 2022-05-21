@@ -69,10 +69,14 @@ PlaylistEntryControl::PlaylistEntryControl(wxWindow *const parent,
     m_playing{false},
     m_prev_song_id{0U},
     m_next_song_id{0U},
+    m_panel_size{GetSize()},
+    m_text_width{NORMAL_WIDTH},
+    m_pix_per_char{calculate_pix_per_char(song_label)},
     m_playlist_entry(std::move(song))
 {
     auto_play->SetValue(song.play_next);
     setup_widgets();
+    // SetSize(-1, m_panel_size.y);
 }
 
 
@@ -261,9 +265,21 @@ void PlaylistEntryControl::on_radio_selected(wxCommandEvent &event)
 }
 
 
+void PlaylistEntryControl::PlaylistEntryPanelOnSize(wxSizeEvent &event)
+{
+    const auto new_size = event.GetSize();
+    const auto delta_x = double(new_size.x - m_panel_size.x);
+    m_text_width = NORMAL_WIDTH;
+    if (delta_x > 0.0) {
+        m_text_width += int(delta_x / m_pix_per_char);
+    }
+    setup_widgets();
+}
+
+
 void PlaylistEntryControl::setup_widgets()
 {
-    auto width = NORMAL_WIDTH;
+    auto width = m_text_width;
     if (m_playing) {
         now_playing->SetLabelText(wxT("==>"));
         width -= 6U;
@@ -286,6 +302,14 @@ void PlaylistEntryControl::dummy_event(uint32_t song_id,
                              song_id, int(value)),
                  wxT("Debug"),
                  wxOK | wxICON_INFORMATION);
+}
+
+
+double PlaylistEntryControl::calculate_pix_per_char(
+    const wxStaticText *const label)
+{
+    const auto label_size = label->GetSize();
+    return double(label_size.x) / double(NORMAL_WIDTH);
 }
 
 }  //  end ui

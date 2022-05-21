@@ -35,6 +35,7 @@
 #include <utility>  //  std::pair
 #include <functional>  //  std::function
 #include <deque>  //  std::deque
+#include <optional>  //  std::optional
 #include <wx/wx.h>  //  wxString
 
  //  module includes
@@ -174,6 +175,7 @@ protected:
     virtual void on_move_up(wxCommandEvent &event) override final;
     virtual void on_move_down(wxCommandEvent &event) override final;
     virtual void on_radio_selected(wxCommandEvent& event) override final;
+    virtual void PlaylistEntryPanelOnSize(wxSizeEvent &event) override final;
 
 private:
     /**
@@ -187,11 +189,17 @@ private:
      */
     static void dummy_event(uint32_t, PlaylistEntryControl*, bool);
 
+    static double calculate_pix_per_char(const wxStaticText *const label);
+
     wxWindow *const m_parent;
     bool m_up_next;
     bool m_playing;
     uint32_t m_prev_song_id;
     uint32_t m_next_song_id;
+    const wxSize m_panel_size;
+    // std::optional<std::pair<wxSize, wxSize>> m_initial_sizes;
+    uint32_t m_text_width;
+    const double m_pix_per_char;
 
     PlayListEntry m_playlist_entry;
 };

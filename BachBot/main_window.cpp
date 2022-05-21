@@ -105,7 +105,7 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	track_label->Wrap( -1 );
 	track_label->SetFont( wxFont( 12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Courier New") ) );
 
-	bSizer2->Add( track_label, 0, wxALL, 5 );
+	bSizer2->Add( track_label, 0, wxALL|wxEXPAND, 5 );
 
 	sbSizer1 = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, wxT("Up Next") ), wxHORIZONTAL );
 
@@ -114,7 +114,7 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	next_label->Wrap( -1 );
 	next_label->SetFont( wxFont( 12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Courier New") ) );
 
-	sbSizer1->Add( next_label, 0, wxALL, 5 );
+	sbSizer1->Add( next_label, 1, wxALL|wxEXPAND, 5 );
 
 
 	bSizer2->Add( sbSizer1, 0, wxALL|wxEXPAND, 5 );
@@ -487,10 +487,7 @@ PlaylistEntryPanel::PlaylistEntryPanel( wxWindow* parent, wxWindowID id, const w
 	song_label->Wrap( -1 );
 	song_label->SetFont( wxFont( 8, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Courier New") ) );
 
-	layout->Add( song_label, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
-
-
-	layout->Add( 0, 0, 1, wxEXPAND, 5 );
+	layout->Add( song_label, 1, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
 	configure_button = new wxButton( this, wxID_ANY, wxT("Configure"), wxDefaultPosition, wxDefaultSize, 0 );
 	layout->Add( configure_button, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
@@ -518,6 +515,7 @@ PlaylistEntryPanel::PlaylistEntryPanel( wxWindow* parent, wxWindowID id, const w
 
 
 	// Connect Events
+	this->Connect( wxEVT_SIZE, wxSizeEventHandler( PlaylistEntryPanel::PlaylistEntryPanelOnSize ) );
 	now_playing->Connect( wxEVT_COMMAND_RADIOBUTTON_SELECTED, wxCommandEventHandler( PlaylistEntryPanel::on_radio_selected ), NULL, this );
 	configure_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( PlaylistEntryPanel::on_configure_clicked ), NULL, this );
 	auto_play->Connect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( PlaylistEntryPanel::on_checkbox_checked ), NULL, this );
@@ -529,6 +527,7 @@ PlaylistEntryPanel::PlaylistEntryPanel( wxWindow* parent, wxWindowID id, const w
 PlaylistEntryPanel::~PlaylistEntryPanel()
 {
 	// Disconnect Events
+	this->Disconnect( wxEVT_SIZE, wxSizeEventHandler( PlaylistEntryPanel::PlaylistEntryPanelOnSize ) );
 	now_playing->Disconnect( wxEVT_COMMAND_RADIOBUTTON_SELECTED, wxCommandEventHandler( PlaylistEntryPanel::on_radio_selected ), NULL, this );
 	configure_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( PlaylistEntryPanel::on_configure_clicked ), NULL, this );
 	auto_play->Disconnect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( PlaylistEntryPanel::on_checkbox_checked ), NULL, this );

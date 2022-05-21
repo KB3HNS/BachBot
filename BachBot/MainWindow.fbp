@@ -1023,7 +1023,7 @@
                 </object>
                 <object class="sizeritem" expanded="0">
                     <property name="border">5</property>
-                    <property name="flag">wxALL</property>
+                    <property name="flag">wxALL|wxEXPAND</property>
                     <property name="proportion">0</property>
                     <object class="wxStaticText" expanded="0">
                         <property name="BottomDockable">1</property>
@@ -1097,8 +1097,8 @@
                         <property name="permission">protected</property>
                         <object class="sizeritem" expanded="1">
                             <property name="border">5</property>
-                            <property name="flag">wxALL</property>
-                            <property name="proportion">0</property>
+                            <property name="flag">wxALL|wxEXPAND</property>
+                            <property name="proportion">1</property>
                             <object class="wxStaticText" expanded="1">
                                 <property name="BottomDockable">1</property>
                                 <property name="LeftDockable">1</property>
@@ -1219,7 +1219,7 @@
                         <property name="window_style">wxALWAYS_SHOW_SB|wxVSCROLL</property>
                         <event name="OnKeyDown">on_keydown_event</event>
                         <event name="OnKeyUp">on_keyup_event</event>
-                        <object class="wxBoxSizer" expanded="0">
+                        <object class="wxBoxSizer" expanded="1">
                             <property name="minimum_size"></property>
                             <property name="name">playlist_container</property>
                             <property name="orient">wxVERTICAL</property>
@@ -3445,6 +3445,7 @@
             <property name="window_extra_style"></property>
             <property name="window_name"></property>
             <property name="window_style">wxTAB_TRAVERSAL</property>
+            <event name="OnSize">PlaylistEntryPanelOnSize</event>
             <object class="wxBoxSizer" expanded="1">
                 <property name="minimum_size"></property>
                 <property name="name">layout</property>
@@ -3519,7 +3520,7 @@
                 <object class="sizeritem" expanded="1">
                     <property name="border">5</property>
                     <property name="flag">wxALIGN_CENTER_VERTICAL|wxALL</property>
-                    <property name="proportion">0</property>
+                    <property name="proportion">1</property>
                     <object class="wxStaticText" expanded="1">
                         <property name="BottomDockable">1</property>
                         <property name="LeftDockable">1</property>
@@ -3576,16 +3577,6 @@
                         <property name="window_name"></property>
                         <property name="window_style"></property>
                         <property name="wrap">-1</property>
-                    </object>
-                </object>
-                <object class="sizeritem" expanded="1">
-                    <property name="border">5</property>
-                    <property name="flag">wxEXPAND</property>
-                    <property name="proportion">1</property>
-                    <object class="spacer" expanded="1">
-                        <property name="height">0</property>
-                        <property name="permission">private</property>
-                        <property name="width">0</property>
                     </object>
                 </object>
                 <object class="sizeritem" expanded="1">

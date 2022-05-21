@@ -47,7 +47,8 @@ LabelAnimator::LabelAnimator(wxStaticText *const label, const uint32_t max_len) 
     m_label{label},
     m_label_text{label->GetLabelText()},
     m_max_len{max_len},
-    m_state{0U}
+    m_state{0U},
+    m_pix_config()
 {
 }
 
@@ -64,7 +65,27 @@ void LabelAnimator::set_label_text(const wxString &text)
 
 void LabelAnimator::animate_tick()
 {
-    if (m_label_text.size() <= m_max_len) {
+    if (!m_pix_config.has_value()) {
+        const auto sizer = m_label->GetContainingSizer();
+        if (nullptr != sizer) {
+            const auto label_size = m_label->GetSize();
+            const auto container_size = sizer->GetSize();
+            const auto pix_per_char = double(label_size.x) / double(m_max_len);
+            const auto container_delta = container_size.x - label_size.x;
+            m_pix_config = std::make_pair(pix_per_char, container_delta);
+        }
+        return;
+    }
+    
+    const auto size = m_label->GetContainingSizer()->GetSize();
+    const auto config = m_pix_config.value();
+    const auto label_width = double(size.x - config.second);
+    auto max_len = int(label_width / config.first);
+    const auto trim_elipsis = L"..."sv;
+    max_len = std::max(int(trim_elipsis.size() * 2U) + 1,
+                       max_len);
+
+    if (m_label_text.size() <= size_t(max_len)) {
         m_label->SetLabelText(m_label_text);
         m_state = 0;
     } else {
@@ -72,18 +93,17 @@ void LabelAnimator::animate_tick()
         auto end_elipsis = L""sv;
 
         if (m_state > 0) {
-            start_elipsis = L"..."sv;
+            start_elipsis = trim_elipsis;
         }
-
 
         auto final_ticks = 0U;
         auto start = (m_state < 0 ? 0 : m_state);
-        auto end = start + int(m_max_len);
+        auto end = start + max_len;
 
         if (end < m_label_text.size()) {
-            end_elipsis = L"..."sv;
+            end_elipsis = trim_elipsis;
         } else {
-            start = int(m_label_text.size() - m_max_len);
+            start = int(m_label_text.size()) - max_len;
             end = m_label_text.size();
             final_ticks = uint32_t(m_state - start);
         }

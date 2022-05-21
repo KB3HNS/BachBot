@@ -34,6 +34,8 @@
 #pragma once
 
  //  system includes
+#include <optional>  //  std::optional
+#include <utility>  //  std::pair
 #include <cstdint>  //  uint32_t
 #include <wx/wx.h>  //  wxStaticText, etc
 
@@ -65,6 +67,7 @@ private:
     wxString m_label_text;
     const uint32_t m_max_len;
     int m_state;
+    std::optional<std::pair<double, int>> m_pix_config;
 };
 
 }  //  end ui

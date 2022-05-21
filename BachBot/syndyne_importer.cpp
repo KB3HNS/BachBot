@@ -370,11 +370,13 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
     }
 
     //  5th pass: remove start dead time from song, assign song id
-    auto &initial_delay = m_file_events.front();
-    auto last_element = initial_delay;
-    for (auto &i: m_file_events) {
+    auto last_element =  m_file_events.front();
+    const auto initial_delay_s = last_element->m_seconds;
+    const auto initial_delay_ticks = last_element->m_midi_time;
+        for (auto &i: m_file_events) {
         i->m_song_id = m_song_id;
-        i -= initial_delay;
+        i->m_seconds -= initial_delay_s;
+        i->m_midi_time -= initial_delay_ticks;
         i->calculate_delta(*last_element);
         last_element = i;
     }

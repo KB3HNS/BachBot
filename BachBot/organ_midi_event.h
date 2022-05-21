@@ -141,6 +141,8 @@ struct OrganMidiEvent
     */
     void calculate_delta(const OrganMidiEvent& rhs);
 
+    void offset_time(const double seconds, const int ticks);
+
     ~OrganMidiEvent();
 
     uint8_t m_event_code;  ///<  This event command
@@ -197,15 +199,6 @@ public:
     * @param rhs other item being linked.
     */
     void link(OrganNote &rhs) const;
-
-    /**
-    * @brief Subtract the event timing of one MIDI event from this one.
-    * @param rhs Midi event timing.
-    * @return `this`
-    * @note This is intended to set a 0-delay gap between "songs" or introduce
-    *       a large gap for intra-song manual triggering.
-    */
-    OrganNote& operator-=(const OrganNote &rhs);
 
     /**
      * @brief Create a copy of the OrgeNMidiEvent payload.

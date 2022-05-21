@@ -190,6 +190,7 @@ namespace bach_bot
 				wxMenu* context_menu;
 
 				// Virtual event handlers, override them in your derived class
+				virtual void PlaylistEntryPanelOnSize( wxSizeEvent& event ) { event.Skip(); }
 				virtual void on_radio_selected( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_configure_clicked( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_checkbox_checked( wxCommandEvent& event ) { event.Skip(); }

@@ -127,7 +127,7 @@ constexpr uint8_t make_midi_command_byte(const uint8_t chan,
 /** Minimum gap between notes */
 constexpr const auto MINIMUM_NOTE_GAP_S = 0.09;
 /** Minimum length of one note */
-constexpr const auto MINIMUM_NOTE_LENGTH_S = 0.065;
+constexpr const auto MINIMUM_NOTE_LENGTH_S = 0.045;
 
 /**
  * @brief Minimum delay between consecutive bank-change commands.

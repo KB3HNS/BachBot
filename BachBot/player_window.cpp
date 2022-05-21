@@ -174,6 +174,9 @@ void PlayerWindow::on_load_playlist(wxCommandEvent &event)
                              "BachBot Playlist|*.bbp", 
                              wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
+    [[maybe_unused]] auto s1 = m_staticline1->GetSize();
+    [[maybe_unused]] auto s2 = playlist_label->GetSize();
+
     if (open_dialog.ShowModal() == wxID_CANCEL) {
         return;
     }
@@ -662,7 +665,8 @@ void PlayerWindow::add_playlist_entry(const PlayListEntry &song)
         prev_song->set_sequence(-1, int(song.song_id));
     }
 
-    static_cast<void>(playlist_container->Add(p_label.get(), 0, wxALL, 5));
+    static_cast<void>(playlist_container->Add(p_label.get(), 1, 
+                                              wxALL|wxEXPAND, 5));
     header_container->Show(true);
     p_label->set_sequence(int(m_song_list.second));
     m_song_list.second = song.song_id;
