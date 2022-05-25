@@ -46,7 +46,7 @@
 
 //  local includes
 #include "common_defs.h"
-#include "organ_midi_event.h"  //  OrganNote
+#include "organ_midi_event.h"  //  OrganNote, BankConfig
 
 namespace bach_bot {
 
@@ -69,6 +69,7 @@ class PlayerThread : public wxThread
      */
     enum MessageId : uint32_t
     {
+        NO_MESSAGE = 0U,
         TICK_MESSAGE,
         STOP_MESSAGE,
         START_MESSAGE,
@@ -239,6 +240,8 @@ private:
      */
     uint32_t m_mode_number;
 
+    BankConfig m_desired_config;  ///< The most recent desired bank/mode
+
     wxFrame *const m_frame;  ///<  Pointer to parent window
     RtMidiOut &m_midi_out;  ///<  Reference to MIDI port
     
@@ -252,6 +255,7 @@ private:
     wxStopWatch m_bank_change_delay;  ///<  Holdoff delay between bank changes.
     wxPowerResourceBlocker m_power_control;  ///<  Prevent low power mode
     wxPowerResourceBlocker m_screen_control;  ///<  Prevent screen blanking
+    MessageId m_last_message;  ///< The most recently processed message
 };
 
 }  //  end bach_bot

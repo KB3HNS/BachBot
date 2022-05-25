@@ -74,13 +74,15 @@ PlayerThread::PlayerThread(wxFrame* const frame, RtMidiOut &intf) :
     m_playing_test_pattern{false},
     m_bank_number{0U},
     m_mode_number{0U},
+    m_desired_config{0U, 0U},
     m_frame{frame},
     m_midi_out(intf),
     m_waiting{nullptr},
     m_current_time(),
     m_bank_change_delay(),
     m_power_control(wxPOWER_RESOURCE_SYSTEM, "BachBot Playing"),
-    m_screen_control(wxPOWER_RESOURCE_SCREEN, "BachBot Playing")
+    m_screen_control(wxPOWER_RESOURCE_SCREEN, "BachBot Playing"),
+    m_last_message{MessageId::NO_MESSAGE}
 {
     m_bank_change_delay.Start(MINIMUM_BANK_CHANGE_INTERVAL_MS);
 }
@@ -158,6 +160,8 @@ bool PlayerThread::run_song()
         default:
             break;
         }
+
+        m_last_message = message.first;
     }
 
     wxThreadEvent end_event(wxEVT_THREAD,
@@ -171,6 +175,16 @@ bool PlayerThread::run_song()
 PlayerThread::Message PlayerThread::wait_for_message()
 {
     wxMutexLocker lock(m_mutex);
+
+    //  To reduce overhead, do the mode check while locked.  Do before blocking
+    // in order to reduce transition delays.
+    if ((MessageId::TICK_MESSAGE == m_last_message) && 
+        !m_playing_test_pattern &&
+        (m_midi_event_queue.size() > 0U) &&
+        (m_bank_change_delay.Time() > MINIMUM_BANK_CHANGE_INTERVAL_MS)) {
+        do_mode_check();
+    }
+
     if (m_event_queue.size() == 0U) {
         wxCondition signal(m_mutex);
         m_waiting = &signal;
@@ -183,14 +197,6 @@ PlayerThread::Message PlayerThread::wait_for_message()
     }
     const auto message = m_event_queue.front();
     m_event_queue.pop_front();
-
-    //  To reduce overhead, do the mode check while locked.
-    if ((MessageId::TICK_MESSAGE == message.first) && 
-        !m_playing_test_pattern &&
-        (m_midi_event_queue.size() > 0U) &&
-        (m_bank_change_delay.Time() > MINIMUM_BANK_CHANGE_INTERVAL_MS)) {
-            do_mode_check();
-    }
 
     return message;
 }
@@ -244,6 +250,8 @@ void PlayerThread::process_notes()
             bank_event.SetInt(make_bank_message_int(uint8_t(bank_number),
                                                     mode_number));
             wxQueueEvent(m_frame, bank_event.Clone());
+        } else {
+            m_desired_config = midi_event.get_bank_config();
         }
 
         if (midi_event.m_metadata.has_value()) {
@@ -294,21 +302,20 @@ void PlayerThread::do_mode_check()
         send_change(SyndyneBankCommands::PREV_BANK);
     };
 
-    const auto desired_mode = m_midi_event_queue.front().get_bank_config();
-    if ((desired_mode.second < m_mode_number && m_bank_number > 0U) || 
-        (desired_mode.second == m_mode_number && 0U == desired_mode.first))
+    if ((m_desired_config.second < m_mode_number && m_bank_number > 0U) || 
+        (m_desired_config.second == m_mode_number && 0U == m_desired_config.first))
     {
         //  The desired piston mode is *lower* than the current state:  We
         // can take a shortcut and use CLEAR to get to the start of this 
         // piston mode.
         m_bank_number = 0U;
         send_change(SyndyneBankCommands::GENERAL_CANCEL);
-    } else if (desired_mode.second < m_mode_number) {
+    } else if (m_desired_config.second < m_mode_number) {
         //  At the bottom of the piston position and need to step down to the
         // top of the last one.
         step_down();
-    } else if (desired_mode.second > m_mode_number ||
-               desired_mode.first > m_bank_number) {
+    } else if (m_desired_config.second > m_mode_number ||
+               m_desired_config.first > m_bank_number) {
         //  We need to go up, no shortcuts available.
         ++m_bank_number;
         if (m_bank_number >= 8U) {
@@ -316,7 +323,7 @@ void PlayerThread::do_mode_check()
             ++m_mode_number;
         }
         send_change(SyndyneBankCommands::NEXT_BANK);
-    } else if (desired_mode.first < m_bank_number) {
+    } else if (m_desired_config.first < m_bank_number) {
         // We just need to walk down to the desired bank.
         step_down();
     }

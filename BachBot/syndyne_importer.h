@@ -109,6 +109,7 @@ public:
      * @param extend_final_duration multiply the length of the final note
      *                              on duration by this value to extend the
      *                              final chord.
+     * @throws std::out_of_range when the resulting song has too few events.
      * @returns timed event list to send to player 
      */
     std::list<OrganNote> get_events(const double initial_delay_beats,

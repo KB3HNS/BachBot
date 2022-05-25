@@ -28,7 +28,7 @@
 #include <algorithm>  //  std::clamp, std::for_each
 #include <array>  //  std::array
 #include <utility>  //  std::pair
-#include <stdexcept>   //  std::runtime_error
+#include <stdexcept>   //  std::runtime_error, std::out_of_range
 #include <fmt/format.h>  //  fmt::format
 
 //  module includes
@@ -328,6 +328,7 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
 {
     std::list<OrganNote> events;
     auto current_config = m_current_config;
+    m_file_events.clear();
 
     //  1st pass: Process all events
     for (auto i = 0; i < event_list.size(); ++i) {
@@ -354,12 +355,15 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
             j.append_events(events);
         }
     }
+    if (events.size() == 0U) {
+        //  Invalid song
+        return;
+    }
 
     //  3rd pass: sort by time
     events.sort();
 
     //  4th pass: update bank config, build output events
-    m_file_events.clear();
     for (auto &i: events) {
         if (i->is_mode_change_event()) {
             current_config = i->get_bank_config();
@@ -373,7 +377,7 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
     auto last_element =  m_file_events.front();
     const auto initial_delay_s = last_element->m_seconds;
     const auto initial_delay_ticks = last_element->m_midi_time;
-        for (auto &i: m_file_events) {
+    for (auto &i: m_file_events) {
         i->m_song_id = m_song_id;
         i->m_seconds -= initial_delay_s;
         i->m_midi_time -= initial_delay_ticks;
@@ -438,7 +442,7 @@ std::list<OrganNote> SyndineImporter::get_events(
     }
 
     if (m_file_events.size() < 2) {
-        throw std::runtime_error("Parsed events < 2");
+        throw std::out_of_range("Parsed events < 2");
     }
 
     for (auto i = m_file_events.rbegin(); m_file_events.rend() != i; ++i) {

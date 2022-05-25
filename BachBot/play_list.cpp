@@ -57,8 +57,11 @@ bool PlayListEntry::import_midi(SyndineImporter *importer)
     }
     importer->adjust_key(delta_pitch);
 
-    midi_events = importer->get_events(gap_beats, last_note_multiplier);
-
+    try {
+        midi_events = importer->get_events(gap_beats, last_note_multiplier);
+    } catch (std::out_of_range) {
+        midi_events.clear();
+    }
     return (midi_events.size() > 0U);
 }
 
@@ -225,7 +228,7 @@ void PlayListEntry::populate_dialog(ui::LoadMidiDialog &dialog) const
     dialog.bank_select->SetValue(
         int(starting_config.first) + 1);
     dialog.mode_select->SetValue(
-        int(starting_config.first) + 1);
+        int(starting_config.second) + 1);
     dialog.pitch_change->SetValue(delta_pitch);
     dialog.extend_ending_textbox->SetValue(
         wxString::FromDouble(last_note_multiplier));
