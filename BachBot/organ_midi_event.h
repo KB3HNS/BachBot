@@ -32,6 +32,7 @@
 
 //  system includes
 #include <cstdint>
+#include <memory>  //  std::shared_ptr
 #include <optional>  //  std::optional
 #include <utility>  //  std::pair
 #include <wx/wx.h>  //  wxLongLong
@@ -41,6 +42,7 @@
 
 #include "common_defs.h"  //  SyndyneKeyboards
 
+namespace bach_bot {
 
 /**
  * @brief Type for setting/getting the desired bank configuration.
@@ -60,7 +62,8 @@ using BankConfig = std::pair<uint8_t, uint32_t>;
  */
 struct OrganMidiEvent
 {
-public:
+    friend class OrganNote;
+
     /**
      * @brief Construct from a MIDI event and map to a specific keyboard.
      * @param midi_event Midi event to take timing and note information from.
@@ -75,25 +78,29 @@ public:
      * @param cfg Generate new bank configuration.
      */
     OrganMidiEvent(const smf::MidiEvent &midi_event, const BankConfig& cfg);
+
+    /**
+     * @brief Construct an arbitrary MIDI event
+     * @param command MIDI command
+     * @param channel MIDI channel
+     * @param byte1 first byte of payload (optional)
+     * @param byte2 second byte of payload (optional)
+    */
     OrganMidiEvent(const MidiCommands command, 
                    const SyndyneKeyboards channel,
                    const int8_t byte1=-1,
                    const int8_t byte2=-1);
 
     /**
-     * @brief Allow default copy construction.
+     * @brief Construct an pure metadata event
+     * @param metadata_value value to assign to metadata
+     * @param src copy non-midi parameters from instance
      */
-    OrganMidiEvent(const OrganMidiEvent&) = default;
-
-    /**
-     * @brief Subtract the event timing of one MIDI event from this one.
-     * @param rhs Midi event timing.
-     * @return `this`
-     * @note This is intended to set a 0-delay gap between "songs" or introduce
-     *       a large gap for intra-song manual triggering.
-     */
-    OrganMidiEvent& operator-=(const OrganMidiEvent &rhs);
-
+    OrganMidiEvent(const int metadata_value,
+                   const OrganMidiEvent *const src = nullptr);
+    
+    OrganMidiEvent(OrganMidiEvent &&) = default;
+    
     /**
      * @brief Send this event to the organ.
      * @param player MIDI device Output reference.
@@ -134,24 +141,71 @@ public:
     */
     void calculate_delta(const OrganMidiEvent& rhs);
 
-    /**
-     * @brief Operator used for sorting events by event time.
-     * @param rhs Event to test in sort function.
-     * @return sort order
-    */
-    constexpr bool operator< (const OrganMidiEvent& rhs) const
-    {
-        return (m_seconds < rhs.m_seconds);
-    }
+    void offset_time(const double seconds, const int ticks);
+
+    ~OrganMidiEvent();
 
     uint8_t m_event_code;  ///<  This event command
-    bool m_mode_change_event; ///< Was this constructed as a mode change event?
+    const bool m_mode_change_event; ///< Was this constructed as a mode change event?
     uint8_t m_desired_bank_number;  ///<  Store the desired bank number
     uint32_t m_desired_mode_number;  ///<  Store the desired piston mode number
     double m_seconds;  ///<  Event time in seconds.
     double m_delta_time;  ///<  Delta seconds since last event.
     std::optional<uint8_t> m_byte1;  ///<  MIDI event payload first byte
     std::optional<uint8_t> m_byte2;  ///<  MIDI event payload second byte
+    std::optional<int> m_metadata;  ///< Optional metadata associated with event
     int m_midi_time;  ///<  Midi event MIDI ticks time.
     int m_delta;  ///<  Midi ticks since last event.
+    OrganMidiEvent *m_partner;  ///< Partner event (for event pairs)
+    uint32_t m_song_id;  ///<  The song ID that this event is associated with.
+
+private:
+    /**
+     * @brief Only allow Organ note to do default copy construction.
+     */
+    OrganMidiEvent(const OrganMidiEvent&) = default;
 };
+
+
+/**
+* @brief Simplify this type.  Organ event storage.
+*/
+class OrganNote : public std::shared_ptr<OrganMidiEvent>
+{
+public:
+    OrganNote(const OrganNote &rhs) = default;
+
+    /**
+     * @brief Construct from new
+     * @param ptr pointer to instance
+    */
+    OrganNote(OrganMidiEvent *const ptr = nullptr);
+
+    /**
+     * @brief Copy construct from another instance
+     * @param rhs instance to copy from.
+    */
+    OrganNote(const OrganMidiEvent &rhs);
+
+    /**
+    * @brief Operator used for sorting events by event time.
+    * @param rhs Event to test in sort function.
+    * @return sort order
+    */
+    bool operator< (const OrganNote& rhs) const;
+
+    /**
+    * @brief Link this event to another event (usually note-on/note-off pair)
+    * @param rhs other item being linked.
+    */
+    void link(OrganNote &rhs) const;
+
+    /**
+     * @brief Create a copy of the OrgeNMidiEvent payload.
+     * @returns copy of the payload
+     */
+    OrganMidiEvent clone() const;
+};
+
+
+}  //  end bach_bot

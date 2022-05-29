@@ -34,33 +34,29 @@
 
 //  system includes
 #include <cstdint>  //  uint32_t, uintptr_t, etc
-#include <list>  //  std::list
+#include <deque>  //  std::deque
 #include <utility>  //  std::pair
 #include <RtMidi.h>  //  RtMidiOut
 #include <wx/wx.h>  //  wxCondition, wxThread, etc
+#include <wx/power.h>  //  wxPowerResourceBlocker
+#include <RtMidi.h>  //  RtMidiOut
 
 //  module includes
 // -none-
 
 //  local includes
-#include "player_window.h"
 #include "common_defs.h"
-#include "organ_midi_event.h"
+#include "organ_midi_event.h"  //  OrganNote, BankConfig
 
+namespace bach_bot {
 
 /**
- * @brief wx Events issues by this class
+ * @brief Manually send an explicit bank-change message
+ * @param midi_out[in] MIDI output handler
+ * @param value message to send
  */
-enum PlayerEvents : int
-{
-    /**
-     * @brief Periodic message sent to UI to refresh screen.
-     * @note
-     * "Int" value is formatted as `(mode << 3) | bank`
-     */
-    TICK_EVENT = 1001,
-    EXIT_EVENT  ///< On thread exit message "Int" is return code.
-};
+void send_bank_change_message(RtMidiOut &midi_out, 
+                              const SyndyneBankCommands value);
 
 
 /**
@@ -73,6 +69,7 @@ class PlayerThread : public wxThread
      */
     enum MessageId : uint32_t
     {
+        NO_MESSAGE = 0U,
         TICK_MESSAGE,
         STOP_MESSAGE,
         START_MESSAGE,
@@ -89,9 +86,9 @@ public:
     /**
      * @brief Constructor
      * @param frame reference to main window 
-     * @param port_id MIDI port to open to send events to
+     * @param[in] intf Midi interface to send events to
      */
-    PlayerThread(PlayerWindow *const frame, const uint32_t port_id);
+    PlayerThread(wxFrame *const frame, RtMidiOut &intf);
 
     /**
      * @brief Thread-safe call to send MIDI stop to.
@@ -119,23 +116,20 @@ public:
 
     /**
      * @brief Play music, upon completion `EXIT_EVENT` will be issued.
-     * @param event_list Parsed MIDI event list
      * @note 
      * Currently there is no check to prevent this from re-triggering.
      * Therefore, external logic should prevent this from being called until
      * after the `EXIT_EVENT` has been issued.
      * @sa PlayerEvents
      */
-    void play(const std::list<OrganMidiEvent> &event_list);
+    void play();
 
     /**
-     * @brief Thread-safe get the number of events remaining in the current
-     *        MIDI event list.
-     * @returns number of events remaining
-     * @note this is intended to drive a simple progress bar in the UI.
+     * @brief Enqueue the events for the next song to be played
+     * @param song_events song events
      */
-    size_t get_events_remaining();
-
+    void enqueue_next_song(std::deque<OrganMidiEvent> song_events);
+    
     /**
      * @brief Set the current state of the organ bank externally.
      * @param current_bank current bank (1-8)
@@ -151,6 +145,13 @@ protected:
 
 private:
 
+    /**
+     * @brief Play the currently loaded song
+     * @retval `true` song ended
+     * @retval `false` received stop signal
+     */
+    bool run_song();
+    
     /**
      * @brief Callback to post timer tick events.
      */
@@ -189,17 +190,42 @@ private:
     void do_mode_check();
 
     /**
-     * @brief Generate the test pattern as a sequence to be played.
+    * @brief Pre-cache the events for the next song during the final duration
+    *        of the current one.  This _may_ be the longest note in the song.
+    *        and therefore it's a good time to attempt to pre-load the next
+    *        song's events.
+    * @param song_id current song ID
     */
-    void generate_test_pattern();
+    void precache_next_song(const uint32_t song_id);
 
-    double generate_test_pattern(const SyndyneKeyboards keyboard, 
-                                 double start_time);
+    /**
+     * @brief Move enqueued song to the MIDI event queue.
+     * @retval `true` events now in m_midi_event_queue
+     * @retval `false` event queue empty
+     */
+    bool load_next_song();
 
-    wxMutex m_mutex;  ///< Shared data are protected by mutex
+    /**
+     * @brief Handling of internal "metadata" events
+     * @param meta_event_id metadata event id / code.
+     */
+    void handle_meta_event(const int meta_event_id);
 
-    std::list<Message> m_event_queue;  ///< Current Thread-Safe event queue
-    std::list<OrganMidiEvent> m_midi_event_queue;  ///< List of midi events
+    /**
+     * @brief Shared data are protected by mutex
+     * @p
+     * *Items protected by the shared mutex:*
+     * 1. `m_event_queue`
+     * 1. `m_precache`
+     * 1. `m_bank_number`/`m_mode_number`
+     */
+    wxMutex m_mutex;
+
+    std::deque<Message> m_event_queue;  ///< Current Thread-Safe event queue
+    std::deque<OrganMidiEvent> m_midi_event_queue;  ///< List of midi events
+    std::deque<OrganMidiEvent> m_precache;  ///< Cache of next song's events
+    /** Flag that we have already checked the cache for the next song */
+    bool m_test_precache;
 
     bool m_playing_test_pattern;  ///<  Are we playing the test pattern?
 
@@ -214,7 +240,9 @@ private:
      */
     uint32_t m_mode_number;
 
-    PlayerWindow *const m_frame;  ///<  Pointer to parent window
+    BankConfig m_desired_config;  ///< The most recent desired bank/mode
+
+    wxFrame *const m_frame;  ///<  Pointer to parent window
     RtMidiOut &m_midi_out;  ///<  Reference to MIDI port
     
     /**
@@ -224,5 +252,10 @@ private:
     wxCondition *m_waiting;
 
     wxStopWatch m_current_time;  ///<  Current time and event time measurement.
-    wxStopWatch m_bank_change_delay;  ///<  Holdoff delay between bank changes
+    wxStopWatch m_bank_change_delay;  ///<  Holdoff delay between bank changes.
+    wxPowerResourceBlocker m_power_control;  ///<  Prevent low power mode
+    wxPowerResourceBlocker m_screen_control;  ///<  Prevent screen blanking
+    MessageId m_last_message;  ///< The most recently processed message
 };
+
+}  //  end bach_bot

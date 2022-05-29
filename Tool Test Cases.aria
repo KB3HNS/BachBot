@@ -22,7 +22,7 @@
     <drum enabled="false" scroll="0.000000"/>
     <controller enabled="false" controller="7"/>
   </editors>
-  <magneticgrid divider="2" triplet="false" dotted="false"/>
+  <magneticgrid divider="4" triplet="false" dotted="false"/>
   <instrument id="0"/>
   <drumkit id="0" collapseView="false"/>
   <guitartuning  string0="67" string1="72" string2="76" string3="81" string4="86" string5="91"/>
@@ -100,7 +100,8 @@
   <note pitch="69" start="34320" end="34400" volume="80" fret="1" string="0"/>
   <note pitch="69" start="34400" end="34480" volume="80" fret="1" string="0"/>
   <note pitch="69" start="34480" end="34560" volume="80" fret="1" string="0"/>
-  <note pitch="67" start="34560" end="38400" volume="80" selected="true"/>
+  <note pitch="67" start="34560" end="38400" volume="80"/>
+  <note pitch="66" start="38400" end="39360" volume="80" selected="true"/>
 </track>
 
 
@@ -124,8 +125,9 @@
   <note pitch="76" start="15360" end="16320" volume="80"/>
   <note pitch="74" start="22080" end="23040" volume="80"/>
   <note pitch="71" start="27840" end="29760" volume="80"/>
-  <note pitch="67" start="34560" end="36480" volume="80" selected="true"/>
-  <note pitch="67" start="36480" end="38400" volume="80" selected="true"/>
+  <note pitch="67" start="34560" end="36480" volume="80"/>
+  <note pitch="67" start="36480" end="38400" volume="80"/>
+  <note pitch="62" start="38400" end="39360" volume="80" selected="true"/>
 </track>
 
 

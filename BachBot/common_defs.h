@@ -40,6 +40,8 @@
 //  local includes
 // -none-
 
+namespace bach_bot {
+
 /**
  * @brief Bank control command values sent to "General Controller 1"
  */
@@ -72,6 +74,14 @@ constexpr const uint8_t SYNDYNE_NOTE_ON_VELOCITY = 127U;
 /** Message size of [nearly] all midi events */
 constexpr const size_t MIDI_MESSAGE_SIZE = 3U;
 
+/** Tempo to derive beat timing from if tempo does not exist in song. */
+constexpr const auto DEFAULT_NO_TEMPO = 120;
+
+/**
+ * @brief Adding or subtracting this from the note yields a note 1 octave up 
+ *        or down from the current note.
+ */
+constexpr const auto MIDI_NOTES_IN_OCTAVE = 12;
 
 /**
  * @brief Simple definition of a complete event tracking table.
@@ -83,7 +93,7 @@ using SyndyneMidiEventTable = std::array<std::array<T, 127U>,
 
 /**
  * @brief The official command set for General Midi
-*/
+ */
 enum MidiCommands : uint8_t
 {
     NOTE_OFF = 0x8U,
@@ -108,11 +118,16 @@ constexpr uint8_t make_midi_command_byte(const uint8_t chan,
     return (command << 4U) | (chan & 0x0FU);
 }
 
-/* Midi timing magic constants */
+
+/*! @addtogroup magic_constants
+ * Midi timing magic constants
+ * @{
+ */
+
 /** Minimum gap between notes */
 constexpr const auto MINIMUM_NOTE_GAP_S = 0.09;
 /** Minimum length of one note */
-constexpr const auto MINIMUM_NOTE_LENGTH_S = 0.065;
+constexpr const auto MINIMUM_NOTE_LENGTH_S = 0.045;
 
 /**
  * @brief Minimum delay between consecutive bank-change commands.
@@ -121,3 +136,28 @@ constexpr const auto MINIMUM_NOTE_LENGTH_S = 0.065;
  *       like, just don't do it!
  */
 constexpr const auto MINIMUM_BANK_CHANGE_INTERVAL_MS = 250L;
+/*! @} */
+
+
+/*! @addtogroup metadata events
+ * Global set of metadata constants.  These should be able to slot in with
+ * the user space of signal integers.  Most classes will have their own set
+ * starting at 1001.  Negative values are OK for events that don't generate a
+ * signal event.
+ * @{
+ */
+
+ /** Meta event added to set first-note initial delay. */
+constexpr const auto EMPTY_FIRST_META_EVENT = -900;
+
+/** Last duration in a song set by the syndyne importer */
+constexpr const auto LAST_NOTE_META_CODE = -901;
+/** 
+ * @brief Meta code for an event generated that indicates sequence is that of
+ *        the test pattern.
+ */
+constexpr const auto TEST_PATTERN_META_CODE = -902;
+
+/*! @} */
+
+}  //  end bach_bot

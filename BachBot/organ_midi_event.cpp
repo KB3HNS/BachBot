@@ -24,7 +24,8 @@
 
 
 //  system includes
-// -none-
+#include <limits>  //  std::numeric_limits
+#include <stdexcept>  //  std::runtime_error
 
 //  module includes
 // -none-
@@ -33,7 +34,10 @@
 #include "organ_midi_event.h"  //  Local include
 
 
-OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent& midi_event, const SyndyneKeyboards channel) :
+namespace bach_bot {
+
+OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent& midi_event,
+                               const SyndyneKeyboards channel) :
     m_event_code{make_midi_command_byte(channel, MidiCommands::SPECIAL)},
     m_mode_change_event{false},
     m_desired_bank_number{0U},
@@ -42,8 +46,11 @@ OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent& midi_event, const SyndyneKe
     m_delta_time{0.0},
     m_byte1(),
     m_byte2(),
+    m_metadata(),
     m_midi_time{midi_event.tick},
-    m_delta{0}
+    m_delta{0},
+    m_partner{nullptr},
+    m_song_id{std::numeric_limits<uint32_t>::max()}
 {
     if (midi_event.isNoteOn()) {
         m_event_code = make_midi_command_byte(channel, MidiCommands::NOTE_ON);
@@ -76,8 +83,11 @@ OrganMidiEvent::OrganMidiEvent(const MidiCommands command,
     m_delta_time{0.0},
     m_byte1(),
     m_byte2(),
+    m_metadata(),
     m_midi_time{0},
-    m_delta{0}
+    m_delta{0},
+    m_partner{nullptr},
+    m_song_id{std::numeric_limits<uint32_t>::max()}
 {
     if (byte1 >= 0) {
         m_byte1 = uint8_t(byte1);
@@ -87,27 +97,58 @@ OrganMidiEvent::OrganMidiEvent(const MidiCommands command,
     }
 }
 
-OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent &midi_event,
-                               const BankConfig& cfg) :
-    m_event_code{make_midi_command_byte(uint8_t(midi_event.getChannel()),
-                                        MidiCommands::SPECIAL)},
-    m_seconds{midi_event.seconds},
-    m_mode_change_event{true},
-    m_desired_bank_number{cfg.first},
-    m_desired_mode_number{cfg.second},
+
+OrganMidiEvent::OrganMidiEvent(const int metadata_value,
+                               const OrganMidiEvent *const src) :
+    m_event_code{make_midi_command_byte(0U, MidiCommands::SPECIAL)},
+    m_mode_change_event{false},
+    m_desired_bank_number{0U},
+    m_desired_mode_number{0U},
+    m_seconds{0.0},
     m_delta_time{0.0},
     m_byte1(),
     m_byte2(),
+    m_metadata(metadata_value),
+    m_midi_time{0},
+    m_delta{0},
+    m_partner{nullptr},
+    m_song_id{std::numeric_limits<uint32_t>::max()}
+{
+    if (nullptr != src) {
+        set_bank_config(src->get_bank_config());
+        m_seconds = src->m_seconds;
+        m_delta_time = src->m_delta_time;
+        m_midi_time = src->m_midi_time;
+        m_delta = src->m_delta;
+        m_song_id = src->m_song_id;
+    }
+}
+
+
+OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent &midi_event,
+                               const BankConfig &cfg) :
+    m_event_code{make_midi_command_byte(uint8_t(midi_event.getChannel()),
+                                        MidiCommands::SPECIAL)},
+    m_mode_change_event{true},
+    m_desired_bank_number{cfg.first},
+    m_desired_mode_number{cfg.second},
+    m_seconds{midi_event.seconds},
+    m_delta_time{0.0},
+    m_byte1(),
+    m_byte2(),
+    m_metadata(),
     m_midi_time{midi_event.tick},
-    m_delta{0}
+    m_delta{0},
+    m_partner{nullptr},
+    m_song_id{std::numeric_limits<uint32_t>::max()}
 {
 }
 
 
 wxLongLong OrganMidiEvent::get_us() const
 {
-    const auto ms_time = m_seconds * 1000000.0;
-    return wxLongLong(ms_time + 0.5);
+    const auto us_time = m_seconds * 1000000.0;
+    return wxLongLong(us_time + 0.5);
 }
 
 
@@ -150,16 +191,61 @@ bool OrganMidiEvent::is_mode_change_event() const
 }
 
 
-OrganMidiEvent& OrganMidiEvent::operator-=(const OrganMidiEvent &rhs)
-{
-    m_seconds -= rhs.m_seconds;
-    m_midi_time -= rhs.m_midi_time;
-    return *this;
-}
-
-
 void OrganMidiEvent::calculate_delta(const OrganMidiEvent& rhs)
 {
     m_delta_time = m_seconds - rhs.m_seconds;
     m_delta = m_midi_time - rhs.m_midi_time;
 }
+
+
+OrganMidiEvent::~OrganMidiEvent()
+{
+    if (nullptr != m_partner) {
+        m_partner->m_partner = nullptr;
+        m_partner = nullptr;
+    }
+}
+
+
+OrganNote::OrganNote(OrganMidiEvent *const ptr) :
+    std::shared_ptr<OrganMidiEvent>(ptr)
+{
+}
+
+
+OrganNote::OrganNote(const OrganMidiEvent &rhs) :
+    OrganNote(new OrganMidiEvent(rhs))
+{
+    get()->m_partner = nullptr;
+}
+
+
+void OrganNote::link(OrganNote &rhs) const
+{
+    auto *const this_inst = get();
+    if (nullptr == this_inst || nullptr == rhs.get()) {
+        throw std::runtime_error("link() on null instance");
+    }
+    this_inst->m_partner = rhs.get();
+    rhs->m_partner = this_inst;
+}
+
+
+bool OrganNote::operator< (const OrganNote& rhs) const
+{
+    const auto *const this_event = get();
+    if (nullptr == this_event || nullptr == rhs.get()) {
+        throw std::runtime_error("operator< on null instance");
+    }
+    return (this_event->m_seconds < rhs->m_seconds);
+}
+
+
+OrganMidiEvent OrganNote::clone() const
+{
+    auto cloned_event = *get();
+    cloned_event.m_partner = nullptr;
+    return cloned_event;
+}
+
+}  //  end bach_bot

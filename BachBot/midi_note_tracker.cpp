@@ -34,7 +34,6 @@
 
 
 namespace {
-
 /**
  * @brief Simple test to see if a midi event occurs at the same time as a
  *        currently tracked event.
@@ -50,6 +49,8 @@ bool is_same_time(const smf::MidiEvent &ev, const int organ_time)
 
 }  //  end anonymous namespace.
 
+
+namespace bach_bot {
 
 MidiNoteTracker::MidiNoteTracker() :
     m_on_now{false},
@@ -67,7 +68,7 @@ MidiNoteTracker::MidiNoteTracker() :
 
 void MidiNoteTracker::add_event(const smf::MidiEvent &ev)
 {
-    auto organ_event = std::make_shared<OrganMidiEvent>(ev, m_keyboard);
+    auto organ_event = OrganNote(new OrganMidiEvent(ev, m_keyboard));
 
     if (ev.isNoteOn() && !m_on_now) {
         process_new_note_on_event(organ_event);
@@ -91,25 +92,31 @@ void MidiNoteTracker::add_event(const smf::MidiEvent &ev)
 }
 
 
-void MidiNoteTracker::append_events(std::list<OrganMidiEvent> &event_list) const
+void MidiNoteTracker::append_events(std::list<OrganNote> &event_list) const
 {
     OrganNote grouped_note_on;
-    for (const auto &i: m_event_list) {
+
+    auto append_pair = [&](const OrganNote &note_on, const OrganNote &note_off) {
+        event_list.emplace_back(note_on);
+        auto &on_event = event_list.back();
+        event_list.emplace_back(note_off);
+        on_event.link(event_list.back());
+        grouped_note_on.reset();
+    };
+
+    for (auto i= m_event_list.cbegin(); m_event_list.cend() != i; ++i) {
         auto grouped_length = 0.0;
         if (grouped_note_on.get() != nullptr) {
-            grouped_length = i.second->m_seconds - grouped_note_on->m_seconds;
+            grouped_length = i->second->m_seconds - grouped_note_on->m_seconds;
         }
 
-        if (i.second->m_seconds - i.first->m_seconds > MINIMUM_NOTE_LENGTH_S) {
-            event_list.emplace_back(*(i.first));
-            event_list.emplace_back(*(i.second));
-            grouped_note_on.reset();
+
+        if (i->second->m_seconds - i->first->m_seconds > MINIMUM_NOTE_LENGTH_S) {
+            append_pair(i->first, i->second);
         } else if (grouped_note_on.get() == nullptr) {
-            grouped_note_on = i.first;
+            grouped_note_on = i->first;
         } else if (grouped_length > MINIMUM_NOTE_LENGTH_S) {
-            event_list.emplace_back(*(grouped_note_on));
-            event_list.emplace_back(*(i.second));
-            grouped_note_on.reset();
+            append_pair(grouped_note_on, i->second);
         }
     }
 }
@@ -155,7 +162,7 @@ void MidiNoteTracker::process_new_note_off_event(OrganNote &organ_ev)
 
 void MidiNoteTracker::insert_off_event(OrganNote &organ_ev)
 {
-    auto organ_event = std::make_shared<OrganMidiEvent>(*organ_ev);
+    OrganNote organ_event(*organ_ev);
     organ_event->m_event_code = make_midi_command_byte(m_keyboard, 
                                                        MidiCommands::NOTE_OFF);
     process_new_note_off_event(organ_event);
@@ -165,9 +172,11 @@ void MidiNoteTracker::insert_off_event(OrganNote &organ_ev)
 
 void MidiNoteTracker::backfill_on_event(OrganNote &organ_ev)
 {
-    auto organ_event = std::make_shared<OrganMidiEvent>(*m_note_off);
+    OrganNote organ_event(*m_note_off);
     organ_event->m_event_code = make_midi_command_byte(m_keyboard, 
                                                        MidiCommands::NOTE_ON);
     process_new_note_on_event(organ_event);
     --m_note_nesting_count;
 }
+
+}  //  end bach_bot

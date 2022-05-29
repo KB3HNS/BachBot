@@ -147,25 +147,40 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="label_animator.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="main_window.cpp" />
     <ClCompile Include="midi_note_tracker.cpp" />
     <ClCompile Include="organ_midi_event.cpp" />
     <ClCompile Include="player_thread.cpp" />
     <ClCompile Include="player_window.cpp" />
+    <ClCompile Include="playlist_entry_control.cpp" />
+    <ClCompile Include="playlist_loader.cpp" />
+    <ClCompile Include="play_list.cpp" />
+    <ClCompile Include="syndyne_importer.cpp" />
+    <ClCompile Include="thread_loader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common_defs.h" />
+    <ClInclude Include="label_animator.h" />
     <ClInclude Include="main_window.h" />
     <ClInclude Include="midi_note_tracker.h" />
     <ClInclude Include="organ_midi_event.h" />
     <ClInclude Include="player_thread.h" />
     <ClInclude Include="player_window.h" />
+    <ClInclude Include="playlist_entry_control.h" />
+    <ClInclude Include="playlist_loader.h" />
+    <ClInclude Include="play_list.h" />
+    <ClInclude Include="syndyne_importer.h" />
+    <ClInclude Include="thread_loader.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\midifile\visual-studio\midifile.vcxproj">
       <Project>{70028d4b-8e0d-4ff2-bd05-d7ab19b66f30}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
