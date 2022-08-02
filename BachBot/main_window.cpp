@@ -21,8 +21,11 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	wxBoxSizer* bSizer12;
 	bSizer12 = new wxBoxSizer( wxHORIZONTAL );
 
+
+	bSizer12->Add( 10, 0, 0, wxEXPAND, 5 );
+
 	wxGridSizer* gSizer1;
-	gSizer1 = new wxGridSizer( 2, 1, 0, 0 );
+	gSizer1 = new wxGridSizer( 3, 1, 0, 0 );
 
 	play_advance_button = new wxButton( this, wxID_ANY, wxT("Play/Advance"), wxDefaultPosition, wxDefaultSize, 0 );
 	gSizer1->Add( play_advance_button, 0, wxALL, 5 );
@@ -31,10 +34,56 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	gSizer1->Add( stop_button, 0, wxALL, 5 );
 
 
-	bSizer12->Add( gSizer1, 1, wxALIGN_CENTER, 0 );
+	gSizer1->Add( 0, 0, 1, wxEXPAND, 5 );
+
+
+	bSizer12->Add( gSizer1, 0, wxEXPAND, 0 );
 
 
 	bSizer12->Add( 0, 0, 1, wxEXPAND, 5 );
+
+	next_song_box_sizer = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, wxT("Current / Next Song") ), wxVERTICAL );
+
+	next_song_grid_sizer = new wxFlexGridSizer( 2, 3, 0, 0 );
+	next_song_grid_sizer->SetFlexibleDirection( wxBOTH );
+	next_song_grid_sizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
+
+	m_staticText3 = new wxStaticText( next_song_box_sizer->GetStaticBox(), wxID_ANY, wxT("Memory"), wxDefaultPosition, wxSize( -1,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	m_staticText3->Wrap( -1 );
+	next_song_grid_sizer->Add( m_staticText3, 1, wxALL|wxEXPAND, 8 );
+
+	m_staticText4 = new wxStaticText( next_song_box_sizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText4->Wrap( -1 );
+	next_song_grid_sizer->Add( m_staticText4, 1, wxALL|wxEXPAND, 5 );
+
+	m_staticText5 = new wxStaticText( next_song_box_sizer->GetStaticBox(), wxID_ANY, wxT("Mode"), wxDefaultPosition, wxSize( 30,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	m_staticText5->Wrap( -1 );
+	next_song_grid_sizer->Add( m_staticText5, 1, wxALL|wxEXPAND, 8 );
+
+	next_memory_label = new wxStaticText( next_song_box_sizer->GetStaticBox(), wxID_ANY, wxT("1"), wxDefaultPosition, wxSize( -1,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	next_memory_label->Wrap( -1 );
+	next_memory_label->SetFont( wxFont( wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxEmptyString ) );
+
+	next_song_grid_sizer->Add( next_memory_label, 1, wxALL|wxEXPAND, 8 );
+
+	m_staticText7 = new wxStaticText( next_song_box_sizer->GetStaticBox(), wxID_ANY, wxT("/"), wxDefaultPosition, wxSize( 25,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	m_staticText7->Wrap( -1 );
+	next_song_grid_sizer->Add( m_staticText7, 1, wxALL|wxEXPAND, 8 );
+
+	next_mode_label = new wxStaticText( next_song_box_sizer->GetStaticBox(), wxID_ANY, wxT("1"), wxDefaultPosition, wxSize( -1,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	next_mode_label->Wrap( -1 );
+	next_mode_label->SetFont( wxFont( wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxEmptyString ) );
+
+	next_song_grid_sizer->Add( next_mode_label, 1, wxALL|wxEXPAND, 8 );
+
+
+	next_song_box_sizer->Add( next_song_grid_sizer, 1, wxEXPAND, 5 );
+
+
+	bSizer12->Add( next_song_box_sizer, 0, wxEXPAND, 10 );
+
+
+	bSizer12->Add( 15, 0, 0, wxEXPAND, 5 );
 
 	wxStaticBoxSizer* sbSizer2;
 	sbSizer2 = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, wxT("Current Config") ), wxVERTICAL );
@@ -44,44 +93,44 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	fgSizer2->SetFlexibleDirection( wxBOTH );
 	fgSizer2->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
 
-	bank_up_button = new wxButton( sbSizer2->GetStaticBox(), wxID_ANY, wxT("/\\"), wxDefaultPosition, wxSize( 35,-1 ), 0 );
-	fgSizer2->Add( bank_up_button, 0, wxALL, 5 );
+	memory_up_button = new wxButton( sbSizer2->GetStaticBox(), wxID_ANY, wxT("/\\"), wxDefaultPosition, wxSize( 35,-1 ), 0 );
+	fgSizer2->Add( memory_up_button, 0, wxALL, 5 );
 
-	m_staticText3 = new wxStaticText( sbSizer2->GetStaticBox(), wxID_ANY, wxT("Bank"), wxDefaultPosition, wxSize( 30,-1 ), wxALIGN_CENTER_HORIZONTAL );
-	m_staticText3->Wrap( -1 );
-	fgSizer2->Add( m_staticText3, 0, wxALL, 5 );
+	m_staticText31 = new wxStaticText( sbSizer2->GetStaticBox(), wxID_ANY, wxT("Memory"), wxDefaultPosition, wxSize( -1,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	m_staticText31->Wrap( -1 );
+	fgSizer2->Add( m_staticText31, 0, wxALL, 5 );
 
-	m_staticText4 = new wxStaticText( sbSizer2->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
-	m_staticText4->Wrap( -1 );
-	fgSizer2->Add( m_staticText4, 0, wxALL, 5 );
+	m_staticText41 = new wxStaticText( sbSizer2->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText41->Wrap( -1 );
+	fgSizer2->Add( m_staticText41, 0, wxALL, 5 );
 
-	m_staticText5 = new wxStaticText( sbSizer2->GetStaticBox(), wxID_ANY, wxT("Mode"), wxDefaultPosition, wxSize( 30,-1 ), wxALIGN_CENTER_HORIZONTAL );
-	m_staticText5->Wrap( -1 );
-	fgSizer2->Add( m_staticText5, 0, wxALL, 5 );
+	m_staticText51 = new wxStaticText( sbSizer2->GetStaticBox(), wxID_ANY, wxT("Mode"), wxDefaultPosition, wxSize( -1,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	m_staticText51->Wrap( -1 );
+	fgSizer2->Add( m_staticText51, 0, wxALL, 5 );
 
 	mode_up_button = new wxButton( sbSizer2->GetStaticBox(), wxID_ANY, wxT("/\\"), wxDefaultPosition, wxSize( 35,-1 ), 0 );
 	fgSizer2->Add( mode_up_button, 0, wxALL, 5 );
 
-	bank_down_button = new wxButton( sbSizer2->GetStaticBox(), wxID_ANY, wxT("\\/"), wxDefaultPosition, wxSize( 35,-1 ), 0 );
-	bank_down_button->Enable( false );
+	memory_down_button = new wxButton( sbSizer2->GetStaticBox(), wxID_ANY, wxT("\\/"), wxDefaultPosition, wxSize( 35,-1 ), 0 );
+	memory_down_button->Enable( false );
 
-	fgSizer2->Add( bank_down_button, 0, wxALL, 5 );
+	fgSizer2->Add( memory_down_button, 0, wxALL, 5 );
 
-	bank_label = new wxStaticText( sbSizer2->GetStaticBox(), wxID_ANY, wxT("1"), wxDefaultPosition, wxSize( 30,-1 ), wxALIGN_CENTER_HORIZONTAL );
-	bank_label->Wrap( -1 );
-	bank_label->SetFont( wxFont( wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxEmptyString ) );
+	memory_label = new wxStaticText( sbSizer2->GetStaticBox(), wxID_ANY, wxT("1"), wxDefaultPosition, wxSize( -1,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	memory_label->Wrap( -1 );
+	memory_label->SetFont( wxFont( wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxEmptyString ) );
 
-	fgSizer2->Add( bank_label, 0, wxALL, 5 );
+	fgSizer2->Add( memory_label, 0, wxALL|wxEXPAND, 5 );
 
-	m_staticText7 = new wxStaticText( sbSizer2->GetStaticBox(), wxID_ANY, wxT("/"), wxDefaultPosition, wxSize( 25,-1 ), wxALIGN_CENTER_HORIZONTAL );
-	m_staticText7->Wrap( -1 );
-	fgSizer2->Add( m_staticText7, 0, wxALL, 5 );
+	m_staticText71 = new wxStaticText( sbSizer2->GetStaticBox(), wxID_ANY, wxT("/"), wxDefaultPosition, wxSize( 25,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	m_staticText71->Wrap( -1 );
+	fgSizer2->Add( m_staticText71, 0, wxALL, 5 );
 
-	mode_label = new wxStaticText( sbSizer2->GetStaticBox(), wxID_ANY, wxT("1"), wxDefaultPosition, wxSize( 30,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	mode_label = new wxStaticText( sbSizer2->GetStaticBox(), wxID_ANY, wxT("1"), wxDefaultPosition, wxSize( -1,-1 ), wxALIGN_CENTER_HORIZONTAL );
 	mode_label->Wrap( -1 );
 	mode_label->SetFont( wxFont( wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxEmptyString ) );
 
-	fgSizer2->Add( mode_label, 0, wxALL, 5 );
+	fgSizer2->Add( mode_label, 0, wxALL|wxEXPAND, 5 );
 
 	mode_down_button = new wxButton( sbSizer2->GetStaticBox(), wxID_ANY, wxT("\\/"), wxDefaultPosition, wxSize( 35,-1 ), 0 );
 	mode_down_button->Enable( false );
@@ -92,7 +141,10 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	sbSizer2->Add( fgSizer2, 1, wxEXPAND, 5 );
 
 
-	bSizer12->Add( sbSizer2, 1, wxEXPAND|wxRIGHT, 10 );
+	bSizer12->Add( sbSizer2, 0, wxEXPAND, 5 );
+
+
+	bSizer12->Add( 10, 0, 0, wxEXPAND, 5 );
 
 
 	bSizer2->Add( bSizer12, 0, wxEXPAND, 5 );
@@ -229,11 +281,13 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	this->Connect( wxEVT_DROP_FILES, wxDropFilesEventHandler( MainWindow::on_drop_midi_file ) );
 	play_advance_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_play_advance ), NULL, this );
 	stop_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_stop ), NULL, this );
-	bank_up_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_bank_up_button_clicked ), NULL, this );
+	next_memory_label->Connect( wxEVT_LEFT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_next ), NULL, this );
+	next_memory_label->Connect( wxEVT_RIGHT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_prev ), NULL, this );
+	memory_up_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_memory_up_button_clicked ), NULL, this );
 	mode_up_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_mode_up_button_clicked ), NULL, this );
-	bank_down_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_bank_down_button_clicked ), NULL, this );
-	bank_label->Connect( wxEVT_LEFT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_next ), NULL, this );
-	bank_label->Connect( wxEVT_RIGHT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_prev ), NULL, this );
+	memory_down_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_memory_down_button_clicked ), NULL, this );
+	memory_label->Connect( wxEVT_LEFT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_next ), NULL, this );
+	memory_label->Connect( wxEVT_RIGHT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_prev ), NULL, this );
 	mode_down_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_mode_down_button_clicked ), NULL, this );
 	playlist_panel->Connect( wxEVT_KEY_DOWN, wxKeyEventHandler( MainWindow::on_keydown_event ), NULL, this );
 	playlist_panel->Connect( wxEVT_KEY_UP, wxKeyEventHandler( MainWindow::on_keyup_event ), NULL, this );
@@ -256,11 +310,13 @@ MainWindow::~MainWindow()
 	this->Disconnect( wxEVT_DROP_FILES, wxDropFilesEventHandler( MainWindow::on_drop_midi_file ) );
 	play_advance_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_play_advance ), NULL, this );
 	stop_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_stop ), NULL, this );
-	bank_up_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_bank_up_button_clicked ), NULL, this );
+	next_memory_label->Disconnect( wxEVT_LEFT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_next ), NULL, this );
+	next_memory_label->Disconnect( wxEVT_RIGHT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_prev ), NULL, this );
+	memory_up_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_memory_up_button_clicked ), NULL, this );
 	mode_up_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_mode_up_button_clicked ), NULL, this );
-	bank_down_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_bank_down_button_clicked ), NULL, this );
-	bank_label->Disconnect( wxEVT_LEFT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_next ), NULL, this );
-	bank_label->Disconnect( wxEVT_RIGHT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_prev ), NULL, this );
+	memory_down_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_memory_down_button_clicked ), NULL, this );
+	memory_label->Disconnect( wxEVT_LEFT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_next ), NULL, this );
+	memory_label->Disconnect( wxEVT_RIGHT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_prev ), NULL, this );
 	mode_down_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_mode_down_button_clicked ), NULL, this );
 	playlist_panel->Disconnect( wxEVT_KEY_DOWN, wxKeyEventHandler( MainWindow::on_keydown_event ), NULL, this );
 	playlist_panel->Disconnect( wxEVT_KEY_UP, wxKeyEventHandler( MainWindow::on_keyup_event ), NULL, this );
@@ -342,17 +398,17 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 
 	bSizer19->Add( 0, 0, 1, wxEXPAND, 5 );
 
-	bank_select = new wxSpinCtrl( this, wxID_ANY, wxT("1"), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 8, 0 );
-	bank_select->SetToolTip( wxT("Set starting bank number (1-8)") );
+	memory_select = new wxSpinCtrl( this, wxID_ANY, wxT("1"), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 100, 0 );
+	memory_select->SetToolTip( wxT("Set starting memory number (1-100)") );
 
-	bSizer19->Add( bank_select, 0, wxALL, 5 );
+	bSizer19->Add( memory_select, 0, wxALL, 5 );
 
 	m_staticText20 = new wxStaticText( this, wxID_ANY, wxT("/"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText20->Wrap( -1 );
 	bSizer19->Add( m_staticText20, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
-	mode_select = new wxSpinCtrl( this, wxID_ANY, wxT("1"), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 100, 0 );
-	mode_select->SetToolTip( wxT("Set starting piston mode number (1-99)") );
+	mode_select = new wxSpinCtrl( this, wxID_ANY, wxT("1"), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 8, 0 );
+	mode_select->SetToolTip( wxT("Set starting general piston mode number (1-8)") );
 
 	bSizer19->Add( mode_select, 0, wxALL, 5 );
 

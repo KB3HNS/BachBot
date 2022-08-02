@@ -195,7 +195,7 @@ SyndineImporter::SyndineImporter(const std::string &file_name,
     m_song_id{song_id},
     m_tempo_detected(),
     m_bpm{DEFAULT_NO_TEMPO},
-    m_current_config{0U, 0U},
+    m_current_config(),
     m_time_scaling_factor{1.0},
     m_note_offset{0},
     m_drum_map()
@@ -212,8 +212,8 @@ SyndineImporter::SyndineImporter(const std::string &file_name,
         }
     }
 
-    for (const auto &i: g_drum_map) {
-        m_drum_map[i.first] = i.second;
+    for (const auto [note, bank_command]: g_drum_map) {
+        m_drum_map[note] = bank_command;
     }
 }
 
@@ -238,12 +238,12 @@ void SyndineImporter::adjust_tempo(const int new_tempo)
 }
 
 
-void SyndineImporter::set_bank_config(const uint8_t initial_bank,
-                                      const uint32_t initial_mode)
+void SyndineImporter::set_bank_config(const uint32_t initial_memory,
+                                      const uint8_t initial_mode)
 {
-    const auto clamped_bank = std::clamp<uint8_t>(initial_bank, 0U, 7U);
-    const auto clamped_mode = std::clamp(initial_mode, 0U, 99U);
-    m_current_config = std::make_pair(clamped_bank, clamped_mode);
+    const auto clamped_memory = std::clamp(initial_memory, 1U, 100U);
+    const auto clamped_mode = std::clamp<uint8_t>(initial_mode, 1U, 8U);
+    m_current_config = {clamped_memory, clamped_mode};
 }
 
 
@@ -293,22 +293,23 @@ void SyndineImporter::update_bank_event(const int note)
     if (m_drum_map.end() != bank_event) {
         switch (bank_event->second) {
         case SyndyneBankCommands::GENERAL_CANCEL:
-            m_current_config.first = 0U;
+            m_current_config.mode = 1U;
             break;
 
         case SyndyneBankCommands::PREV_BANK:
-            if (0U == m_current_config.first) {
-                m_current_config.first = 8U;
-                --m_current_config.second;
+            if (m_current_config.mode <= 1U) {
+                m_current_config.mode = 8U;
+                --m_current_config.memory;
+            } else {
+                --m_current_config.mode;
             }
-            --m_current_config.first;
             break;
 
         case SyndyneBankCommands::NEXT_BANK:
-            ++m_current_config.first;
-            if (m_current_config.first >= 8U) {
-                m_current_config.first = 0U;
-                ++m_current_config.second;
+            ++m_current_config.mode;
+            if (m_current_config.mode >= 8U) {
+                m_current_config.mode = 1U;
+                ++m_current_config.memory;
             }
             break;
 
@@ -317,10 +318,9 @@ void SyndineImporter::update_bank_event(const int note)
         }
     }
 
-    m_current_config.first = std::clamp(m_current_config.first, 
-                                        uint8_t(0U), 
-                                        uint8_t(7U));
-    m_current_config.second = std::clamp(m_current_config.second,  0U,  99U);
+    m_current_config.memory = std::clamp(m_current_config.memory, 1U, 100U);
+    m_current_config.mode = std::clamp(m_current_config.mode,
+                                         uint8_t(1U), uint8_t(8U));
 }
 
 

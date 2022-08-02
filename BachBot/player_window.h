@@ -134,8 +134,8 @@ protected:
     virtual void on_close(wxCloseEvent &event) override final;
     virtual void on_save_as(wxCommandEvent &event) override final;
     virtual void on_drop_midi_file(wxDropFilesEvent &event) override final;
-    virtual void on_bank_up_button_clicked(wxCommandEvent &event) override final;
-    virtual void on_bank_down_button_clicked(wxCommandEvent &event) override final;
+    virtual void on_memory_up_button_clicked(wxCommandEvent &event) override final;
+    virtual void on_memory_down_button_clicked(wxCommandEvent &event) override final;
     virtual void on_mode_up_button_clicked(wxCommandEvent &event) override final;
     virtual void on_mode_down_button_clicked(wxCommandEvent &event) override final;
 

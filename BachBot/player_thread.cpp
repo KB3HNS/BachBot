@@ -37,12 +37,6 @@
 namespace {
 constexpr const auto TICKS_PER_UI_REFRESH = 500U;
 
-
-constexpr int make_bank_message_int(const uint8_t bank, const uint32_t mode)
-{
-    return (int(mode) * 8) + int(bank);
-}
-
 }
 
 
@@ -72,9 +66,9 @@ PlayerThread::PlayerThread(wxFrame* const frame, RtMidiOut &intf) :
     m_precache(),
     m_test_precache{false},
     m_playing_test_pattern{false},
-    m_bank_number{0U},
-    m_mode_number{0U},
-    m_desired_config{0U, 0U},
+    m_memory_number{1U},
+    m_mode_number{1U},
+    m_desired_config(),
     m_frame{frame},
     m_midi_out(intf),
     m_waiting{nullptr},
@@ -243,12 +237,11 @@ void PlayerThread::process_notes()
 
         midi_event.send_event(m_midi_out);
         if (m_playing_test_pattern) {
-            const auto bank_number = (midi_event.m_event_code & 0x0FU) - 1U;
-            const auto mode_number = midi_event.m_byte1.value() - 1U;
+            const BankConfig msg{uint32_t(midi_event.m_byte1.value()),
+                                 uint8_t(midi_event.m_event_code & 0x0FU)};
             wxThreadEvent bank_event(wxEVT_THREAD,
                                      ui::PlayerWindowEvents::BANK_CHANGE_EVENT);
-            bank_event.SetInt(make_bank_message_int(uint8_t(bank_number),
-                                                    mode_number));
+            bank_event.SetInt(int(msg));
             wxQueueEvent(m_frame, bank_event.Clone());
         } else {
             m_desired_config = midi_event.get_bank_config();
@@ -271,11 +264,11 @@ void PlayerThread::force_advance()
 }
 
 
-void PlayerThread::set_bank_config(const uint8_t current_bank,
-                                   const uint32_t current_mode)
+void PlayerThread::set_bank_config(const uint32_t current_memory,
+                                   const uint8_t current_mode)
 {
     wxMutexLocker lock(m_mutex);
-    m_bank_number = current_bank;
+    m_memory_number = current_memory;
     m_mode_number = current_mode;
     m_bank_change_delay.Start();
 }
@@ -288,42 +281,43 @@ void PlayerThread::do_mode_check()
         send_bank_change_message(m_midi_out, value);
         wxThreadEvent bank_event(wxEVT_THREAD,
                                  ui::PlayerWindowEvents::BANK_CHANGE_EVENT);
-        bank_event.SetInt(make_bank_message_int(m_bank_number, m_mode_number));
+        BankConfig config{m_memory_number, m_mode_number};
+        bank_event.SetInt(int(config));
         wxQueueEvent(m_frame, bank_event.Clone());
         m_bank_change_delay.Start();
     };
 
     auto step_down = [=]() {
-        if (0U == m_bank_number) {
+        if (0U == m_mode_number) {
+            --m_memory_number;
+            m_mode_number = 8U;
+        } else {
             --m_mode_number;
-            m_bank_number = 8U;
         }
-        --m_bank_number;
         send_change(SyndyneBankCommands::PREV_BANK);
     };
 
-    if ((m_desired_config.second < m_mode_number && m_bank_number > 0U) || 
-        (m_desired_config.second == m_mode_number && 0U == m_desired_config.first))
+    if ((m_desired_config.memory < m_memory_number && m_mode_number > 0U) || 
+        (m_desired_config.memory == m_memory_number && 1U == m_desired_config.mode))
     {
-        //  The desired piston mode is *lower* than the current state:  We
-        // can take a shortcut and use CLEAR to get to the start of this 
-        // piston mode.
-        m_bank_number = 0U;
+        //  The desired memory is *lower* than the current state:  We can take
+        // a shortcut and use CLEAR to get to the start of this piston mode.
+        m_mode_number = 0U;
         send_change(SyndyneBankCommands::GENERAL_CANCEL);
-    } else if (m_desired_config.second < m_mode_number) {
+    } else if (m_desired_config.memory < m_memory_number) {
         //  At the bottom of the piston position and need to step down to the
         // top of the last one.
         step_down();
-    } else if (m_desired_config.second > m_mode_number ||
-               m_desired_config.first > m_bank_number) {
+    } else if (m_desired_config.memory > m_memory_number ||
+               m_desired_config.mode > m_mode_number) {
         //  We need to go up, no shortcuts available.
-        ++m_bank_number;
-        if (m_bank_number >= 8U) {
-            m_bank_number = 0U;
-            ++m_mode_number;
+        ++m_mode_number;
+        if (m_mode_number > 8U) {
+            m_mode_number = 1U;
+            ++m_memory_number;
         }
         send_change(SyndyneBankCommands::NEXT_BANK);
-    } else if (m_desired_config.first < m_bank_number) {
+    } else if (m_desired_config.mode < m_mode_number) {
         // We just need to walk down to the desired bank.
         step_down();
     }

@@ -47,6 +47,7 @@ PlaylistXmlLoader::PlaylistXmlLoader(wxFrame *const parent,
 {
 }
 
+
 int PlaylistXmlLoader::count_children()
 {
     auto count = -1;
@@ -132,7 +133,7 @@ void PlaylistDndLoader::build_playlist_entry(PlayListEntry &song_entry,
     song_entry.song_id = song_index + m_first_song_id;
     song_entry.tempo_requested = -1;
     song_entry.gap_beats = 0.0;
-    song_entry.starting_config = std::make_pair(uint8_t(0), 0U);
+    song_entry.starting_config = BankConfig();
     song_entry.delta_pitch = 0;
     song_entry.last_note_multiplier = 1.0;
     song_entry.play_next = false;

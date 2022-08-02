@@ -38,7 +38,7 @@
 
 namespace {
     /** The amount of text normally allowed in the filename label */
-    constexpr const auto NORMAL_WIDTH = 32U;
+    constexpr const auto NORMAL_WIDTH = 85U;
 }  //  end anonymous namespace
 
 namespace bach_bot {

@@ -46,7 +46,7 @@
 
 namespace {
     using namespace std::literals::string_view_literals;
-    constexpr const auto EDITION = L"Ascention"sv;
+    constexpr const auto EDITION = L"Pentecost"sv;
 
     constexpr const auto NOW_PLAYING_LEN = 40U;
     constexpr const auto UP_NEXT_LEN = 38U;
@@ -96,7 +96,7 @@ PlayerWindow::PlayerWindow() :
     m_next_song_id{0U, false},
     m_song_list(0U, 0U),
     m_song_labels(),
-    m_current_config{0U, 0U},
+    m_current_config(),
     m_playlist_name(),
     m_playlist_changed{false},
     m_selected_control{nullptr},
@@ -358,10 +358,7 @@ void PlayerWindow::on_device_changed(const uint32_t device_id)
 
 void PlayerWindow::on_bank_changed(wxThreadEvent &event)
 {
-    const auto current_setting = uint32_t(event.GetInt());
-    const auto bank = current_setting % 8U;
-    const auto mode = current_setting / 8U;
-    m_current_config = std::make_pair(uint8_t(bank), mode);
+    m_current_config = BankConfig(event.GetInt());
     update_config_ui(false);
 }
 
@@ -585,28 +582,10 @@ void PlayerWindow::on_drop_midi_file(wxDropFilesEvent &event)
 }
 
 
-void PlayerWindow::on_bank_up_button_clicked(wxCommandEvent &event)
+void PlayerWindow::on_mode_up_button_clicked(wxCommandEvent &event)
 {
-    if (m_current_config.first < 7U) {
-        ++m_current_config.first;
-    }
-    update_config_ui();
-}
-
-
-void PlayerWindow::on_bank_down_button_clicked(wxCommandEvent & event)
-{
-    if (m_current_config.first > 0U) {
-        --m_current_config.first;
-    }
-    update_config_ui();
-}
-
-
-void PlayerWindow::on_mode_up_button_clicked(wxCommandEvent & event)
-{
-    if (m_current_config.second < 99U) {
-        ++m_current_config.second;
+    if (m_current_config.mode < 8U) {
+        ++m_current_config.mode;
     }
     update_config_ui();
 }
@@ -614,8 +593,26 @@ void PlayerWindow::on_mode_up_button_clicked(wxCommandEvent & event)
 
 void PlayerWindow::on_mode_down_button_clicked(wxCommandEvent & event)
 {
-    if (m_current_config.second > 0U) {
-        --m_current_config.second;
+    if (m_current_config.mode > 1U) {
+        --m_current_config.mode;
+    }
+    update_config_ui();
+}
+
+
+void PlayerWindow::on_memory_up_button_clicked(wxCommandEvent & event)
+{
+    if (m_current_config.memory < 100U) {
+        ++m_current_config.memory;
+    }
+    update_config_ui();
+}
+
+
+void PlayerWindow::on_memory_down_button_clicked(wxCommandEvent & event)
+{
+    if (m_current_config.memory > 1U) {
+        --m_current_config.memory;
     }
     update_config_ui();
 }
@@ -771,8 +768,8 @@ void PlayerWindow::start_player_thread()
 {
     m_player_thread = std::make_unique<PlayerThread>(this, m_midi_out);
     m_midi_out.openPort(m_current_device_id);
-    m_player_thread->set_bank_config(m_current_config.first, 
-                                     m_current_config.second);
+    m_player_thread->set_bank_config(m_current_config.memory, 
+                                     m_current_config.mode);
 
     if (0U != m_next_song_id.first) {
         auto control = m_song_labels[m_next_song_id.first].get();
@@ -814,29 +811,29 @@ void PlayerWindow::scroll_to_widget(const PlaylistEntryControl *const widget)
 
 void PlayerWindow::update_config_ui(const bool send_update)
 {
-    if (m_current_config.first >= 7U) {
-        m_current_config.first = 7U;
-        static_cast<void>(bank_up_button->Enable(false));
-    } else {
-        static_cast<void>(bank_up_button->Enable());
-    }
-    static_cast<void>(bank_down_button->Enable((0U != m_current_config.first)));
-
-    if (m_current_config.second >= 100U) {
-        m_current_config.second = 100U;
+    if (m_current_config.mode >= 8U) {
+        m_current_config.mode = 8U;
         static_cast<void>(mode_up_button->Enable(false));
     } else {
         static_cast<void>(mode_up_button->Enable());
     }
-    static_cast<void>(mode_down_button->Enable((0U != m_current_config.second)));
+    static_cast<void>(mode_down_button->Enable((m_current_config.mode > 1U)));
 
-    bank_label->SetLabelText(wxString::Format(wxT("%d"),
-                                              m_current_config.first + 1U));
+    if (m_current_config.memory >= 100U) {
+        m_current_config.memory = 100U;
+        static_cast<void>(memory_up_button->Enable(false));
+    } else {
+        static_cast<void>(memory_up_button->Enable());
+    }
+    static_cast<void>(memory_down_button->Enable((m_current_config.memory > 1U)));
+
+    memory_label->SetLabelText(wxString::Format(wxT("%d"),
+                                                m_current_config.memory));
     mode_label->SetLabelText(wxString::Format(wxT("%u"),
-                                              m_current_config.second + 1U));
+                                              m_current_config.mode));
     if ((m_player_thread.get() != nullptr) && send_update) {
-        m_player_thread->set_bank_config(m_current_config.first,
-                                         m_current_config.second);
+        m_player_thread->set_bank_config(m_current_config.memory,
+                                         m_current_config.mode);
     }
 }
 

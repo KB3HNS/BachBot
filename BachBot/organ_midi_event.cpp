@@ -40,8 +40,8 @@ OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent& midi_event,
                                const SyndyneKeyboards channel) :
     m_event_code{make_midi_command_byte(channel, MidiCommands::SPECIAL)},
     m_mode_change_event{false},
-    m_desired_bank_number{0U},
-    m_desired_mode_number{0U},
+    m_desired_memory{1U},
+    m_desired_mode_number{1U},
     m_seconds{midi_event.seconds},
     m_delta_time{0.0},
     m_byte1(),
@@ -77,8 +77,8 @@ OrganMidiEvent::OrganMidiEvent(const MidiCommands command,
                                const int8_t byte2) :
     m_event_code{make_midi_command_byte(channel, command)},
     m_mode_change_event{(MidiCommands::CONTROL_CHANGE == command)},
-    m_desired_bank_number{0U},
-    m_desired_mode_number{0U},
+    m_desired_memory{1U},
+    m_desired_mode_number{1U},
     m_seconds{0.0},
     m_delta_time{0.0},
     m_byte1(),
@@ -102,8 +102,8 @@ OrganMidiEvent::OrganMidiEvent(const int metadata_value,
                                const OrganMidiEvent *const src) :
     m_event_code{make_midi_command_byte(0U, MidiCommands::SPECIAL)},
     m_mode_change_event{false},
-    m_desired_bank_number{0U},
-    m_desired_mode_number{0U},
+    m_desired_memory{1U},
+    m_desired_mode_number{1U},
     m_seconds{0.0},
     m_delta_time{0.0},
     m_byte1(),
@@ -130,8 +130,8 @@ OrganMidiEvent::OrganMidiEvent(const smf::MidiEvent &midi_event,
     m_event_code{make_midi_command_byte(uint8_t(midi_event.getChannel()),
                                         MidiCommands::SPECIAL)},
     m_mode_change_event{true},
-    m_desired_bank_number{cfg.first},
-    m_desired_mode_number{cfg.second},
+    m_desired_memory{cfg.memory},
+    m_desired_mode_number{cfg.mode},
     m_seconds{midi_event.seconds},
     m_delta_time{0.0},
     m_byte1(),
@@ -174,14 +174,14 @@ void OrganMidiEvent::send_event(RtMidiOut& player) const
 
 void OrganMidiEvent::set_bank_config(const BankConfig& cfg)
 {
-    m_desired_bank_number = cfg.first;
-    m_desired_mode_number = cfg.second;
+    m_desired_memory = cfg.memory;
+    m_desired_mode_number = cfg.mode;
 }
 
 
 BankConfig OrganMidiEvent::get_bank_config() const
 {
-    return {m_desired_bank_number, m_desired_mode_number};
+    return {m_desired_memory, m_desired_mode_number};
 }
 
 
@@ -246,6 +246,22 @@ OrganMidiEvent OrganNote::clone() const
     auto cloned_event = *get();
     cloned_event.m_partner = nullptr;
     return cloned_event;
+}
+
+
+BankConfig::BankConfig(int msgdata) :
+    BankConfig()
+{
+    const auto current_setting = uint32_t(msgdata);
+    mode = uint8_t(current_setting & 0xFF);
+    memory = current_setting >> 8U;
+}
+
+
+BankConfig::operator int() const
+{
+    const auto mem = memory << 8U;
+    return int(mem) + int(mode);
 }
 
 }  //  end bach_bot

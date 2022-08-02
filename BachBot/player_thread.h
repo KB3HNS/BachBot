@@ -132,11 +132,11 @@ public:
     
     /**
      * @brief Set the current state of the organ bank externally.
-     * @param current_bank current bank (1-8)
-     * @param current_mode current piston mode (1-100)
+     * @param current_memory current bank (1-100)
+     * @param current_mode current general piston mode (1-8)
      */
-    void set_bank_config(const uint8_t current_bank, 
-                         const uint32_t current_mode);
+    void set_bank_config(const uint32_t current_memory, 
+                         const uint8_t current_mode);
 
     virtual ~PlayerThread() override;
 
@@ -231,14 +231,16 @@ private:
 
     /**
      *  @brief Value of the current bank registration number that the organ
-     *         _should_ be at.  Range 1-8 (reported as 0-7)
+     *         _should_ be at.  Range 1-100
      */
-    uint8_t m_bank_number;
+    uint32_t m_memory_number;
     
     /**
-     * @brief Value of the piston mode that organ _should_ be at.  Range 1-100.
+     * @brief Value of the general piston mode that organ _should_ be at.  
+     *        Range 1-8 (with caveat).
+     * @sa `BankConfig`
      */
-    uint32_t m_mode_number;
+    uint8_t m_mode_number;
 
     BankConfig m_desired_config;  ///< The most recent desired bank/mode
 
