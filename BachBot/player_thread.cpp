@@ -277,6 +277,14 @@ void PlayerThread::set_bank_config(const uint32_t current_memory,
 void PlayerThread::do_mode_check()
 {
     wxMutexLocker lock(m_mutex);
+
+    if (m_desired_config.memory == m_memory_number &&
+        m_desired_config.mode == m_mode_number)
+    {
+        //  Nothing to do.
+        return;
+    }
+
     auto send_change = [&](const SyndyneBankCommands value) {
         send_bank_change_message(m_midi_out, value);
         wxThreadEvent bank_event(wxEVT_THREAD,

@@ -217,7 +217,7 @@ private:
      * *Items protected by the shared mutex:*
      * 1. `m_event_queue`
      * 1. `m_precache`
-     * 1. `m_bank_number`/`m_mode_number`
+     * 1. `m_memory_number`/`m_mode_number`
      */
     wxMutex m_mutex;
 
