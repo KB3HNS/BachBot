@@ -77,6 +77,7 @@ PlayerThread::PlayerThread(wxFrame* const frame, RtMidiOut &intf) :
     m_power_control(wxPOWER_RESOURCE_SYSTEM, "BachBot Playing"),
     m_screen_control(wxPOWER_RESOURCE_SCREEN, "BachBot Playing"),
     m_last_message{MessageId::NO_MESSAGE},
+    m_first_match{false},
     m_desired_config_shared()
 {
     m_desired_config_shared = int(m_desired_config);
@@ -151,7 +152,9 @@ bool PlayerThread::run_song()
                 tick_event.SetInt(int(m_midi_event_queue.size()));
                 wxQueueEvent(m_frame, tick_event.Clone());
             }
-            process_notes();
+            if (m_first_match) {
+                process_notes();
+            }
             break;
 
         default:
@@ -273,6 +276,7 @@ void PlayerThread::force_advance()
     const auto &current_event = m_midi_event_queue.front();
     const auto ms = current_event.get_us().GetValue();
     m_current_time.Start(long(ms / 1000LL));
+    m_first_match = true;
 }
 
 
@@ -294,6 +298,10 @@ void PlayerThread::do_mode_check()
         m_desired_config.mode == m_mode_number)
     {
         //  Nothing to do.
+        if (!m_first_match) {
+            m_current_time.Start(0L);
+            m_first_match = true;
+        }
         return;
     }
 
@@ -358,6 +366,8 @@ bool PlayerThread::load_next_song()
     wxMutexLocker lock(m_mutex);
     const auto song_size = m_precache.size();
     if (song_size > 0U) {
+        m_desired_config = m_precache.front().get_bank_config();
+        m_desired_config_shared = int(m_desired_config);
         m_midi_event_queue = std::move(m_precache);
     }
 

@@ -103,7 +103,8 @@ PlayerWindow::PlayerWindow() :
     m_accel_table(int(NUM_ACCEL_ENTRIES), g_accel_entries.data()),
     m_ui_animation_timer(this, PlayerWindowEvents::UI_ANIMATE_TICK),
     m_up_next_label(next_label, UP_NEXT_LEN),
-    m_playing_label(track_label, NOW_PLAYING_LEN)
+    m_playing_label(track_label, NOW_PLAYING_LEN),
+    m_background(wxT("test.jpg"))
 {
     for (auto i = 0U; i < m_midi_out.getPortCount(); ++i) {
         m_midi_devices.emplace_back(
@@ -127,6 +128,10 @@ PlayerWindow::PlayerWindow() :
 
     SetAcceleratorTable(m_accel_table);
     m_ui_animation_timer.Start(LabelAnimator::RECOMMENDED_TICK_MS);
+
+    
+    // auto background = new wxBackgroundBitmap(R"(D:\devel\BachBot\x64\Debug\test.jpg)");
+    PushEventHandler(&m_background);
 }
 
 
@@ -624,6 +629,24 @@ void PlayerWindow::on_mode_down_button_clicked(wxCommandEvent & event)
 }
 
 
+void PlayerWindow::next_buttonOnButtonClick(wxCommandEvent &event)
+{
+    on_manual_advance(event);
+}
+
+
+void PlayerWindow::prev_buttonOnButtonClick(wxCommandEvent &event)
+{
+    on_manual_prev(event);
+}
+
+
+void PlayerWindow::cancel_buttonOnButtonClick(wxCommandEvent &event)
+{
+    on_manual_cancel(event);
+}
+
+
 void PlayerWindow::on_memory_up_button_clicked(wxCommandEvent & event)
 {
     if (m_current_config.memory < 100U) {
@@ -864,6 +887,8 @@ void PlayerWindow::update_config_ui(const bool send_update)
 
 PlayerWindow::~PlayerWindow()
 {
+    static_cast<void>(PopEventHandler());
+    
     wxCommandEvent e;
     on_stop(e);
     std::for_each(m_midi_devices.begin(), m_midi_devices.end(), 

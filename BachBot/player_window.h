@@ -47,6 +47,7 @@
 #include "playlist_entry_control.h"  //  PlaylistEntryControl
 #include "organ_midi_event.h"  //  BankConfig
 #include "label_animator.h"  //  LabelAnimator
+#include "bitmap_painter.h"  //  BitmapPainter
 
 
 namespace bach_bot {
@@ -138,6 +139,9 @@ protected:
     virtual void on_memory_down_button_clicked(wxCommandEvent &event) override final;
     virtual void on_mode_up_button_clicked(wxCommandEvent &event) override final;
     virtual void on_mode_down_button_clicked(wxCommandEvent &event) override final;
+    virtual void next_buttonOnButtonClick(wxCommandEvent& event) override final;
+    virtual void prev_buttonOnButtonClick(wxCommandEvent& event) override final;
+    virtual void cancel_buttonOnButtonClick(wxCommandEvent& event) override final;
 
 private:
     //  Locally bound UI events
@@ -252,6 +256,7 @@ private:
     wxTimer m_ui_animation_timer;
     LabelAnimator m_up_next_label;
     LabelAnimator m_playing_label;
+    BitmapPainter m_background;
 
     wxDECLARE_EVENT_TABLE();
 

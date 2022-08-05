@@ -262,6 +262,13 @@ private:
     wxPowerResourceBlocker m_screen_control;  ///<  Prevent screen blanking
     MessageId m_last_message;  ///< The most recently processed message
     
+    /**
+     * @brief Flag: don't start processing notes on first run until either the
+     *        player state matches the desired state, or a force-advance event
+     *        comes in.
+     */
+    bool m_first_match;
+    
     /** 
      * @briefCopy of current "desired config" that can be read easily by the UI
      * thread.

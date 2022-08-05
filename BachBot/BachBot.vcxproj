@@ -147,6 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bitmap_painter.cpp" />
     <ClCompile Include="label_animator.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="main_window.cpp" />
@@ -161,6 +162,7 @@
     <ClCompile Include="thread_loader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bitmap_painter.h" />
     <ClInclude Include="common_defs.h" />
     <ClInclude Include="label_animator.h" />
     <ClInclude Include="main_window.h" />

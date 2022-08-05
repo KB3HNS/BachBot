@@ -50,6 +50,9 @@ namespace bach_bot
 			protected:
 				wxButton* play_advance_button;
 				wxButton* stop_button;
+				wxButton* next_button;
+				wxButton* prev_button;
+				wxButton* cancel_button;
 				wxStaticBoxSizer* next_song_box_sizer;
 				wxPanel* next_song_panel;
 				wxFlexGridSizer* next_song_grid_sizer;
@@ -95,6 +98,9 @@ namespace bach_bot
 				virtual void on_drop_midi_file( wxDropFilesEvent& event ) { event.Skip(); }
 				virtual void on_play_advance( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_stop( wxCommandEvent& event ) { event.Skip(); }
+				virtual void next_buttonOnButtonClick( wxCommandEvent& event ) { event.Skip(); }
+				virtual void prev_buttonOnButtonClick( wxCommandEvent& event ) { event.Skip(); }
+				virtual void cancel_buttonOnButtonClick( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_bank_change_next( wxMouseEvent& event ) { event.Skip(); }
 				virtual void on_bank_change_prev( wxMouseEvent& event ) { event.Skip(); }
 				virtual void on_memory_up_button_clicked( wxCommandEvent& event ) { event.Skip(); }

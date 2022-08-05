@@ -42,6 +42,30 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 
 	bSizer12->Add( 0, 0, 1, wxEXPAND, 5 );
 
+	wxBoxSizer* bSizer13;
+	bSizer13 = new wxBoxSizer( wxVERTICAL );
+
+
+	bSizer13->Add( 0, 25, 0, wxEXPAND, 5 );
+
+	wxBoxSizer* bSizer14;
+	bSizer14 = new wxBoxSizer( wxHORIZONTAL );
+
+	next_button = new wxButton( this, wxID_ANY, wxT("Next\nBank"), wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer14->Add( next_button, 0, wxALL, 5 );
+
+	prev_button = new wxButton( this, wxID_ANY, wxT("Prev\nBank"), wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer14->Add( prev_button, 0, wxALL, 5 );
+
+	cancel_button = new wxButton( this, wxID_ANY, wxT("Gen.\nCan"), wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer14->Add( cancel_button, 0, wxALL, 5 );
+
+
+	bSizer13->Add( bSizer14, 1, wxEXPAND, 5 );
+
+
+	bSizer12->Add( bSizer13, 0, wxEXPAND, 5 );
+
 	next_song_box_sizer = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, wxT("Current / Next Song") ), wxVERTICAL );
 
 	next_song_panel = new wxPanel( next_song_box_sizer->GetStaticBox(), wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
@@ -285,6 +309,9 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	this->Connect( wxEVT_DROP_FILES, wxDropFilesEventHandler( MainWindow::on_drop_midi_file ) );
 	play_advance_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_play_advance ), NULL, this );
 	stop_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_stop ), NULL, this );
+	next_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::next_buttonOnButtonClick ), NULL, this );
+	prev_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::prev_buttonOnButtonClick ), NULL, this );
+	cancel_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::cancel_buttonOnButtonClick ), NULL, this );
 	next_memory_label->Connect( wxEVT_LEFT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_next ), NULL, this );
 	next_memory_label->Connect( wxEVT_RIGHT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_prev ), NULL, this );
 	memory_up_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_memory_up_button_clicked ), NULL, this );
@@ -314,6 +341,9 @@ MainWindow::~MainWindow()
 	this->Disconnect( wxEVT_DROP_FILES, wxDropFilesEventHandler( MainWindow::on_drop_midi_file ) );
 	play_advance_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_play_advance ), NULL, this );
 	stop_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_stop ), NULL, this );
+	next_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::next_buttonOnButtonClick ), NULL, this );
+	prev_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::prev_buttonOnButtonClick ), NULL, this );
+	cancel_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::cancel_buttonOnButtonClick ), NULL, this );
 	next_memory_label->Disconnect( wxEVT_LEFT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_next ), NULL, this );
 	next_memory_label->Disconnect( wxEVT_RIGHT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_prev ), NULL, this );
 	memory_up_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_memory_up_button_clicked ), NULL, this );
