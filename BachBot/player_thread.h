@@ -35,6 +35,7 @@
 //  system includes
 #include <cstdint>  //  uint32_t, uintptr_t, etc
 #include <deque>  //  std::deque
+#include <atomic>  //  std::atomic
 #include <utility>  //  std::pair
 #include <RtMidi.h>  //  RtMidiOut
 #include <wx/wx.h>  //  wxCondition, wxThread, etc
@@ -129,6 +130,8 @@ public:
      * @param song_events song events
      */
     void enqueue_next_song(std::deque<OrganMidiEvent> song_events);
+
+    BankConfig get_desired_config() const;
     
     /**
      * @brief Set the current state of the organ bank externally.
@@ -258,6 +261,12 @@ private:
     wxPowerResourceBlocker m_power_control;  ///<  Prevent low power mode
     wxPowerResourceBlocker m_screen_control;  ///<  Prevent screen blanking
     MessageId m_last_message;  ///< The most recently processed message
+    
+    /** 
+     * @briefCopy of current "desired config" that can be read easily by the UI
+     * thread.
+     */
+    std::atomic<int> m_desired_config_shared;
 };
 
 }  //  end bach_bot

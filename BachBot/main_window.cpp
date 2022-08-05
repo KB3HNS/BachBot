@@ -44,40 +44,44 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 
 	next_song_box_sizer = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, wxT("Current / Next Song") ), wxVERTICAL );
 
+	next_song_panel = new wxPanel( next_song_box_sizer->GetStaticBox(), wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
 	next_song_grid_sizer = new wxFlexGridSizer( 2, 3, 0, 0 );
 	next_song_grid_sizer->SetFlexibleDirection( wxBOTH );
 	next_song_grid_sizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
 
-	m_staticText3 = new wxStaticText( next_song_box_sizer->GetStaticBox(), wxID_ANY, wxT("Memory"), wxDefaultPosition, wxSize( -1,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	m_staticText3 = new wxStaticText( next_song_panel, wxID_ANY, wxT("Memory"), wxDefaultPosition, wxSize( -1,-1 ), wxALIGN_CENTER_HORIZONTAL );
 	m_staticText3->Wrap( -1 );
 	next_song_grid_sizer->Add( m_staticText3, 1, wxALL|wxEXPAND, 8 );
 
-	m_staticText4 = new wxStaticText( next_song_box_sizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText4 = new wxStaticText( next_song_panel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText4->Wrap( -1 );
 	next_song_grid_sizer->Add( m_staticText4, 1, wxALL|wxEXPAND, 5 );
 
-	m_staticText5 = new wxStaticText( next_song_box_sizer->GetStaticBox(), wxID_ANY, wxT("Mode"), wxDefaultPosition, wxSize( 30,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	m_staticText5 = new wxStaticText( next_song_panel, wxID_ANY, wxT("Mode"), wxDefaultPosition, wxSize( 30,-1 ), wxALIGN_CENTER_HORIZONTAL );
 	m_staticText5->Wrap( -1 );
 	next_song_grid_sizer->Add( m_staticText5, 1, wxALL|wxEXPAND, 8 );
 
-	next_memory_label = new wxStaticText( next_song_box_sizer->GetStaticBox(), wxID_ANY, wxT("1"), wxDefaultPosition, wxSize( -1,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	next_memory_label = new wxStaticText( next_song_panel, wxID_ANY, wxT("1"), wxDefaultPosition, wxSize( -1,-1 ), wxALIGN_CENTER_HORIZONTAL );
 	next_memory_label->Wrap( -1 );
 	next_memory_label->SetFont( wxFont( wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxEmptyString ) );
 
 	next_song_grid_sizer->Add( next_memory_label, 1, wxALL|wxEXPAND, 8 );
 
-	m_staticText7 = new wxStaticText( next_song_box_sizer->GetStaticBox(), wxID_ANY, wxT("/"), wxDefaultPosition, wxSize( 25,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	m_staticText7 = new wxStaticText( next_song_panel, wxID_ANY, wxT("/"), wxDefaultPosition, wxSize( 25,-1 ), wxALIGN_CENTER_HORIZONTAL );
 	m_staticText7->Wrap( -1 );
 	next_song_grid_sizer->Add( m_staticText7, 1, wxALL|wxEXPAND, 8 );
 
-	next_mode_label = new wxStaticText( next_song_box_sizer->GetStaticBox(), wxID_ANY, wxT("1"), wxDefaultPosition, wxSize( -1,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	next_mode_label = new wxStaticText( next_song_panel, wxID_ANY, wxT("1"), wxDefaultPosition, wxSize( -1,-1 ), wxALIGN_CENTER_HORIZONTAL );
 	next_mode_label->Wrap( -1 );
 	next_mode_label->SetFont( wxFont( wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxEmptyString ) );
 
 	next_song_grid_sizer->Add( next_mode_label, 1, wxALL|wxEXPAND, 8 );
 
 
-	next_song_box_sizer->Add( next_song_grid_sizer, 1, wxEXPAND, 5 );
+	next_song_panel->SetSizer( next_song_grid_sizer );
+	next_song_panel->Layout();
+	next_song_grid_sizer->Fit( next_song_panel );
+	next_song_box_sizer->Add( next_song_panel, 1, wxEXPAND | wxALL, 5 );
 
 
 	bSizer12->Add( next_song_box_sizer, 0, wxEXPAND, 10 );

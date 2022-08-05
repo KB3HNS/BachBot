@@ -48,8 +48,8 @@ namespace {
     using namespace std::literals::string_view_literals;
     constexpr const auto EDITION = L"Pentecost"sv;
 
-    constexpr const auto NOW_PLAYING_LEN = 40U;
-    constexpr const auto UP_NEXT_LEN = 38U;
+    constexpr const auto NOW_PLAYING_LEN = 78U;
+    constexpr const auto UP_NEXT_LEN = 76U;
 
     enum AcceleratorEntries : size_t
     {
@@ -438,6 +438,30 @@ void PlayerWindow::on_timer_tick(wxTimerEvent &event)
     static_cast<void>(event);
     m_up_next_label.animate_tick();
     m_playing_label.animate_tick();
+    BankConfig next_config;
+    auto box = next_song_box_sizer->GetStaticBox();
+    if (m_player_thread.get() != nullptr) {
+        next_config = m_player_thread->get_desired_config();
+        box->SetLabelText("Desired Config");
+    } else if (m_next_song_id.first > 0U) {
+        const auto &song = m_song_labels.at(m_next_song_id.first);
+        next_config = song->get_starting_registration();
+        box->SetLabelText("Next Song Config");
+    } else {
+        box->SetLabelText("Current / Next Song");
+    }
+
+    next_memory_label->SetLabelText(wxString::Format(wxT("%d"),
+                                                     next_config.memory));
+    next_mode_label->SetLabelText(wxString::Format(wxT("%d"),
+                                                   next_config.mode));
+
+    const auto color = (next_config != m_current_config ?
+                        *wxRED : GetBackgroundColour());
+    if (next_song_panel->GetBackgroundColour() != color) {
+        next_song_panel->SetBackgroundColour(color);
+        next_song_panel->Refresh();
+    }
 }
 
 

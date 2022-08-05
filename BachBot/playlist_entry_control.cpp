@@ -1,26 +1,26 @@
 /**
-* @file playlist_loader.cpp
-* @brief Playlist loading
-* @copyright
-* 2022 Andrew Buettner (ABi)
-*
-* @section LICENSE
-*
-* BachBot - A hymn Midi player for Schlicker organs
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-* 
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * @file playlist_loader.cpp
+ * @brief Playlist loading
+ * @copyright
+ * 2022 Andrew Buettner (ABi)
+ *
+ * @section LICENSE
+ *
+ * BachBot - A hymn Midi player for Schlicker organs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 //  system includes
 #include <utility>  //  std::swap
@@ -38,7 +38,7 @@
 
 namespace {
     /** The amount of text normally allowed in the filename label */
-    constexpr const auto NORMAL_WIDTH = 85U;
+    constexpr const auto NORMAL_WIDTH = 87U;
 }  //  end anonymous namespace
 
 namespace bach_bot {
@@ -194,6 +194,12 @@ void PlaylistEntryControl::set_sequence(const int prev, const int next)
 void PlaylistEntryControl::deselect()
 {
     now_playing->SetValue(false);
+}
+
+
+BankConfig PlaylistEntryControl::get_starting_registration() const
+{
+    return m_playlist_entry.starting_config;
 }
 
 

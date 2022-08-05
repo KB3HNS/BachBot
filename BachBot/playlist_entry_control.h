@@ -44,6 +44,7 @@
  //  local includes
 #include "main_window.h"  //  PlaylistEntryPanel
 #include "play_list.h"  //  PlayListEntry
+#include "organ_midi_event.h"  //  BankConfig
 
 namespace bach_bot {
 namespace ui {
@@ -167,6 +168,8 @@ public:
      * @brief Unselect the select radio button.
      */
     void deselect();
+
+    BankConfig get_starting_registration() const;
 
 protected:
     virtual void on_configure_clicked(wxCommandEvent& event) override final;

@@ -20,6 +20,7 @@
 #include <wx/settings.h>
 #include <wx/sizer.h>
 #include <wx/stattext.h>
+#include <wx/panel.h>
 #include <wx/statbox.h>
 #include <wx/gauge.h>
 #include <wx/statline.h>
@@ -32,7 +33,6 @@
 #include <wx/checkbox.h>
 #include <wx/dialog.h>
 #include <wx/radiobut.h>
-#include <wx/panel.h>
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -51,6 +51,7 @@ namespace bach_bot
 				wxButton* play_advance_button;
 				wxButton* stop_button;
 				wxStaticBoxSizer* next_song_box_sizer;
+				wxPanel* next_song_panel;
 				wxFlexGridSizer* next_song_grid_sizer;
 				wxStaticText* m_staticText3;
 				wxStaticText* m_staticText4;
@@ -116,7 +117,7 @@ namespace bach_bot
 
 			public:
 
-				MainWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("BachBot Player"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 830,572 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
+				MainWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("BachBot Player"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 815,572 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
 
 				~MainWindow();
 
@@ -209,7 +210,7 @@ namespace bach_bot
 
 			public:
 
-				PlaylistEntryPanel( wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 375,43 ), long style = wxTAB_TRAVERSAL, const wxString& name = wxEmptyString );
+				PlaylistEntryPanel( wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 762,43 ), long style = wxTAB_TRAVERSAL, const wxString& name = wxEmptyString );
 
 				~PlaylistEntryPanel();
 

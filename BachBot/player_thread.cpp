@@ -76,14 +76,17 @@ PlayerThread::PlayerThread(wxFrame* const frame, RtMidiOut &intf) :
     m_bank_change_delay(),
     m_power_control(wxPOWER_RESOURCE_SYSTEM, "BachBot Playing"),
     m_screen_control(wxPOWER_RESOURCE_SCREEN, "BachBot Playing"),
-    m_last_message{MessageId::NO_MESSAGE}
+    m_last_message{MessageId::NO_MESSAGE},
+    m_desired_config_shared()
 {
+    m_desired_config_shared = int(m_desired_config);
     m_bank_change_delay.Start(MINIMUM_BANK_CHANGE_INTERVAL_MS);
 }
 
 
 wxThread::ExitCode PlayerThread::Entry()
 {
+    //  Keep this around for debug purposes.
     [[maybe_unused]] const auto start_result = timeBeginPeriod(1U);
 
     auto timer_callback = [](UINT, UINT, DWORD_PTR dwUser, DWORD_PTR, DWORD_PTR) {
@@ -225,6 +228,13 @@ void PlayerThread::enqueue_next_song(std::deque<OrganMidiEvent> song_events)
 }
 
 
+BankConfig PlayerThread::get_desired_config() const
+{
+    const auto desired_config = int(m_desired_config_shared);
+    return BankConfig(desired_config);
+}
+
+
 void PlayerThread::process_notes()
 {
     const auto time_now = m_current_time.TimeInMicro();
@@ -253,6 +263,8 @@ void PlayerThread::process_notes()
 
         m_midi_event_queue.pop_front();
     } while (m_midi_event_queue.size() > 0U);
+
+    m_desired_config_shared = int(m_desired_config);
 }
 
 
@@ -306,7 +318,8 @@ void PlayerThread::do_mode_check()
     };
 
     if ((m_desired_config.memory < m_memory_number && m_mode_number > 0U) || 
-        (m_desired_config.memory == m_memory_number && 1U == m_desired_config.mode))
+        (m_desired_config.memory == m_memory_number &&
+         1U == m_desired_config.mode && m_mode_number > 1U))
     {
         //  The desired memory is *lower* than the current state:  We can take
         // a shortcut and use CLEAR to get to the start of this piston mode.
