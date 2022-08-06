@@ -123,7 +123,7 @@ namespace bach_bot
 
 			public:
 
-				MainWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("BachBot Player"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 815,572 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
+				MainWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("BachBot Player"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 815,727 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
 
 				~MainWindow();
 
@@ -178,6 +178,7 @@ namespace bach_bot
 
 			protected:
 				wxStaticText* m_staticText22;
+				wxStaticText* progress_label;
 				wxStaticText* filename_label;
 				wxGauge* progress_bar;
 

@@ -37,12 +37,13 @@
 #include <deque>  //  std::deque
 #include <optional>  //  std::optional
 #include <wx/wx.h>  //  wxString
+#include <array>  //
 
  //  module includes
  // -none-
 
  //  local includes
-#include "main_window.h"  //  PlaylistEntryPanel
+#include "main_window.h"  //  PlaylistEntryPanel, LoadMidiDialog
 #include "play_list.h"  //  PlayListEntry
 #include "organ_midi_event.h"  //  BankConfig
 
@@ -59,6 +60,17 @@ namespace ui {
 void set_label_filename(wxStaticText *const label,
                         const wxString &filename,
                         const size_t max_len);
+
+
+/** Various color entries based on state */
+enum PlaylistControlState : size_t
+{
+    ENTRY_NORMAL = 0U,
+    ENTRY_NEXT,
+    ENTRY_PLAYING,
+    ENTRY_SELECTED,
+    SIZE_COLOR_ARRAY
+};
 
 
 /**
@@ -165,6 +177,12 @@ public:
     }
 
     /**
+     * @brief Periodically check and update this entry background color.
+     * @param up_next `true` if up next, `false` otherwise
+     */
+    void update_color_state(const bool up_next);
+
+    /**
      * @brief Unselect the select radio button.
      */
     void deselect();
@@ -205,6 +223,10 @@ private:
     const double m_pix_per_char;
 
     PlayListEntry m_playlist_entry;
+    LoadMidiDialog *m_active_dialog;
+
+    static const size_t ARRAY_SIZE = PlaylistControlState::SIZE_COLOR_ARRAY;
+    const std::array<wxColor, ARRAY_SIZE> m_colors;
 };
 
 }  //  end ui

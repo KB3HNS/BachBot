@@ -199,23 +199,25 @@ void PlayerWindow::on_load_playlist(wxCommandEvent &event)
     }
 
     PlaylistXmlLoader loader(this, open_dialog.GetPath());
+    loader.set_on_success_callback([&](std::list<PlayListEntry> playlist) {
+        clear_playlist_window();
+        if (playlist.size() > 0U) {
+            for (const auto &i: playlist) {
+                add_playlist_entry(i);
+            }
+            layout_scroll_panel();
+        }
+
+        m_playlist_name = open_dialog.GetPath();
+
+    });
+
     if (loader.ShowModal() != wxID_OK) {
         wxMessageBox(fmt::format(L"Error loading playlist:\n"
                                   "Error reported was: {}",
                                  loader.get_error_text().value()));
         return;
     }
-
-    clear_playlist_window();
-    const auto playlist = loader.get_playlist();
-    if (playlist.size() > 0U) {
-        for (const auto &i: playlist) {
-            add_playlist_entry(i);
-        }
-        layout_scroll_panel();
-    }
-
-    m_playlist_name = open_dialog.GetPath();
 }
 
 
@@ -467,6 +469,10 @@ void PlayerWindow::on_timer_tick(wxTimerEvent &event)
         next_song_panel->SetBackgroundColour(color);
         next_song_panel->Refresh();
     }
+
+    for (auto &[song_id, control]: m_song_labels) {
+        control->update_color_state(song_id == m_next_song_id.first);
+    }
 }
 
 
@@ -522,7 +528,9 @@ void PlayerWindow::on_checkbox_event(const uint32_t song_id, const bool checked)
             m_player_thread->enqueue_next_song(control->get_song_events());
         } else {
             m_player_thread->enqueue_next_song({});
-            if (0U != m_next_song_id.first) {
+            if (0U != m_next_song_id.first &&
+                m_current_song_id != m_next_song_id.first)
+            {
                 m_song_labels[m_next_song_id.first]->reset_status();
             }
         }
@@ -592,21 +600,22 @@ void PlayerWindow::on_save_as(wxCommandEvent &event)
 void PlayerWindow::on_drop_midi_file(wxDropFilesEvent &event)
 {
     PlaylistDndLoader loader(this, event, uint32_t(m_song_labels.size()) + 1U);
+    loader.set_on_success_callback([=](std::list<PlayListEntry> playlist) {
+        if (playlist.size() > 0U) {
+            std::for_each(playlist.begin(), playlist.end(),
+                          [=](const PlayListEntry &i) {
+                              add_playlist_entry(i);
+                          });
+            layout_scroll_panel();
+            m_playlist_changed = true;
+        }
+    });
+
     if (loader.ShowModal() != wxID_OK) {
         wxMessageBox(fmt::format(L"Error with import:\n"
                                  "Error reported was: {}",
                                  loader.get_error_text().value()));
         return;
-    }
-
-    const auto playlist = loader.get_playlist();
-    if (playlist.size() > 0U) {
-        std::for_each(playlist.begin(), playlist.end(),
-                      [=](const PlayListEntry &i) {
-            add_playlist_entry(i);
-        });
-        layout_scroll_panel();
-        m_playlist_changed = true;
     }
 }
 
@@ -738,9 +747,9 @@ void PlayerWindow::add_playlist_entry(const PlayListEntry &song)
                                   PlaylistEntryControl *control,
                                   bool selected) {
         if (selected) {
-            for (auto &i: m_song_labels) {
-                if (i.first != song_id) {
-                    i.second->deselect();
+            for (auto &[sid, entry]: m_song_labels) {
+                if (sid != song_id) {
+                    entry->deselect();
                 }
             }
             m_selected_control = control;
@@ -768,7 +777,11 @@ void PlayerWindow::set_next_song(const uint32_t song_id, bool priority)
 {
     if (!m_next_song_id.second || priority) {
         if (0U != m_next_song_id.first) {
-            m_song_labels[m_next_song_id.first]->reset_status();
+            auto control = m_song_labels[m_next_song_id.first].get();
+            control->reset_status();
+            if (m_next_song_id.first == m_current_song_id) {
+                control->set_playing();
+            }
         }
         m_next_song_id = std::make_pair(song_id, priority);
         if (0U != song_id) {
@@ -782,7 +795,7 @@ void PlayerWindow::set_next_song(const uint32_t song_id, bool priority)
                 next_song->set_next();
                 m_player_thread->enqueue_next_song(
                     next_song->get_song_events());
-            } else {
+            } else if (song_id != m_current_song_id) {
                 next_song->reset_status();
             }
         } else {

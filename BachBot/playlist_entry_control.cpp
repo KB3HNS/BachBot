@@ -37,8 +37,10 @@
 
 
 namespace {
-    /** The amount of text normally allowed in the filename label */
-    constexpr const auto NORMAL_WIDTH = 87U;
+/** The amount of text normally allowed in the filename label */
+constexpr const auto NORMAL_WIDTH = 87U;
+
+const wxColor default_color(uint8_t(171), uint8_t(171), uint8_t(171));
 }  //  end anonymous namespace
 
 namespace bach_bot {
@@ -72,7 +74,12 @@ PlaylistEntryControl::PlaylistEntryControl(wxWindow *const parent,
     m_panel_size{GetSize()},
     m_text_width{NORMAL_WIDTH},
     m_pix_per_char{calculate_pix_per_char(song_label)},
-    m_playlist_entry(std::move(song))
+    m_playlist_entry(std::move(song)),
+    m_active_dialog{nullptr},
+    m_colors{parent->GetBackgroundColour(),
+             *wxYELLOW,
+             *wxGREEN,
+             *wxLIGHT_GREY}
 {
     auto_play->SetValue(song.play_next);
     setup_widgets();
@@ -89,7 +96,7 @@ const wxString& PlaylistEntryControl::get_filename() const
 void PlaylistEntryControl::set_next()
 {
     m_up_next = true;
-    m_playing = false;
+    // m_playing = false;
     setup_widgets();
 }
 
@@ -191,6 +198,25 @@ void PlaylistEntryControl::set_sequence(const int prev, const int next)
 }
 
 
+void PlaylistEntryControl::update_color_state(const bool up_next)
+{
+    auto index = (now_playing->GetValue() ?
+                  PlaylistControlState::ENTRY_SELECTED :
+                  PlaylistControlState::ENTRY_NORMAL);
+    if (m_playing) {
+        index = PlaylistControlState::ENTRY_PLAYING;
+    } else if (up_next) {
+        index = PlaylistControlState::ENTRY_NEXT;
+    }
+
+    const auto &color = m_colors[index];
+    if (GetBackgroundColour() != color) {
+        SetBackgroundColour(color);
+        Refresh();
+    }
+}
+
+
 void PlaylistEntryControl::deselect()
 {
     now_playing->SetValue(false);
@@ -268,6 +294,7 @@ void PlaylistEntryControl::on_move_down(wxCommandEvent & event)
 void PlaylistEntryControl::on_radio_selected(wxCommandEvent &event)
 {
     selected_event(m_playlist_entry.song_id, this, now_playing->GetValue());
+    setup_widgets();
 }
 
 
@@ -292,7 +319,12 @@ void PlaylistEntryControl::setup_widgets()
     } else {
         now_playing->SetLabelText(wxT(""));
     }
-    static_cast<void>(configure_button->Enable(!(m_playing || m_up_next)));
+    
+    const auto edit_forbidden = (!m_playing && !m_up_next);
+    static_cast<void>(configure_button->Enable(edit_forbidden));
+    if (edit_forbidden && (nullptr != m_active_dialog)) {
+        m_active_dialog->Close();
+    }
 
     set_label_filename(song_label, m_playlist_entry.file_name, width);
 

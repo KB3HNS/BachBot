@@ -34,6 +34,7 @@
 #include <vector>  //  std::vector
 #include <list>  //  std::list
 #include <optional>  //  std::optional
+#include <functional>  //  std::function
 #include <wx/wx.h>  //  wxThread, etc
 
 //  module includes
@@ -53,6 +54,7 @@ namespace ui {
 class ThreadLoader : public LoadingPopup, wxThread
 {
 public:
+    using SuccessCallback = std::function<void(std::list<PlayListEntry>)>;
     /**
      * @brief Constructor
      * @param parent Parent window (main window)
@@ -67,11 +69,7 @@ public:
      */
     std::optional<wxString> get_error_text();
 
-    /**
-     * @brief Get playlist entries (moves from internal storage)
-     * @returns playlist entries
-     */
-    std::list<PlayListEntry> get_playlist();
+    void set_on_success_callback(SuccessCallback callback);
 
 protected:
     virtual ExitCode Entry() override;
@@ -121,10 +119,14 @@ private:
      */
     void parse_playlist();
 
+    void dummy_callback(std::list<PlayListEntry>);
+
     wxMutex m_mutex;
     std::list<PlayListEntry> m_playlist;
     std::optional<wxString> m_error_text;
     uint32_t m_count;
+    size_t m_last_progress_len;
+    SuccessCallback m_success_callback;
 
     wxDECLARE_EVENT_TABLE();
 };

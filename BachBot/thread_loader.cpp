@@ -24,6 +24,7 @@
 
 //  system includes
 #include <fmt/xchar.h>  //  fmt::format(L
+#include <stdexcept>  //  std::runtime_error
 
 //  module includes
 // -none-
@@ -33,11 +34,12 @@
 #include "playlist_entry_control.h"  //  set_label_filename
 
 namespace {
-    constexpr const size_t MAX_FILENAME_LEN = 52U;
+    constexpr const size_t MAX_FILENAME_LEN = 58U;
 }
 
 namespace bach_bot {
 namespace ui {
+using namespace std::placeholders;
 
 
 ThreadLoader::ThreadLoader(wxFrame *const parent) :
@@ -46,7 +48,9 @@ ThreadLoader::ThreadLoader(wxFrame *const parent) :
     m_mutex(),
     m_playlist(),
     m_error_text(),
-    m_count{0U}
+    m_count{0U},
+    m_last_progress_len{MAX_FILENAME_LEN},
+    m_success_callback{std::bind(&ThreadLoader::dummy_callback, this, _1)}
 {
 }
 
@@ -67,9 +71,9 @@ std::optional<wxString> ThreadLoader::get_error_text()
 }
 
 
-std::list<PlayListEntry> ThreadLoader::get_playlist()
+void ThreadLoader::set_on_success_callback(SuccessCallback callback)
 {
-    return std::move(m_playlist);
+    m_success_callback = callback;
 }
 
 
@@ -126,18 +130,45 @@ void ThreadLoader::on_tick_event(wxThreadEvent &event)
     if (value > 0 && value <= progress_bar->GetRange()) {
         progress_bar->SetValue(value);
     }
+
+    const auto progress_text = wxString::Format("%i/%i",
+                                                value,
+                                                progress_bar->GetRange());
+    progress_label->SetLabelText(progress_text);
+    const auto label_len = progress_text.Length();
+    //  The first entry will have a *very* brief glitch here.  I can't seem to
+    // avoid it.
+    if (label_len != m_last_progress_len) {
+        m_last_progress_len = label_len;
+        set_label_filename(filename_label,
+                           filename_label->GetLabelText(),
+                           MAX_FILENAME_LEN - label_len);
+        Layout();
+    }
 }
 
 
 void ThreadLoader::on_close_event(wxThreadEvent &event)
 {
-    EndModal(event.GetInt());
+    filename_label->SetLabelText(wxT("Finishing..."));
+
+    const auto retval = event.GetInt();
+    if (wxID_OK == retval) {
+        m_success_callback(std::move(m_playlist));
+    }
+
+    EndModal(retval);
 }
 
 
 void ThreadLoader::on_filename_event(wxThreadEvent &event)
 {
-    set_label_filename(filename_label, event.GetString(), MAX_FILENAME_LEN);
+    const auto string_len = MAX_FILENAME_LEN -
+                            progress_label->GetLabelText().Length();
+    set_label_filename(filename_label, event.GetString(), string_len);
+    if (progress_bar->GetValue() > 8) {
+        event.GetInt();
+    }
 }
 
 
@@ -167,6 +198,12 @@ void ThreadLoader::parse_playlist()
             wxQueueEvent(this, tick_event.Clone());
         }
     }
+}
+
+
+void ThreadLoader::dummy_callback(std::list<PlayListEntry>)
+{
+    throw std::runtime_error("Error: playlist loader callback not specified!");
 }
 
 

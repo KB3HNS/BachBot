@@ -536,17 +536,27 @@ LoadingPopup::LoadingPopup( wxWindow* parent, wxWindowID id, const wxString& tit
 	wxBoxSizer* bSizer9;
 	bSizer9 = new wxBoxSizer( wxVERTICAL );
 
-	m_staticText22 = new wxStaticText( this, wxID_ANY, wxT("Loading playlist, please wait"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText22 = new wxStaticText( this, wxID_ANY, wxT("Loading playlist, please wait..."), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText22->Wrap( -1 );
 	m_staticText22->SetFont( wxFont( 16, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxEmptyString ) );
 
 	bSizer9->Add( m_staticText22, 0, wxALL|wxEXPAND, 5 );
 
+	wxBoxSizer* bSizer15;
+	bSizer15 = new wxBoxSizer( wxHORIZONTAL );
+
+	progress_label = new wxStaticText( this, wxID_ANY, wxT("1/1"), wxDefaultPosition, wxDefaultSize, 0 );
+	progress_label->Wrap( -1 );
+	bSizer15->Add( progress_label, 0, wxALL, 5 );
+
 	filename_label = new wxStaticText( this, wxID_ANY, wxT("Preparing..."), wxDefaultPosition, wxDefaultSize, 0 );
 	filename_label->Wrap( -1 );
 	filename_label->SetFont( wxFont( wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Courier New") ) );
 
-	bSizer9->Add( filename_label, 0, wxALL|wxEXPAND, 5 );
+	bSizer15->Add( filename_label, 1, wxALL|wxEXPAND, 5 );
+
+
+	bSizer9->Add( bSizer15, 1, wxEXPAND, 5 );
 
 	progress_bar = new wxGauge( this, wxID_ANY, 100, wxDefaultPosition, wxDefaultSize, wxGA_HORIZONTAL );
 	progress_bar->SetValue( 0 );
