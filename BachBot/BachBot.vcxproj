@@ -158,6 +158,7 @@
     <ClCompile Include="playlist_entry_control.cpp" />
     <ClCompile Include="playlist_loader.cpp" />
     <ClCompile Include="play_list.cpp" />
+    <ClCompile Include="rt_timer_win.cpp" />
     <ClCompile Include="syndyne_importer.cpp" />
     <ClCompile Include="thread_loader.cpp" />
   </ItemGroup>
@@ -173,6 +174,7 @@
     <ClInclude Include="playlist_entry_control.h" />
     <ClInclude Include="playlist_loader.h" />
     <ClInclude Include="play_list.h" />
+    <ClInclude Include="rt_timer.h" />
     <ClInclude Include="syndyne_importer.h" />
     <ClInclude Include="thread_loader.h" />
   </ItemGroup>

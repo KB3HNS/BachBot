@@ -25,6 +25,7 @@
 
 //  system includes
 #include <stdexcept>  //  std::runtime_error
+#include <memory>  //  std::unique_ptr
 
 //  module includes
 // -none-
@@ -32,11 +33,11 @@
 //  local includes
 #include "player_thread.h"  //   local include
 #include "player_window.h"  //  PlayerWindowEvents
+#include "rt_timer.h"  //  RTTimer
 
 
 namespace {
 constexpr const auto TICKS_PER_UI_REFRESH = 500U;
-
 }
 
 
@@ -74,8 +75,6 @@ PlayerThread::PlayerThread(wxFrame* const frame, RtMidiOut &intf) :
     m_waiting{nullptr},
     m_current_time(),
     m_bank_change_delay(),
-    m_power_control(wxPOWER_RESOURCE_SYSTEM, "BachBot Playing"),
-    m_screen_control(wxPOWER_RESOURCE_SCREEN, "BachBot Playing"),
     m_last_message{MessageId::NO_MESSAGE},
     m_first_match{false},
     m_desired_config_shared()
@@ -87,31 +86,19 @@ PlayerThread::PlayerThread(wxFrame* const frame, RtMidiOut &intf) :
 
 wxThread::ExitCode PlayerThread::Entry()
 {
-    //  Keep this around for debug purposes.
-    [[maybe_unused]] const auto start_result = timeBeginPeriod(1U);
-
-    auto timer_callback = [](UINT, UINT, DWORD_PTR dwUser, DWORD_PTR, DWORD_PTR) {
-        auto *const ptr = reinterpret_cast<PlayerThread*>(dwUser);
-        ptr->post_tick();
-    };
-    const auto timer_id = timeSetEvent(
-        1U, 1U, timer_callback, DWORD_PTR(this), TIME_PERIODIC);
-
+    std::unique_ptr<RTTimer> timer(create_timer(this));
+    
+    timer->start_timer();
     while (load_next_song()) {
         if (!run_song()) {
             break;
         }
     }
 
-    timeKillEvent(timer_id);
-    const auto end_result = timeEndPeriod(1U);
-
-    //  Sleep a short period of time to allow for syncronization
-    // wxMilliSleep(10UL);
-
+    timer->stop_timer();
     wxThreadEvent exit_event(wxEVT_THREAD,
                              ui::PlayerWindowEvents::EXIT_EVENT);
-    exit_event.SetInt(int(end_result));
+    exit_event.SetInt(0);
     wxQueueEvent(m_frame, exit_event.Clone());
 
     return nullptr;

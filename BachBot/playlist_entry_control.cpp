@@ -242,7 +242,10 @@ void PlaylistEntryControl::on_configure_clicked(wxCommandEvent &event)
                          wxOK | wxICON_INFORMATION);
         }
 
-        if (update_dialog.ShowModal() == wxID_CANCEL) {
+        m_active_dialog = &update_dialog;
+        const auto result = update_dialog.ShowModal();
+        m_active_dialog = nullptr;
+        if (wxID_CANCEL == result) {
             return;
         }
 
@@ -320,8 +323,8 @@ void PlaylistEntryControl::setup_widgets()
         now_playing->SetLabelText(wxT(""));
     }
     
-    const auto edit_forbidden = (!m_playing && !m_up_next);
-    static_cast<void>(configure_button->Enable(edit_forbidden));
+    const auto edit_forbidden = (m_playing || m_up_next);
+    static_cast<void>(configure_button->Enable(!edit_forbidden));
     if (edit_forbidden && (nullptr != m_active_dialog)) {
         m_active_dialog->Close();
     }

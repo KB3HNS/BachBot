@@ -39,7 +39,6 @@
 #include <utility>  //  std::pair
 #include <RtMidi.h>  //  RtMidiOut
 #include <wx/wx.h>  //  wxCondition, wxThread, etc
-#include <wx/power.h>  //  wxPowerResourceBlocker
 #include <RtMidi.h>  //  RtMidiOut
 
 //  module includes
@@ -59,6 +58,8 @@ namespace bach_bot {
 void send_bank_change_message(RtMidiOut &midi_out, 
                               const SyndyneBankCommands value);
 
+//  Forward declare this to prevent a circular dependency:
+class RTTimer;
 
 /**
  * @brief wxThread representing the real-time midi player
@@ -141,6 +142,14 @@ public:
     void set_bank_config(const uint32_t current_memory, 
                          const uint8_t current_mode);
 
+    /**
+     * @brief Callback to post timer tick events.
+     */
+    void post_tick()
+    {
+        post_message(MessageId::TICK_MESSAGE);
+    }
+
     virtual ~PlayerThread() override;
 
 protected:
@@ -155,14 +164,6 @@ private:
      */
     bool run_song();
     
-    /**
-     * @brief Callback to post timer tick events.
-     */
-    void post_tick()
-    {
-        post_message(MessageId::TICK_MESSAGE);
-    }
-
     /**
      * @brief General message posting API
      * @param msg_id Message to be posted
@@ -258,8 +259,6 @@ private:
 
     wxStopWatch m_current_time;  ///<  Current time and event time measurement.
     wxStopWatch m_bank_change_delay;  ///<  Holdoff delay between bank changes.
-    wxPowerResourceBlocker m_power_control;  ///<  Prevent low power mode
-    wxPowerResourceBlocker m_screen_control;  ///<  Prevent screen blanking
     MessageId m_last_message;  ///< The most recently processed message
     
     /**
