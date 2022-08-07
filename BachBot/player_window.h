@@ -32,7 +32,7 @@
 #include <list>  //  std::list
 #include <memory>  //  std::unique_ptr
 #include <utility>  //  std::pair
-#include <unordered_map>  //  std::unordered_map
+#include <map>  //  std::map
 #include <optional>  //  std::optional
 #include <wx/wx.h>  //  wxLog, wxThread, etc
 #include <RtMidi.h>  //  RtMidiOut
@@ -210,7 +210,7 @@ private:
      * @param priority set `true` when requested through the UI as opposed to
      *        playback / reordering action.
      */
-    void set_next_song(const uint32_t song_id, const bool priority=false);
+    void set_next_song(uint32_t song_id, const bool priority=false);
 
     /**
      * @brief check to see if the application should be closed
@@ -247,7 +247,7 @@ private:
     uint32_t m_current_song_id;
     std::pair<uint32_t, bool> m_next_song_id;
     std::pair<uint32_t, uint32_t> m_song_list;  ///< front/end of playlist
-    std::unordered_map<uint32_t, PlaylistEntryType> m_song_labels;
+    std::map<uint32_t, PlaylistEntryType> m_song_labels;
     BankConfig m_current_config;
     std::optional<wxString> m_playlist_name;
     bool m_playlist_changed;

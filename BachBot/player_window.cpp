@@ -773,8 +773,11 @@ void PlayerWindow::layout_scroll_panel() const
 }
 
 
-void PlayerWindow::set_next_song(const uint32_t song_id, bool priority)
+void PlayerWindow::set_next_song(uint32_t song_id, bool priority)
 {
+    if (0U == song_id) {
+        song_id = m_song_list.first;
+    }
     if (!m_next_song_id.second || priority) {
         if (0U != m_next_song_id.first) {
             auto control = m_song_labels[m_next_song_id.first].get();
