@@ -18,6 +18,9 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	wxBoxSizer* bSizer2;
 	bSizer2 = new wxBoxSizer( wxVERTICAL );
 
+
+	bSizer2->Add( 0, 5, 0, wxEXPAND, 5 );
+
 	wxBoxSizer* bSizer12;
 	bSizer12 = new wxBoxSizer( wxHORIZONTAL );
 
@@ -547,6 +550,8 @@ LoadingPopup::LoadingPopup( wxWindow* parent, wxWindowID id, const wxString& tit
 
 	progress_label = new wxStaticText( this, wxID_ANY, wxT("1/1"), wxDefaultPosition, wxDefaultSize, 0 );
 	progress_label->Wrap( -1 );
+	progress_label->SetFont( wxFont( 9, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Courier New") ) );
+
 	bSizer15->Add( progress_label, 0, wxALL, 5 );
 
 	filename_label = new wxStaticText( this, wxID_ANY, wxT("Preparing..."), wxDefaultPosition, wxDefaultSize, 0 );

@@ -63,6 +63,10 @@ namespace {
     
     //wxAcceleratorEntry g_accel_entries[2U];
     std::array<wxAcceleratorEntry, NUM_ACCEL_ENTRIES> g_accel_entries;
+
+    // constexpr const auto image_name = L"test.jpg"sv;
+    // constexpr const auto image_name = L"dark-brown-wood-texture-background-with-design-space_53876-160410.jpg"sv;
+    constexpr const auto image_name = L"wood.png"sv;
 }  //  end anonymous namespace
 
 
@@ -104,7 +108,7 @@ PlayerWindow::PlayerWindow() :
     m_ui_animation_timer(this, PlayerWindowEvents::UI_ANIMATE_TICK),
     m_up_next_label(next_label, UP_NEXT_LEN),
     m_playing_label(track_label, NOW_PLAYING_LEN),
-    m_background(wxT("test.jpg"))
+    m_background(image_name.data())
 {
     for (auto i = 0U; i < m_midi_out.getPortCount(); ++i) {
         m_midi_devices.emplace_back(
@@ -321,7 +325,11 @@ void PlayerWindow::on_about(wxCommandEvent &event)
          "Organs using the Syndyne Console Control system.\n"
          "Written By Andrew Buettner for Zion Lutheran Church and School "
          "Hartland, WI\n"
-         "https://www.github.com/KB3HNS/BachBot", EDITION),
+         "https://www.github.com/KB3HNS/BachBot"
+         "\n\nImage by rawpixel.com on Freepik\n"
+         "free-photo/brown-wood-textured-background-with-design-space_21631206.htm"
+         
+         , EDITION),
         wxT("About BachBot"), wxOK | wxICON_INFORMATION);
 }
 
