@@ -326,10 +326,7 @@ void PlayerWindow::on_about(wxCommandEvent &event)
          "Written By Andrew Buettner for Zion Lutheran Church and School "
          "Hartland, WI\n"
          "https://www.github.com/KB3HNS/BachBot"
-         "\n\nImage by rawpixel.com on Freepik\n"
-         "free-photo/brown-wood-textured-background-with-design-space_21631206.htm"
-         
-         , EDITION),
+         "\n\nImage by rawpixel.com on Freepik.com", EDITION),
         wxT("About BachBot"), wxOK | wxICON_INFORMATION);
 }
 
