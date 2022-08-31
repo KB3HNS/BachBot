@@ -52,10 +52,36 @@ namespace bach_bot {
  * "Cancel" always sets the bank back to the first bank of the current piston
  * mode.  This represents the only way of controlling stop settings from the
  * MIDI interface.
- *  - `first` current bank (0-7)
- *  - `second` current mode (0-100)
+ * [^1]: Normal acceptable range is 1-8, however there is a corner case where
+ * the value `0` occurs after sending a "general cancel".
  */
-using BankConfig = std::pair<uint8_t, uint32_t>;
+struct BankConfig
+{
+    constexpr BankConfig(uint32_t mem, uint8_t bank) : 
+        memory{mem},
+        mode{bank}
+    { }
+
+    constexpr BankConfig() :
+        BankConfig(1U, 1U)
+    {}
+
+    /**
+     * @brief Construct from a thread message
+     * @param msgdata message data (packed bytes)
+     */
+    explicit BankConfig(int msgdata);
+
+    uint32_t memory;  ///< current memory(1-100)
+    uint8_t mode;  ///< current general piston mode (0-8)[^1]
+
+    /**
+     * @brief Convert to a thread message
+     * @returns value to put into a thread message
+     */
+    operator int() const;
+};
+
 
 /**
  * @brief Organ MIDI event storage class.
@@ -147,8 +173,8 @@ struct OrganMidiEvent
 
     uint8_t m_event_code;  ///<  This event command
     const bool m_mode_change_event; ///< Was this constructed as a mode change event?
-    uint8_t m_desired_bank_number;  ///<  Store the desired bank number
-    uint32_t m_desired_mode_number;  ///<  Store the desired piston mode number
+    uint32_t m_desired_memory;  ///<  Store the desired memory number
+    uint8_t m_desired_mode_number;  ///<  Store the desired piston mode number
     double m_seconds;  ///<  Event time in seconds.
     double m_delta_time;  ///<  Delta seconds since last event.
     std::optional<uint8_t> m_byte1;  ///<  MIDI event payload first byte

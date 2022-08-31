@@ -20,6 +20,7 @@
 #include <wx/settings.h>
 #include <wx/sizer.h>
 #include <wx/stattext.h>
+#include <wx/panel.h>
 #include <wx/statbox.h>
 #include <wx/gauge.h>
 #include <wx/statline.h>
@@ -32,7 +33,6 @@
 #include <wx/checkbox.h>
 #include <wx/dialog.h>
 #include <wx/radiobut.h>
-#include <wx/panel.h>
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -50,14 +50,26 @@ namespace bach_bot
 			protected:
 				wxButton* play_advance_button;
 				wxButton* stop_button;
-				wxButton* bank_up_button;
+				wxButton* next_button;
+				wxButton* prev_button;
+				wxButton* cancel_button;
+				wxStaticBoxSizer* next_song_box_sizer;
+				wxPanel* next_song_panel;
+				wxFlexGridSizer* next_song_grid_sizer;
 				wxStaticText* m_staticText3;
 				wxStaticText* m_staticText4;
 				wxStaticText* m_staticText5;
-				wxButton* mode_up_button;
-				wxButton* bank_down_button;
-				wxStaticText* bank_label;
+				wxStaticText* next_memory_label;
 				wxStaticText* m_staticText7;
+				wxStaticText* next_mode_label;
+				wxButton* memory_up_button;
+				wxStaticText* m_staticText31;
+				wxStaticText* m_staticText41;
+				wxStaticText* m_staticText51;
+				wxButton* mode_up_button;
+				wxButton* memory_down_button;
+				wxStaticText* memory_label;
+				wxStaticText* m_staticText71;
 				wxStaticText* mode_label;
 				wxButton* mode_down_button;
 				wxGauge* event_count;
@@ -86,11 +98,14 @@ namespace bach_bot
 				virtual void on_drop_midi_file( wxDropFilesEvent& event ) { event.Skip(); }
 				virtual void on_play_advance( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_stop( wxCommandEvent& event ) { event.Skip(); }
-				virtual void on_bank_up_button_clicked( wxCommandEvent& event ) { event.Skip(); }
-				virtual void on_mode_up_button_clicked( wxCommandEvent& event ) { event.Skip(); }
-				virtual void on_bank_down_button_clicked( wxCommandEvent& event ) { event.Skip(); }
+				virtual void next_buttonOnButtonClick( wxCommandEvent& event ) { event.Skip(); }
+				virtual void prev_buttonOnButtonClick( wxCommandEvent& event ) { event.Skip(); }
+				virtual void cancel_buttonOnButtonClick( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_bank_change_next( wxMouseEvent& event ) { event.Skip(); }
 				virtual void on_bank_change_prev( wxMouseEvent& event ) { event.Skip(); }
+				virtual void on_memory_up_button_clicked( wxCommandEvent& event ) { event.Skip(); }
+				virtual void on_mode_up_button_clicked( wxCommandEvent& event ) { event.Skip(); }
+				virtual void on_memory_down_button_clicked( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_mode_down_button_clicked( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_keydown_event( wxKeyEvent& event ) { event.Skip(); }
 				virtual void on_keyup_event( wxKeyEvent& event ) { event.Skip(); }
@@ -108,7 +123,7 @@ namespace bach_bot
 
 			public:
 
-				MainWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("BachBot Player"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 430,410 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
+				MainWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("BachBot Player"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 815,727 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
 
 				~MainWindow();
 
@@ -138,7 +153,7 @@ namespace bach_bot
 				wxSpinCtrl* select_tempo;
 				wxStaticText* initial_gap_label;
 				wxTextCtrl* initial_gap_text_box;
-				wxSpinCtrl* bank_select;
+				wxSpinCtrl* memory_select;
 				wxSpinCtrl* mode_select;
 				wxSpinCtrl* pitch_change;
 				wxStaticText* extended_ending_label;
@@ -163,6 +178,7 @@ namespace bach_bot
 
 			protected:
 				wxStaticText* m_staticText22;
+				wxStaticText* progress_label;
 				wxStaticText* filename_label;
 				wxGauge* progress_bar;
 
@@ -201,7 +217,7 @@ namespace bach_bot
 
 			public:
 
-				PlaylistEntryPanel( wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 375,43 ), long style = wxTAB_TRAVERSAL, const wxString& name = wxEmptyString );
+				PlaylistEntryPanel( wxWindow* parent, wxWindowID id = wxID_ANY, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 762,43 ), long style = wxTAB_TRAVERSAL, const wxString& name = wxEmptyString );
 
 				~PlaylistEntryPanel();
 

@@ -32,7 +32,7 @@
 #include <list>  //  std::list
 #include <memory>  //  std::unique_ptr
 #include <utility>  //  std::pair
-#include <unordered_map>  //  std::unordered_map
+#include <map>  //  std::map
 #include <optional>  //  std::optional
 #include <wx/wx.h>  //  wxLog, wxThread, etc
 #include <RtMidi.h>  //  RtMidiOut
@@ -47,6 +47,7 @@
 #include "playlist_entry_control.h"  //  PlaylistEntryControl
 #include "organ_midi_event.h"  //  BankConfig
 #include "label_animator.h"  //  LabelAnimator
+#include "bitmap_painter.h"  //  BitmapPainter
 
 
 namespace bach_bot {
@@ -134,10 +135,13 @@ protected:
     virtual void on_close(wxCloseEvent &event) override final;
     virtual void on_save_as(wxCommandEvent &event) override final;
     virtual void on_drop_midi_file(wxDropFilesEvent &event) override final;
-    virtual void on_bank_up_button_clicked(wxCommandEvent &event) override final;
-    virtual void on_bank_down_button_clicked(wxCommandEvent &event) override final;
+    virtual void on_memory_up_button_clicked(wxCommandEvent &event) override final;
+    virtual void on_memory_down_button_clicked(wxCommandEvent &event) override final;
     virtual void on_mode_up_button_clicked(wxCommandEvent &event) override final;
     virtual void on_mode_down_button_clicked(wxCommandEvent &event) override final;
+    virtual void next_buttonOnButtonClick(wxCommandEvent& event) override final;
+    virtual void prev_buttonOnButtonClick(wxCommandEvent& event) override final;
+    virtual void cancel_buttonOnButtonClick(wxCommandEvent& event) override final;
 
 private:
     //  Locally bound UI events
@@ -206,7 +210,7 @@ private:
      * @param priority set `true` when requested through the UI as opposed to
      *        playback / reordering action.
      */
-    void set_next_song(const uint32_t song_id, const bool priority=false);
+    void set_next_song(uint32_t song_id, const bool priority=false);
 
     /**
      * @brief check to see if the application should be closed
@@ -243,7 +247,7 @@ private:
     uint32_t m_current_song_id;
     std::pair<uint32_t, bool> m_next_song_id;
     std::pair<uint32_t, uint32_t> m_song_list;  ///< front/end of playlist
-    std::unordered_map<uint32_t, PlaylistEntryType> m_song_labels;
+    std::map<uint32_t, PlaylistEntryType> m_song_labels;
     BankConfig m_current_config;
     std::optional<wxString> m_playlist_name;
     bool m_playlist_changed;
@@ -252,6 +256,7 @@ private:
     wxTimer m_ui_animation_timer;
     LabelAnimator m_up_next_label;
     LabelAnimator m_playing_label;
+    BitmapPainter m_background;
 
     wxDECLARE_EVENT_TABLE();
 

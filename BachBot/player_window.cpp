@@ -46,10 +46,10 @@
 
 namespace {
     using namespace std::literals::string_view_literals;
-    constexpr const auto EDITION = L"Ascention"sv;
+    constexpr const auto EDITION = L"Pentecost"sv;
 
-    constexpr const auto NOW_PLAYING_LEN = 40U;
-    constexpr const auto UP_NEXT_LEN = 38U;
+    constexpr const auto NOW_PLAYING_LEN = 78U;
+    constexpr const auto UP_NEXT_LEN = 76U;
 
     enum AcceleratorEntries : size_t
     {
@@ -63,6 +63,10 @@ namespace {
     
     //wxAcceleratorEntry g_accel_entries[2U];
     std::array<wxAcceleratorEntry, NUM_ACCEL_ENTRIES> g_accel_entries;
+
+    // constexpr const auto image_name = L"test.jpg"sv;
+    // constexpr const auto image_name = L"dark-brown-wood-texture-background-with-design-space_53876-160410.jpg"sv;
+    constexpr const auto image_name = L"wood.png"sv;
 }  //  end anonymous namespace
 
 
@@ -96,14 +100,15 @@ PlayerWindow::PlayerWindow() :
     m_next_song_id{0U, false},
     m_song_list(0U, 0U),
     m_song_labels(),
-    m_current_config{0U, 0U},
+    m_current_config(),
     m_playlist_name(),
     m_playlist_changed{false},
     m_selected_control{nullptr},
     m_accel_table(int(NUM_ACCEL_ENTRIES), g_accel_entries.data()),
     m_ui_animation_timer(this, PlayerWindowEvents::UI_ANIMATE_TICK),
     m_up_next_label(next_label, UP_NEXT_LEN),
-    m_playing_label(track_label, NOW_PLAYING_LEN)
+    m_playing_label(track_label, NOW_PLAYING_LEN),
+    m_background(image_name.data())
 {
     for (auto i = 0U; i < m_midi_out.getPortCount(); ++i) {
         m_midi_devices.emplace_back(
@@ -127,6 +132,10 @@ PlayerWindow::PlayerWindow() :
 
     SetAcceleratorTable(m_accel_table);
     m_ui_animation_timer.Start(LabelAnimator::RECOMMENDED_TICK_MS);
+
+    
+    // auto background = new wxBackgroundBitmap(R"(D:\devel\BachBot\x64\Debug\test.jpg)");
+    PushEventHandler(&m_background);
 }
 
 
@@ -194,23 +203,25 @@ void PlayerWindow::on_load_playlist(wxCommandEvent &event)
     }
 
     PlaylistXmlLoader loader(this, open_dialog.GetPath());
+    loader.set_on_success_callback([&](std::list<PlayListEntry> playlist) {
+        clear_playlist_window();
+        if (playlist.size() > 0U) {
+            for (const auto &i: playlist) {
+                add_playlist_entry(i);
+            }
+            layout_scroll_panel();
+        }
+
+        m_playlist_name = open_dialog.GetPath();
+
+    });
+
     if (loader.ShowModal() != wxID_OK) {
         wxMessageBox(fmt::format(L"Error loading playlist:\n"
                                   "Error reported was: {}",
                                  loader.get_error_text().value()));
         return;
     }
-
-    clear_playlist_window();
-    const auto playlist = loader.get_playlist();
-    if (playlist.size() > 0U) {
-        for (const auto &i: playlist) {
-            add_playlist_entry(i);
-        }
-        layout_scroll_panel();
-    }
-
-    m_playlist_name = open_dialog.GetPath();
 }
 
 
@@ -314,7 +325,8 @@ void PlayerWindow::on_about(wxCommandEvent &event)
          "Organs using the Syndyne Console Control system.\n"
          "Written By Andrew Buettner for Zion Lutheran Church and School "
          "Hartland, WI\n"
-         "https://www.github.com/KB3HNS/BachBot", EDITION),
+         "https://www.github.com/KB3HNS/BachBot"
+         "\n\nImage by rawpixel.com on Freepik.com", EDITION),
         wxT("About BachBot"), wxOK | wxICON_INFORMATION);
 }
 
@@ -358,10 +370,7 @@ void PlayerWindow::on_device_changed(const uint32_t device_id)
 
 void PlayerWindow::on_bank_changed(wxThreadEvent &event)
 {
-    const auto current_setting = uint32_t(event.GetInt());
-    const auto bank = current_setting % 8U;
-    const auto mode = current_setting / 8U;
-    m_current_config = std::make_pair(uint8_t(bank), mode);
+    m_current_config = BankConfig(event.GetInt());
     update_config_ui(false);
 }
 
@@ -441,6 +450,34 @@ void PlayerWindow::on_timer_tick(wxTimerEvent &event)
     static_cast<void>(event);
     m_up_next_label.animate_tick();
     m_playing_label.animate_tick();
+    BankConfig next_config;
+    auto box = next_song_box_sizer->GetStaticBox();
+    if (m_player_thread.get() != nullptr) {
+        next_config = m_player_thread->get_desired_config();
+        box->SetLabelText("Desired Config");
+    } else if (m_next_song_id.first > 0U) {
+        const auto &song = m_song_labels.at(m_next_song_id.first);
+        next_config = song->get_starting_registration();
+        box->SetLabelText("Next Song Config");
+    } else {
+        box->SetLabelText("Current / Next Song");
+    }
+
+    next_memory_label->SetLabelText(wxString::Format(wxT("%d"),
+                                                     next_config.memory));
+    next_mode_label->SetLabelText(wxString::Format(wxT("%d"),
+                                                   next_config.mode));
+
+    const auto color = (next_config != m_current_config ?
+                        *wxRED : GetBackgroundColour());
+    if (next_song_panel->GetBackgroundColour() != color) {
+        next_song_panel->SetBackgroundColour(color);
+        next_song_panel->Refresh();
+    }
+
+    for (auto &[song_id, control]: m_song_labels) {
+        control->update_color_state(song_id == m_next_song_id.first);
+    }
 }
 
 
@@ -496,7 +533,9 @@ void PlayerWindow::on_checkbox_event(const uint32_t song_id, const bool checked)
             m_player_thread->enqueue_next_song(control->get_song_events());
         } else {
             m_player_thread->enqueue_next_song({});
-            if (0U != m_next_song_id.first) {
+            if (0U != m_next_song_id.first &&
+                m_current_song_id != m_next_song_id.first)
+            {
                 m_song_labels[m_next_song_id.first]->reset_status();
             }
         }
@@ -566,47 +605,30 @@ void PlayerWindow::on_save_as(wxCommandEvent &event)
 void PlayerWindow::on_drop_midi_file(wxDropFilesEvent &event)
 {
     PlaylistDndLoader loader(this, event, uint32_t(m_song_labels.size()) + 1U);
+    loader.set_on_success_callback([=](std::list<PlayListEntry> playlist) {
+        if (playlist.size() > 0U) {
+            std::for_each(playlist.begin(), playlist.end(),
+                          [=](const PlayListEntry &i) {
+                              add_playlist_entry(i);
+                          });
+            layout_scroll_panel();
+            m_playlist_changed = true;
+        }
+    });
+
     if (loader.ShowModal() != wxID_OK) {
         wxMessageBox(fmt::format(L"Error with import:\n"
                                  "Error reported was: {}",
                                  loader.get_error_text().value()));
         return;
     }
-
-    const auto playlist = loader.get_playlist();
-    if (playlist.size() > 0U) {
-        std::for_each(playlist.begin(), playlist.end(),
-                      [=](const PlayListEntry &i) {
-            add_playlist_entry(i);
-        });
-        layout_scroll_panel();
-        m_playlist_changed = true;
-    }
 }
 
 
-void PlayerWindow::on_bank_up_button_clicked(wxCommandEvent &event)
+void PlayerWindow::on_mode_up_button_clicked(wxCommandEvent &event)
 {
-    if (m_current_config.first < 7U) {
-        ++m_current_config.first;
-    }
-    update_config_ui();
-}
-
-
-void PlayerWindow::on_bank_down_button_clicked(wxCommandEvent & event)
-{
-    if (m_current_config.first > 0U) {
-        --m_current_config.first;
-    }
-    update_config_ui();
-}
-
-
-void PlayerWindow::on_mode_up_button_clicked(wxCommandEvent & event)
-{
-    if (m_current_config.second < 99U) {
-        ++m_current_config.second;
+    if (m_current_config.mode < 8U) {
+        ++m_current_config.mode;
     }
     update_config_ui();
 }
@@ -614,8 +636,44 @@ void PlayerWindow::on_mode_up_button_clicked(wxCommandEvent & event)
 
 void PlayerWindow::on_mode_down_button_clicked(wxCommandEvent & event)
 {
-    if (m_current_config.second > 0U) {
-        --m_current_config.second;
+    if (m_current_config.mode > 1U) {
+        --m_current_config.mode;
+    }
+    update_config_ui();
+}
+
+
+void PlayerWindow::next_buttonOnButtonClick(wxCommandEvent &event)
+{
+    on_manual_advance(event);
+}
+
+
+void PlayerWindow::prev_buttonOnButtonClick(wxCommandEvent &event)
+{
+    on_manual_prev(event);
+}
+
+
+void PlayerWindow::cancel_buttonOnButtonClick(wxCommandEvent &event)
+{
+    on_manual_cancel(event);
+}
+
+
+void PlayerWindow::on_memory_up_button_clicked(wxCommandEvent & event)
+{
+    if (m_current_config.memory < 100U) {
+        ++m_current_config.memory;
+    }
+    update_config_ui();
+}
+
+
+void PlayerWindow::on_memory_down_button_clicked(wxCommandEvent & event)
+{
+    if (m_current_config.memory > 1U) {
+        --m_current_config.memory;
     }
     update_config_ui();
 }
@@ -694,9 +752,9 @@ void PlayerWindow::add_playlist_entry(const PlayListEntry &song)
                                   PlaylistEntryControl *control,
                                   bool selected) {
         if (selected) {
-            for (auto &i: m_song_labels) {
-                if (i.first != song_id) {
-                    i.second->deselect();
+            for (auto &[sid, entry]: m_song_labels) {
+                if (sid != song_id) {
+                    entry->deselect();
                 }
             }
             m_selected_control = control;
@@ -720,11 +778,18 @@ void PlayerWindow::layout_scroll_panel() const
 }
 
 
-void PlayerWindow::set_next_song(const uint32_t song_id, bool priority)
+void PlayerWindow::set_next_song(uint32_t song_id, bool priority)
 {
+    if (0U == song_id) {
+        song_id = m_song_list.first;
+    }
     if (!m_next_song_id.second || priority) {
         if (0U != m_next_song_id.first) {
-            m_song_labels[m_next_song_id.first]->reset_status();
+            auto control = m_song_labels[m_next_song_id.first].get();
+            control->reset_status();
+            if (m_next_song_id.first == m_current_song_id) {
+                control->set_playing();
+            }
         }
         m_next_song_id = std::make_pair(song_id, priority);
         if (0U != song_id) {
@@ -738,7 +803,7 @@ void PlayerWindow::set_next_song(const uint32_t song_id, bool priority)
                 next_song->set_next();
                 m_player_thread->enqueue_next_song(
                     next_song->get_song_events());
-            } else {
+            } else if (song_id != m_current_song_id) {
                 next_song->reset_status();
             }
         } else {
@@ -771,8 +836,8 @@ void PlayerWindow::start_player_thread()
 {
     m_player_thread = std::make_unique<PlayerThread>(this, m_midi_out);
     m_midi_out.openPort(m_current_device_id);
-    m_player_thread->set_bank_config(m_current_config.first, 
-                                     m_current_config.second);
+    m_player_thread->set_bank_config(m_current_config.memory, 
+                                     m_current_config.mode);
 
     if (0U != m_next_song_id.first) {
         auto control = m_song_labels[m_next_song_id.first].get();
@@ -814,35 +879,37 @@ void PlayerWindow::scroll_to_widget(const PlaylistEntryControl *const widget)
 
 void PlayerWindow::update_config_ui(const bool send_update)
 {
-    if (m_current_config.first >= 7U) {
-        m_current_config.first = 7U;
-        static_cast<void>(bank_up_button->Enable(false));
-    } else {
-        static_cast<void>(bank_up_button->Enable());
-    }
-    static_cast<void>(bank_down_button->Enable((0U != m_current_config.first)));
-
-    if (m_current_config.second >= 100U) {
-        m_current_config.second = 100U;
+    if (m_current_config.mode >= 8U) {
+        m_current_config.mode = 8U;
         static_cast<void>(mode_up_button->Enable(false));
     } else {
         static_cast<void>(mode_up_button->Enable());
     }
-    static_cast<void>(mode_down_button->Enable((0U != m_current_config.second)));
+    static_cast<void>(mode_down_button->Enable((m_current_config.mode > 1U)));
 
-    bank_label->SetLabelText(wxString::Format(wxT("%d"),
-                                              m_current_config.first + 1U));
+    if (m_current_config.memory >= 100U) {
+        m_current_config.memory = 100U;
+        static_cast<void>(memory_up_button->Enable(false));
+    } else {
+        static_cast<void>(memory_up_button->Enable());
+    }
+    static_cast<void>(memory_down_button->Enable((m_current_config.memory > 1U)));
+
+    memory_label->SetLabelText(wxString::Format(wxT("%d"),
+                                                m_current_config.memory));
     mode_label->SetLabelText(wxString::Format(wxT("%u"),
-                                              m_current_config.second + 1U));
+                                              m_current_config.mode));
     if ((m_player_thread.get() != nullptr) && send_update) {
-        m_player_thread->set_bank_config(m_current_config.first,
-                                         m_current_config.second);
+        m_player_thread->set_bank_config(m_current_config.memory,
+                                         m_current_config.mode);
     }
 }
 
 
 PlayerWindow::~PlayerWindow()
 {
+    static_cast<void>(PopEventHandler());
+    
     wxCommandEvent e;
     on_stop(e);
     std::for_each(m_midi_devices.begin(), m_midi_devices.end(), 

@@ -66,13 +66,6 @@ protected:
 
 private:
     /**
-     * @brief Parse the playlist tree
-     * @param playlist_root pointer to root node
-     * @throws std::out_of_range on load error
-     */
-    void _parse_playlist(const wxXmlNode *const playlist_root);
-
-    /**
      * @brief Count children (ie songs) in XML tree and sorts them into the
      *        internal vector (sends start event)
      * @param playlist_root root note of playlist

@@ -49,8 +49,8 @@ bool PlayListEntry::import_midi(SyndineImporter *importer)
         importer = local_importer.get();
     }
     tempo_detected = importer->get_tempo();
-    importer->set_bank_config(starting_config.first,
-                              starting_config.second);
+    importer->set_bank_config(starting_config.memory,
+                              starting_config.mode);
 
     if (tempo_requested > 0) {
         importer->adjust_tempo(tempo_requested);
@@ -110,13 +110,13 @@ bool PlayListEntry::load_config(const wxXmlNode *const playlist_node)
         valid = false;
     }
 
-    int start_bank;
+    int start_memory;
     int start_mode;
-    test_int(start_bank, playlist_node->GetAttribute(wxT("start_bank")), 1, 8);
-    test_int(start_mode, playlist_node->GetAttribute(wxT("start_mode")), 1, 100);
+    test_int(start_memory, playlist_node->GetAttribute(wxT("start_memory")),
+                                                       1, 100);
+    test_int(start_mode, playlist_node->GetAttribute(wxT("start_mode")), 1, 8);
     if (valid) {
-        starting_config = std::make_pair(uint8_t(start_bank - 1), 
-                                                    uint32_t(start_mode - 1));
+        starting_config = {uint32_t(start_memory), uint8_t(start_mode)};
     }
 
     test_int(delta_pitch,
@@ -164,9 +164,9 @@ std::optional<wxString> PlayListEntry::load_config(
     }
 
     tempo_requested = dialog.select_tempo->GetValue();
-    starting_config = std::make_pair(
-        uint8_t(dialog.bank_select->GetValue() - 1), 
-        uint32_t(dialog.mode_select->GetValue() - 1));
+    starting_config = {uint32_t(dialog.memory_select->GetValue()),
+                       uint8_t(dialog.mode_select->GetValue())};
+
     delta_pitch = dialog.pitch_change->GetValue();
     play_next = dialog.play_next_checkbox->IsChecked();
 
@@ -186,11 +186,11 @@ void PlayListEntry::save_config(wxXmlNode *const playlist_node) const
         wxT("gap"), wxString::FromDouble(gap_beats));
 
     playlist_node->AddAttribute(
-        wxT("start_bank"),
-        wxString::Format(wxT("%d"), starting_config.first + 1U));
+        wxT("start_memory"),
+        wxString::Format(wxT("%d"), starting_config.memory));
     playlist_node->AddAttribute(
         wxT("start_mode"),
-        wxString::Format(wxT("%d"), starting_config.second + 1U));
+        wxString::Format(wxT("%d"), starting_config.mode));
 
     playlist_node->AddAttribute(
         wxT("pitch"),
@@ -225,10 +225,8 @@ void PlayListEntry::populate_dialog(ui::LoadMidiDialog &dialog) const
 
     dialog.initial_gap_text_box->SetValue(
         wxString::FromDouble(gap_beats));
-    dialog.bank_select->SetValue(
-        int(starting_config.first) + 1);
-    dialog.mode_select->SetValue(
-        int(starting_config.second) + 1);
+    dialog.memory_select->SetValue(int(starting_config.memory));
+    dialog.mode_select->SetValue(int(starting_config.mode));
     dialog.pitch_change->SetValue(delta_pitch);
     dialog.extend_ending_textbox->SetValue(
         wxString::FromDouble(last_note_multiplier));

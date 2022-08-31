@@ -35,10 +35,10 @@
 //  system includes
 #include <cstdint>  //  uint32_t, uintptr_t, etc
 #include <deque>  //  std::deque
+#include <atomic>  //  std::atomic
 #include <utility>  //  std::pair
 #include <RtMidi.h>  //  RtMidiOut
 #include <wx/wx.h>  //  wxCondition, wxThread, etc
-#include <wx/power.h>  //  wxPowerResourceBlocker
 #include <RtMidi.h>  //  RtMidiOut
 
 //  module includes
@@ -58,6 +58,8 @@ namespace bach_bot {
 void send_bank_change_message(RtMidiOut &midi_out, 
                               const SyndyneBankCommands value);
 
+//  Forward declare this to prevent a circular dependency:
+class RTTimer;
 
 /**
  * @brief wxThread representing the real-time midi player
@@ -129,14 +131,24 @@ public:
      * @param song_events song events
      */
     void enqueue_next_song(std::deque<OrganMidiEvent> song_events);
+
+    BankConfig get_desired_config() const;
     
     /**
      * @brief Set the current state of the organ bank externally.
-     * @param current_bank current bank (1-8)
-     * @param current_mode current piston mode (1-100)
+     * @param current_memory current bank (1-100)
+     * @param current_mode current general piston mode (1-8)
      */
-    void set_bank_config(const uint8_t current_bank, 
-                         const uint32_t current_mode);
+    void set_bank_config(const uint32_t current_memory, 
+                         const uint8_t current_mode);
+
+    /**
+     * @brief Callback to post timer tick events.
+     */
+    void post_tick()
+    {
+        post_message(MessageId::TICK_MESSAGE);
+    }
 
     virtual ~PlayerThread() override;
 
@@ -152,14 +164,6 @@ private:
      */
     bool run_song();
     
-    /**
-     * @brief Callback to post timer tick events.
-     */
-    void post_tick()
-    {
-        post_message(MessageId::TICK_MESSAGE);
-    }
-
     /**
      * @brief General message posting API
      * @param msg_id Message to be posted
@@ -217,7 +221,7 @@ private:
      * *Items protected by the shared mutex:*
      * 1. `m_event_queue`
      * 1. `m_precache`
-     * 1. `m_bank_number`/`m_mode_number`
+     * 1. `m_memory_number`/`m_mode_number`
      */
     wxMutex m_mutex;
 
@@ -231,14 +235,16 @@ private:
 
     /**
      *  @brief Value of the current bank registration number that the organ
-     *         _should_ be at.  Range 1-8 (reported as 0-7)
+     *         _should_ be at.  Range 1-100
      */
-    uint8_t m_bank_number;
+    uint32_t m_memory_number;
     
     /**
-     * @brief Value of the piston mode that organ _should_ be at.  Range 1-100.
+     * @brief Value of the general piston mode that organ _should_ be at.  
+     *        Range 1-8 (with caveat).
+     * @sa `BankConfig`
      */
-    uint32_t m_mode_number;
+    uint8_t m_mode_number;
 
     BankConfig m_desired_config;  ///< The most recent desired bank/mode
 
@@ -253,9 +259,20 @@ private:
 
     wxStopWatch m_current_time;  ///<  Current time and event time measurement.
     wxStopWatch m_bank_change_delay;  ///<  Holdoff delay between bank changes.
-    wxPowerResourceBlocker m_power_control;  ///<  Prevent low power mode
-    wxPowerResourceBlocker m_screen_control;  ///<  Prevent screen blanking
     MessageId m_last_message;  ///< The most recently processed message
+    
+    /**
+     * @brief Flag: don't start processing notes on first run until either the
+     *        player state matches the desired state, or a force-advance event
+     *        comes in.
+     */
+    bool m_first_match;
+    
+    /** 
+     * @briefCopy of current "desired config" that can be read easily by the UI
+     * thread.
+     */
+    std::atomic<int> m_desired_config_shared;
 };
 
 }  //  end bach_bot

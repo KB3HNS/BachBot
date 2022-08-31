@@ -82,11 +82,11 @@ public:
 
     /**
      * @brief Set the starting registration bank and piston position
-     * @param initial_bank registration bank that song starts on
-     * @param initial_mode desired piston mode to begin song
+     * @param initial_memory number that song starts on
+     * @param initial_mode desired general piston mode to begin song
      */
-    void set_bank_config(const uint8_t initial_bank, 
-                         const uint32_t initial_mode);
+    void set_bank_config(const uint32_t initial_memory, 
+                         const uint8_t initial_mode);
 
     /**
      * @brief Adjust song up or down `offset_steps` half-steps

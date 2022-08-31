@@ -1,26 +1,26 @@
 /**
-* @file playlist_loader.cpp
-* @brief Playlist loading
-* @copyright
-* 2022 Andrew Buettner (ABi)
-*
-* @section LICENSE
-*
-* BachBot - A hymn Midi player for Schlicker organs
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-* 
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * @file playlist_loader.cpp
+ * @brief Playlist loading
+ * @copyright
+ * 2022 Andrew Buettner (ABi)
+ *
+ * @section LICENSE
+ *
+ * BachBot - A hymn Midi player for Schlicker organs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 //  system includes
 #include <utility>  //  std::swap
@@ -37,8 +37,10 @@
 
 
 namespace {
-    /** The amount of text normally allowed in the filename label */
-    constexpr const auto NORMAL_WIDTH = 32U;
+/** The amount of text normally allowed in the filename label */
+constexpr const auto NORMAL_WIDTH = 87U;
+
+const wxColor default_color(uint8_t(171), uint8_t(171), uint8_t(171));
 }  //  end anonymous namespace
 
 namespace bach_bot {
@@ -72,7 +74,12 @@ PlaylistEntryControl::PlaylistEntryControl(wxWindow *const parent,
     m_panel_size{GetSize()},
     m_text_width{NORMAL_WIDTH},
     m_pix_per_char{calculate_pix_per_char(song_label)},
-    m_playlist_entry(std::move(song))
+    m_playlist_entry(std::move(song)),
+    m_active_dialog{nullptr},
+    m_colors{parent->GetBackgroundColour(),
+             *wxYELLOW,
+             *wxGREEN,
+             *wxLIGHT_GREY}
 {
     auto_play->SetValue(song.play_next);
     setup_widgets();
@@ -89,7 +96,7 @@ const wxString& PlaylistEntryControl::get_filename() const
 void PlaylistEntryControl::set_next()
 {
     m_up_next = true;
-    m_playing = false;
+    // m_playing = false;
     setup_widgets();
 }
 
@@ -191,9 +198,34 @@ void PlaylistEntryControl::set_sequence(const int prev, const int next)
 }
 
 
+void PlaylistEntryControl::update_color_state(const bool up_next)
+{
+    auto index = (now_playing->GetValue() ?
+                  PlaylistControlState::ENTRY_SELECTED :
+                  PlaylistControlState::ENTRY_NORMAL);
+    if (m_playing) {
+        index = PlaylistControlState::ENTRY_PLAYING;
+    } else if (up_next) {
+        index = PlaylistControlState::ENTRY_NEXT;
+    }
+
+    const auto &color = m_colors[index];
+    if (GetBackgroundColour() != color) {
+        SetBackgroundColour(color);
+        Refresh();
+    }
+}
+
+
 void PlaylistEntryControl::deselect()
 {
     now_playing->SetValue(false);
+}
+
+
+BankConfig PlaylistEntryControl::get_starting_registration() const
+{
+    return m_playlist_entry.starting_config;
 }
 
 
@@ -210,7 +242,10 @@ void PlaylistEntryControl::on_configure_clicked(wxCommandEvent &event)
                          wxOK | wxICON_INFORMATION);
         }
 
-        if (update_dialog.ShowModal() == wxID_CANCEL) {
+        m_active_dialog = &update_dialog;
+        const auto result = update_dialog.ShowModal();
+        m_active_dialog = nullptr;
+        if (wxID_CANCEL == result) {
             return;
         }
 
@@ -262,6 +297,7 @@ void PlaylistEntryControl::on_move_down(wxCommandEvent & event)
 void PlaylistEntryControl::on_radio_selected(wxCommandEvent &event)
 {
     selected_event(m_playlist_entry.song_id, this, now_playing->GetValue());
+    setup_widgets();
 }
 
 
@@ -286,7 +322,12 @@ void PlaylistEntryControl::setup_widgets()
     } else {
         now_playing->SetLabelText(wxT(""));
     }
-    static_cast<void>(configure_button->Enable(!(m_playing || m_up_next)));
+    
+    const auto edit_forbidden = (m_playing || m_up_next);
+    static_cast<void>(configure_button->Enable(!edit_forbidden));
+    if (edit_forbidden && (nullptr != m_active_dialog)) {
+        m_active_dialog->Close();
+    }
 
     set_label_filename(song_label, m_playlist_entry.file_name, width);
 
