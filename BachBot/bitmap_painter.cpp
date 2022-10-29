@@ -43,7 +43,8 @@ BitmapPainter::BitmapPainter(const wxString &filename) :
     const auto &std = wxStandardPaths::Get();
     wxFileName exe_name(std.GetExecutablePath());
     const auto path = exe_name.GetPath() + exe_name.GetPathSeparator();
-    assert(m_bitmap.LoadFile(path + filename, wxBITMAP_TYPE_PNG));
+    const auto loaded = m_bitmap.LoadFile(path + filename, wxBITMAP_TYPE_PNG);
+    assert(loaded);
 }
 
 
