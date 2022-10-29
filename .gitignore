@@ -36,3 +36,6 @@ x64
 Debug
 DebugLib
 attic_code
+build
+.vscode
+Release

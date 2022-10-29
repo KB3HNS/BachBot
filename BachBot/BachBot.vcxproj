@@ -183,12 +183,12 @@
     <ClInclude Include="thread_loader.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\midifile\visual-studio\midifile.vcxproj">
-      <Project>{70028d4b-8e0d-4ff2-bd05-d7ab19b66f30}</Project>
-    </ProjectReference>
+    <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="cpp.hint" />
+    <ProjectReference Include="..\midifile.vcxproj">
+      <Project>{70028d4b-8e0d-4ff2-bd05-d7ab19b66f30}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
