@@ -139,9 +139,16 @@ protected:
     virtual void on_memory_down_button_clicked(wxCommandEvent &event) override final;
     virtual void on_mode_up_button_clicked(wxCommandEvent &event) override final;
     virtual void on_mode_down_button_clicked(wxCommandEvent &event) override final;
-    virtual void next_buttonOnButtonClick(wxCommandEvent& event) override final;
-    virtual void prev_buttonOnButtonClick(wxCommandEvent& event) override final;
-    virtual void cancel_buttonOnButtonClick(wxCommandEvent& event) override final;
+    virtual void next_buttonOnButtonClick(wxCommandEvent &event) override final;
+    virtual void prev_buttonOnButtonClick(wxCommandEvent &event) override final;
+    virtual void cancel_buttonOnButtonClick(wxCommandEvent &event) override final;
+    virtual void on_sync_button_clicked(wxCommandEvent &event) override final;
+    virtual void on_select_multi(wxCommandEvent &event) override final;
+    virtual void on_clear_selection(wxCommandEvent &event) override final;
+    virtual void on_shift_up(wxCommandEvent &event) override final;
+    virtual void on_shift_down(wxCommandEvent &event) override final;
+    virtual void on_group_edit(wxCommandEvent &event) override final;
+    virtual void on_delete_selected(wxCommandEvent &event) override final;
 
 private:
     //  Locally bound UI events
@@ -239,6 +246,19 @@ private:
      */
     void update_config_ui(const bool send_update=true);
 
+    /**
+     * @brief Update the window title with platlist data
+     * @param playlist_changed flag to set if playlist changed or not
+     */
+    void update_window_title(const bool playlist_changed);
+
+    /**
+     * @brief Remove a song from the playlist.
+     * @param widget control representing song to remove.
+     */
+    void remove_song(PlaylistEntryControl *const widget,
+                     const uint32_t song_id);
+
     std::unique_ptr<PlayerThread> m_player_thread;
     std::list<wxMenuItem> m_midi_devices;
     RtMidiOut m_midi_out;
@@ -257,6 +277,7 @@ private:
     LabelAnimator m_up_next_label;
     LabelAnimator m_playing_label;
     BitmapPainter m_background;
+    bool m_sync_config;
 
     wxDECLARE_EVENT_TABLE();
 

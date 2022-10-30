@@ -57,7 +57,7 @@ namespace bach_bot
 				wxPanel* next_song_panel;
 				wxFlexGridSizer* next_song_grid_sizer;
 				wxStaticText* m_staticText3;
-				wxStaticText* m_staticText4;
+				wxButton* sync_button;
 				wxStaticText* m_staticText5;
 				wxStaticText* next_memory_label;
 				wxStaticText* m_staticText7;
@@ -89,6 +89,10 @@ namespace bach_bot
 				wxMenu* m_menu1;
 				wxMenuItem* new_playlist_menu;
 				wxMenuItem* load_playlist_menu;
+				wxMenu* edit_menu;
+				wxMenuItem* select_multi_menu;
+				wxMenuItem* group_edit_menu;
+				wxMenuItem* delete_multi_menu;
 				wxMenu* device_select;
 				wxMenu* m_menu4;
 				wxMenu* m_menu2;
@@ -101,6 +105,7 @@ namespace bach_bot
 				virtual void next_buttonOnButtonClick( wxCommandEvent& event ) { event.Skip(); }
 				virtual void prev_buttonOnButtonClick( wxCommandEvent& event ) { event.Skip(); }
 				virtual void cancel_buttonOnButtonClick( wxCommandEvent& event ) { event.Skip(); }
+				virtual void on_sync_button_clicked( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_bank_change_next( wxMouseEvent& event ) { event.Skip(); }
 				virtual void on_bank_change_prev( wxMouseEvent& event ) { event.Skip(); }
 				virtual void on_memory_up_button_clicked( wxCommandEvent& event ) { event.Skip(); }
@@ -115,6 +120,12 @@ namespace bach_bot
 				virtual void on_save_as( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_open_midi( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_quit( wxCommandEvent& event ) { event.Skip(); }
+				virtual void on_select_multi( wxCommandEvent& event ) { event.Skip(); }
+				virtual void on_clear_selection( wxCommandEvent& event ) { event.Skip(); }
+				virtual void on_shift_up( wxCommandEvent& event ) { event.Skip(); }
+				virtual void on_shift_down( wxCommandEvent& event ) { event.Skip(); }
+				virtual void on_group_edit( wxCommandEvent& event ) { event.Skip(); }
+				virtual void on_delete_selected( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_manual_advance( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_manual_prev( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_manual_cancel( wxCommandEvent& event ) { event.Skip(); }
@@ -204,6 +215,7 @@ namespace bach_bot
 				wxButton* configure_button;
 				wxCheckBox* auto_play;
 				wxMenu* context_menu;
+				wxMenuItem* delete_entry_menu;
 
 				// Virtual event handlers, override them in your derived class
 				virtual void PlaylistEntryPanelOnSize( wxSizeEvent& event ) { event.Skip(); }
@@ -213,6 +225,7 @@ namespace bach_bot
 				virtual void on_set_next( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_move_up( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_move_down( wxCommandEvent& event ) { event.Skip(); }
+				virtual void on_remove_song( wxCommandEvent& event ) { event.Skip(); }
 
 
 			public:

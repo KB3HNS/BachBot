@@ -166,9 +166,6 @@ void ThreadLoader::on_filename_event(wxThreadEvent &event)
     const auto string_len = MAX_FILENAME_LEN -
                             progress_label->GetLabelText().Length();
     set_label_filename(filename_label, event.GetString(), string_len);
-    if (progress_bar->GetValue() > 8) {
-        event.GetInt();
-    }
 }
 
 

@@ -62,10 +62,6 @@ void set_label_filename(wxStaticText *const label,
 PlaylistEntryControl::PlaylistEntryControl(wxWindow *const parent,
                                            PlayListEntry song) :
     PlaylistEntryPanel(parent),
-    checkbox_event(dummy_event),
-    move_event(dummy_event),
-    set_next_event(dummy_event),
-    selected_event(dummy_event),
     m_parent{parent},
     m_up_next{false},
     m_playing{false},
@@ -79,11 +75,12 @@ PlaylistEntryControl::PlaylistEntryControl(wxWindow *const parent,
     m_colors{parent->GetBackgroundColour(),
              *wxYELLOW,
              *wxGREEN,
-             *wxLIGHT_GREY}
+             *wxLIGHT_GREY},
+    m_event_handler(dummy_event)
+
 {
     auto_play->SetValue(song.play_next);
     setup_widgets();
-    // SetSize(-1, m_panel_size.y);
 }
 
 
@@ -96,7 +93,6 @@ const wxString& PlaylistEntryControl::get_filename() const
 void PlaylistEntryControl::set_next()
 {
     m_up_next = true;
-    // m_playing = false;
     setup_widgets();
 }
 
@@ -130,6 +126,12 @@ bool PlaylistEntryControl::get_autoplay() const
 }
 
 
+void PlaylistEntryControl::set_callback(CallBack event_handler)
+{
+    m_event_handler = event_handler;
+}
+
+
 void PlaylistEntryControl::swap(PlaylistEntryControl *const other)
 {
     auto update_ui = [](PlaylistEntryControl *const control) {
@@ -149,14 +151,30 @@ void PlaylistEntryControl::swap(PlaylistEntryControl *const other)
 
     if (now_playing->GetValue()) {
         now_playing->SetValue(false);
-        selected_event(m_playlist_entry.song_id, this, false);
+        m_event_handler(PlaylistEntryEventId::ENTRY_SELECTED_EVENT,
+                        m_playlist_entry.song_id,
+                        this,
+                        false);
+
         other->now_playing->SetValue(true);
-        selected_event(other->m_playlist_entry.song_id, other, true);
+        m_event_handler(PlaylistEntryEventId::ENTRY_SELECTED_EVENT,
+                        other->m_playlist_entry.song_id,
+                        other,
+                        true);
     } else if (other->now_playing->GetValue()) {
         other->now_playing->SetValue(false);
-        selected_event(other->m_playlist_entry.song_id, other, false);
+
+
+        m_event_handler(PlaylistEntryEventId::ENTRY_SELECTED_EVENT,
+                        other->m_playlist_entry.song_id,
+                        other,
+                        false);
+
         now_playing->SetValue(true);
-        selected_event(m_playlist_entry.song_id, this, true);
+        m_event_handler(PlaylistEntryEventId::ENTRY_SELECTED_EVENT,
+                        m_playlist_entry.song_id,
+                        this,
+                        true);
     }
 
     std::swap(m_playlist_entry, other->m_playlist_entry);
@@ -254,9 +272,10 @@ void PlaylistEntryControl::on_configure_clicked(wxCommandEvent &event)
 
     if (m_playlist_entry.import_midi()) {
         auto_play->SetValue(m_playlist_entry.play_next);
-        checkbox_event(m_playlist_entry.song_id, 
-                       this, 
-                       m_playlist_entry.play_next);
+        m_event_handler(PlaylistEntryEventId::ENTRY_CHECKBOX_EVENT,
+                        m_playlist_entry.song_id,
+                        this,
+                        m_playlist_entry.play_next);
     }
 }
 
@@ -267,21 +286,30 @@ void PlaylistEntryControl::on_checkbox_checked(wxCommandEvent &event)
     const auto changed = (m_playlist_entry.play_next != checked);
     m_playlist_entry.play_next = checked;
     if (changed) {
-        checkbox_event(m_playlist_entry.song_id, this, checked);
+        m_event_handler(PlaylistEntryEventId::ENTRY_CHECKBOX_EVENT,
+                        m_playlist_entry.song_id,
+                        this,
+                        checked);
     }
 }
 
 
 void PlaylistEntryControl::on_set_next(wxCommandEvent &event)
 {
-    set_next_event(m_playlist_entry.song_id, this, true);
+    m_event_handler(PlaylistEntryEventId::ENTRY_SET_NEXT_EVENT,
+                    m_playlist_entry.song_id,
+                    this,
+                    true);
 }
 
 
 void PlaylistEntryControl::on_move_up(wxCommandEvent & event)
 {
     if (0U != m_prev_song_id) {
-        move_event(m_playlist_entry.song_id, this, true);
+        m_event_handler(PlaylistEntryEventId::ENTRY_MOVED_EVENT,
+                        m_playlist_entry.song_id,
+                        this,
+                        true);
     }
 }
 
@@ -289,15 +317,35 @@ void PlaylistEntryControl::on_move_up(wxCommandEvent & event)
 void PlaylistEntryControl::on_move_down(wxCommandEvent & event)
 {
     if (0U != m_next_song_id) {
-        move_event(m_playlist_entry.song_id, this, false);
+        m_event_handler(PlaylistEntryEventId::ENTRY_MOVED_EVENT,
+                        m_playlist_entry.song_id,
+                        this,
+                        false);
     }
 }
 
 
 void PlaylistEntryControl::on_radio_selected(wxCommandEvent &event)
 {
-    selected_event(m_playlist_entry.song_id, this, now_playing->GetValue());
+    m_event_handler(PlaylistEntryEventId::ENTRY_SELECTED_EVENT,
+                    m_playlist_entry.song_id,
+                    this,
+                    now_playing->GetValue());
     setup_widgets();
+}
+
+
+void PlaylistEntryControl::on_remove_song(wxCommandEvent &event)
+{
+    static_cast<void>(event);
+    CallAfter([=]() {
+        if (!m_playing) {
+            m_event_handler(PlaylistEntryEventId::ENTRY_DELETED_EVENT,
+                            m_playlist_entry.song_id,
+                            this,
+                            false);
+        }
+    });
 }
 
 
@@ -316,6 +364,7 @@ void PlaylistEntryControl::PlaylistEntryPanelOnSize(wxSizeEvent &event)
 void PlaylistEntryControl::setup_widgets()
 {
     auto width = m_text_width;
+    delete_entry_menu->Enable(!m_playing);
     if (m_playing) {
         now_playing->SetLabelText(wxT("==>"));
         width -= 6U;
@@ -335,12 +384,13 @@ void PlaylistEntryControl::setup_widgets()
 }
 
 
-void PlaylistEntryControl::dummy_event(uint32_t song_id, 
+void PlaylistEntryControl::dummy_event(const PlaylistEntryEventId reason,
+                                       uint32_t song_id, 
                                        PlaylistEntryControl*,
                                        bool value)
 {
-    wxMessageBox(fmt::format(L"PlayerWindow::unhandled_dummy_event {} value: {}",
-                             song_id, int(value)),
+    wxMessageBox(fmt::format(L"PlayerWindow::unhandled_dummy_event {} value: {} me={}",
+                             int(reason), int(value), song_id),
                  wxT("Debug"),
                  wxOK | wxICON_INFORMATION);
 }

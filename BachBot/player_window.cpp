@@ -46,7 +46,7 @@
 
 namespace {
     using namespace std::literals::string_view_literals;
-    constexpr const auto EDITION = L"Pentecost"sv;
+    constexpr const auto EDITION = L"Reformation"sv;
 
     constexpr const auto NOW_PLAYING_LEN = 78U;
     constexpr const auto UP_NEXT_LEN = 76U;
@@ -61,12 +61,11 @@ namespace {
         NUM_ACCEL_ENTRIES
     };
     
-    //wxAcceleratorEntry g_accel_entries[2U];
     std::array<wxAcceleratorEntry, NUM_ACCEL_ENTRIES> g_accel_entries;
 
-    // constexpr const auto image_name = L"test.jpg"sv;
-    // constexpr const auto image_name = L"dark-brown-wood-texture-background-with-design-space_53876-160410.jpg"sv;
     constexpr const auto image_name = L"wood.png"sv;
+
+    std::optional<wxString> s_window_title;
 }  //  end anonymous namespace
 
 
@@ -108,7 +107,8 @@ PlayerWindow::PlayerWindow() :
     m_ui_animation_timer(this, PlayerWindowEvents::UI_ANIMATE_TICK),
     m_up_next_label(next_label, UP_NEXT_LEN),
     m_playing_label(track_label, NOW_PLAYING_LEN),
-    m_background(image_name.data())
+    m_background(image_name.data()),
+    m_sync_config{false}
 {
     for (auto i = 0U; i < m_midi_out.getPortCount(); ++i) {
         m_midi_devices.emplace_back(
@@ -173,7 +173,9 @@ void PlayerWindow::on_new_playlist(wxCommandEvent &event)
         }
     }
 
+    m_playlist_name.reset();
     clear_playlist_window();
+    update_window_title(false);
 }
 
 
@@ -213,7 +215,7 @@ void PlayerWindow::on_load_playlist(wxCommandEvent &event)
         }
 
         m_playlist_name = open_dialog.GetPath();
-
+        update_window_title(false);
     });
 
     if (loader.ShowModal() != wxID_OK) {
@@ -252,7 +254,7 @@ void PlayerWindow::on_save_playlist(wxCommandEvent &event)
         }
 
         playlist_doc.Save(m_playlist_name.value());
-        m_playlist_changed = false;
+        update_window_title(false);
     }
 }
 
@@ -305,7 +307,7 @@ void PlayerWindow::on_open_midi(wxCommandEvent &event)
     add_playlist_entry(song_entry);
     layout_scroll_panel();
     m_song_list.second = song_entry.song_id;
-    m_playlist_changed = true;
+    update_window_title(true);
 }
 
 
@@ -478,6 +480,12 @@ void PlayerWindow::on_timer_tick(wxTimerEvent &event)
     for (auto &[song_id, control]: m_song_labels) {
         control->update_color_state(song_id == m_next_song_id.first);
     }
+
+    if (m_sync_config) {
+        m_current_config = next_config;
+        update_config_ui();
+        m_sync_config = false;
+    }
 }
 
 
@@ -520,7 +528,7 @@ void PlayerWindow::on_move_event(const uint32_t song_id,
         }
     }
 
-    m_playlist_changed = true;
+    update_window_title(true);
 }
 
 
@@ -541,7 +549,7 @@ void PlayerWindow::on_checkbox_event(const uint32_t song_id, const bool checked)
         }
     }
 
-    m_playlist_changed = true;
+    update_window_title(true);
 }
 
 
@@ -612,7 +620,7 @@ void PlayerWindow::on_drop_midi_file(wxDropFilesEvent &event)
                               add_playlist_entry(i);
                           });
             layout_scroll_panel();
-            m_playlist_changed = true;
+            update_window_title(true);
         }
     });
 
@@ -661,7 +669,44 @@ void PlayerWindow::cancel_buttonOnButtonClick(wxCommandEvent &event)
 }
 
 
-void PlayerWindow::on_memory_up_button_clicked(wxCommandEvent & event)
+void PlayerWindow::on_sync_button_clicked(wxCommandEvent &event)
+{
+    static_cast<void>(event);
+    m_sync_config = true;
+}
+
+
+void PlayerWindow::on_select_multi(wxCommandEvent &event)
+{
+}
+
+
+void PlayerWindow::on_clear_selection(wxCommandEvent & event)
+{
+}
+
+
+void PlayerWindow::on_shift_up(wxCommandEvent & event)
+{
+}
+
+
+void PlayerWindow::on_shift_down(wxCommandEvent & event)
+{
+}
+
+
+void PlayerWindow::on_group_edit(wxCommandEvent & event)
+{
+}
+
+
+void PlayerWindow::on_delete_selected(wxCommandEvent & event)
+{
+}
+
+
+void PlayerWindow::on_memory_up_button_clicked(wxCommandEvent &event)
 {
     if (m_current_config.memory < 100U) {
         ++m_current_config.memory;
@@ -670,7 +715,7 @@ void PlayerWindow::on_memory_up_button_clicked(wxCommandEvent & event)
 }
 
 
-void PlayerWindow::on_memory_down_button_clicked(wxCommandEvent & event)
+void PlayerWindow::on_memory_down_button_clicked(wxCommandEvent &event)
 {
     if (m_current_config.memory > 1U) {
         --m_current_config.memory;
@@ -729,37 +774,40 @@ void PlayerWindow::add_playlist_entry(const PlayListEntry &song)
     p_label->set_sequence(int(m_song_list.second));
     m_song_list.second = song.song_id;
 
-    p_label->move_event = [=](uint32_t song_id,
+    p_label->set_callback([=](const PlaylistEntryEventId reason,
+                              uint32_t song_id,
                               PlaylistEntryControl *control,
-                              bool direction) {
-        on_move_event(song_id, control, direction);
-    };
+                              bool flag) {
+        switch (reason) {
+        case PlaylistEntryEventId::ENTRY_CHECKBOX_EVENT:
+            on_checkbox_event(song_id, flag);
+            break;
 
-    p_label->checkbox_event = [=](uint32_t song_id,
-                                  PlaylistEntryControl*,
-                                  bool checked) {
-        on_checkbox_event(song_id, checked);
-    };
+        case PlaylistEntryEventId::ENTRY_MOVED_EVENT:
+            on_move_event(song_id, control, flag);
+            break;
 
-    p_label->set_next_event = [=](uint32_t song_id,
-                                  PlaylistEntryControl *control,
-                                  bool) {
-        set_next_song(song_id, true);
-        scroll_to_widget(control);
-    };
+        case PlaylistEntryEventId::ENTRY_SET_NEXT_EVENT:
+            set_next_song(song_id, true);
+            scroll_to_widget(control);
+            break;
 
-    p_label->selected_event = [=](uint32_t song_id,
-                                  PlaylistEntryControl *control,
-                                  bool selected) {
-        if (selected) {
-            for (auto &[sid, entry]: m_song_labels) {
-                if (sid != song_id) {
-                    entry->deselect();
+        case PlaylistEntryEventId::ENTRY_SELECTED_EVENT:
+            if (flag) {
+                for (auto &[sid, entry]: m_song_labels) {
+                    if (sid != song_id) {
+                        entry->deselect();
+                    }
                 }
+                m_selected_control = control;
             }
-            m_selected_control = control;
+            break;
+
+        case PlaylistEntryEventId::ENTRY_DELETED_EVENT:
+            remove_song(control, song_id);
+            break;
         }
-    };
+    });
 
     m_song_labels[song.song_id] = std::move(p_label);
 
@@ -903,6 +951,66 @@ void PlayerWindow::update_config_ui(const bool send_update)
         m_player_thread->set_bank_config(m_current_config.memory,
                                          m_current_config.mode);
     }
+}
+
+
+void PlayerWindow::update_window_title(const bool playlist_changed)
+{
+    m_playlist_changed = playlist_changed;
+    if (!s_window_title.has_value()) {
+        s_window_title = GetTitle();
+    }
+
+    const auto &title = s_window_title.value();
+    if (m_playlist_name.has_value()) {
+        const auto change_flag = (m_playlist_changed ? L"*"sv : L""sv);
+        SetTitle(fmt::format(L"{} - {}{}",
+                             title, m_playlist_name.value(),
+                             change_flag));
+    } else {
+        SetTitle(title);
+    }
+}
+
+
+void PlayerWindow::remove_song(PlaylistEntryControl *const widget,
+                               const uint32_t song_id)
+{
+    const auto sequence = widget->get_sequence();
+
+    PlaylistEntryControl *prev_song = nullptr;
+
+    assert(song_id != m_current_song_id);
+    if (sequence.first > 0U) {
+        prev_song = m_song_labels[sequence.first].get();
+        prev_song->set_sequence(-1, int(sequence.second));
+    } else {
+        //  Removing first entry in playlist
+        assert(song_id == m_song_list.first);
+        m_song_list.first = sequence.second;
+    }
+
+    if (sequence.second > 0U) {
+        auto next_song = m_song_labels[sequence.second].get();
+        next_song->set_sequence(int(sequence.first));
+
+        if (nullptr != prev_song) {
+            
+        }
+    } else {
+        //  Removing last entry in playlist
+        assert(song_id == m_song_list.second);
+        m_song_list.second = sequence.first;
+    }
+
+    if (song_id == m_next_song_id.first) {
+        set_next_song(sequence.second, true);
+    }
+
+    playlist_container->Detach(widget);
+    layout_scroll_panel();
+    update_window_title(true);
+    m_song_labels.erase(song_id);
 }
 
 
