@@ -76,8 +76,8 @@ PlaylistEntryControl::PlaylistEntryControl(wxWindow *const parent,
              *wxYELLOW,
              *wxGREEN,
              *wxLIGHT_GREY},
-    m_event_handler(dummy_event)
-
+    m_event_handler(dummy_event),
+    m_currently_selected{false}
 {
     auto_play->SetValue(song.play_next);
     setup_widgets();
@@ -235,15 +235,94 @@ void PlaylistEntryControl::update_color_state(const bool up_next)
 }
 
 
-void PlaylistEntryControl::deselect()
+void PlaylistEntryControl::select(const bool selected)
 {
-    now_playing->SetValue(false);
+    m_currently_selected = selected;
+    if (now_playing->GetValue() != selected) {
+        now_playing->SetValue(selected);
+    }
 }
 
 
 BankConfig PlaylistEntryControl::get_starting_registration() const
 {
     return m_playlist_entry.starting_config;
+}
+
+
+bool PlaylistEntryControl::apply_group_dialog(const GroupEditMidiDialog &dialog)
+{
+    LoadMidiDialog update_dialog(m_parent->GetGrandParent());
+    m_playlist_entry.populate_dialog(update_dialog);
+
+    //  Apply edit dialog
+    if (dialog.tempo_checkbox->IsChecked()) {
+        const auto tempo = update_dialog.select_tempo->GetValue() +
+                           dialog.select_tempo->GetValue();
+
+        if (tempo < update_dialog.select_tempo->GetMin() || 
+                tempo > update_dialog.select_tempo->GetMax()) {
+            wxMessageBox(
+                fmt::format(L"Tempo adjust {} results in a tempo out-of-range {}",
+                            dialog.select_tempo->GetValue(), tempo),
+                wxT("Form Error"),
+                wxOK | wxICON_INFORMATION);
+
+            return false;
+        }
+
+        update_dialog.select_tempo->SetValue(tempo);
+    }
+
+    if (dialog.silence_checkbox->IsChecked()) {
+        update_dialog.initial_gap_text_box->SetValue(
+            dialog.initial_gap_text_box->GetValue());
+    }
+
+    if (dialog.bank_config_checkbox->IsChecked()) {
+        update_dialog.memory_select->SetValue(dialog.memory_select->GetValue());
+        update_dialog.mode_select->SetValue(dialog.mode_select->GetValue());
+    }
+
+    if (dialog.pitch_checkbox->IsChecked()) {
+        update_dialog.pitch_change->SetValue(dialog.pitch_change->GetValue());
+    }
+
+    if (dialog.extend_ending_checkbox->IsChecked()) {
+        update_dialog.extend_ending_textbox->SetValue(
+            dialog.extend_ending_textbox->GetValue());
+    }
+
+    if (dialog.apply_play_next_checkbox->IsChecked()) {
+        update_dialog.play_next_checkbox->SetValue(
+            dialog.play_next_checkbox->IsChecked());
+    }
+
+    auto error_text = m_playlist_entry.load_config(update_dialog);
+    if (error_text.has_value()) {
+        wxMessageBox(error_text.value(), wxT("Form Error"),
+                     wxOK | wxICON_INFORMATION);
+        return false;
+    }
+
+    if (m_playlist_entry.import_midi()) {
+        auto_play->SetValue(m_playlist_entry.play_next);
+        if (dialog.apply_play_next_checkbox->IsChecked()) {
+            m_event_handler(PlaylistEntryEventId::ENTRY_CHECKBOX_EVENT,
+                            m_playlist_entry.song_id,
+                            this,
+                            m_playlist_entry.play_next);
+        }
+    } else {
+        wxMessageBox(
+            fmt::format(L"Failed to import for {}", m_playlist_entry.file_name),
+            wxT("Import Error"),
+            wxOK | wxICON_INFORMATION);
+
+        return false;
+    }
+
+    return true;
 }
 
 
@@ -256,7 +335,7 @@ void PlaylistEntryControl::on_configure_clicked(wxCommandEvent &event)
     auto imported = false;
     do {
         if (error_text.has_value()) {
-            wxMessageBox(error_text.value(), "Form Error",
+            wxMessageBox(error_text.value(), wxT("Form Error"),
                          wxOK | wxICON_INFORMATION);
         }
 
@@ -267,7 +346,6 @@ void PlaylistEntryControl::on_configure_clicked(wxCommandEvent &event)
             return;
         }
 
-        error_text = m_playlist_entry.load_config(update_dialog);
     } while (error_text.has_value());
 
     if (m_playlist_entry.import_midi()) {
@@ -327,10 +405,14 @@ void PlaylistEntryControl::on_move_down(wxCommandEvent & event)
 
 void PlaylistEntryControl::on_radio_selected(wxCommandEvent &event)
 {
-    m_event_handler(PlaylistEntryEventId::ENTRY_SELECTED_EVENT,
-                    m_playlist_entry.song_id,
-                    this,
-                    now_playing->GetValue());
+    const auto selected = now_playing->GetValue();
+    if (selected != m_currently_selected) {
+        m_currently_selected = selected;
+        m_event_handler(PlaylistEntryEventId::ENTRY_SELECTED_EVENT,
+                        m_playlist_entry.song_id,
+                        this,
+                        selected);
+    }
     setup_widgets();
 }
 

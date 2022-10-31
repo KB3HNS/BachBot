@@ -181,17 +181,6 @@ void PlayerWindow::on_new_playlist(wxCommandEvent &event)
 
 void PlayerWindow::on_load_playlist(wxCommandEvent &event)
 {
-    wxFileDialog open_dialog(this, "Open Playlist", "", "", 
-                             "BachBot Playlist|*.bbp", 
-                             wxFD_OPEN | wxFD_FILE_MUST_EXIST);
-
-    [[maybe_unused]] auto s1 = m_staticline1->GetSize();
-    [[maybe_unused]] auto s2 = playlist_label->GetSize();
-
-    if (open_dialog.ShowModal() == wxID_CANCEL) {
-        return;
-    }
-
     if (m_playlist_changed) {
         wxMessageDialog confirm_dialog(
             this,  wxT("Clear current playlist?"), wxT("Confirm clear"),
@@ -202,6 +191,17 @@ void PlayerWindow::on_load_playlist(wxCommandEvent &event)
         } else if (wxYES == response) {
             on_save_playlist(event);
         }
+    }
+
+    wxFileDialog open_dialog(this, "Open Playlist", "", "", 
+                             "BachBot Playlist|*.bbp", 
+                             wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+
+    [[maybe_unused]] auto s1 = m_staticline1->GetSize();
+    [[maybe_unused]] auto s2 = playlist_label->GetSize();
+
+    if (open_dialog.ShowModal() == wxID_CANCEL) {
+        return;
     }
 
     PlaylistXmlLoader loader(this, open_dialog.GetPath());
@@ -414,7 +414,7 @@ void PlayerWindow::on_song_done_playing(wxThreadEvent &event)
 void PlayerWindow::on_accel_down_event(wxCommandEvent &event)
 {
     static_cast<void>(event);
-    if (nullptr != m_selected_control) {
+    if ((nullptr != m_selected_control) && !select_multi_menu->IsChecked()) {
         const auto sequence = m_selected_control->get_sequence();
         if (0U != sequence.second) {
             on_move_event(m_selected_control->get_song_id(),
@@ -424,10 +424,10 @@ void PlayerWindow::on_accel_down_event(wxCommandEvent &event)
 }
 
 
-void PlayerWindow::on_accel_up_event(wxCommandEvent & event)
+void PlayerWindow::on_accel_up_event(wxCommandEvent &event)
 {
     static_cast<void>(event);
-    if (nullptr != m_selected_control) {
+    if (nullptr != m_selected_control && !select_multi_menu->IsChecked()) {
         const auto sequence = m_selected_control->get_sequence();
         if (0U != sequence.first) {
             on_move_event(m_selected_control->get_song_id(),
@@ -440,7 +440,7 @@ void PlayerWindow::on_accel_up_event(wxCommandEvent & event)
 void PlayerWindow::on_accel_play_next_event(wxCommandEvent &event)
 {
     static_cast<void>(event);
-    if (nullptr != m_selected_control) {
+    if (nullptr != m_selected_control && !select_multi_menu->IsChecked()) {
         set_next_song(m_selected_control->get_song_id(), true);
         scroll_to_widget(m_selected_control);
     }
@@ -496,7 +496,7 @@ void PlayerWindow::on_move_event(const uint32_t song_id,
     const auto sequence = control->get_sequence();
     const auto next_song_id = (direction ? sequence.first : sequence.second);
     auto other_control = m_song_labels[next_song_id].get();
-    scroll_to_widget(other_control);
+    // scroll_to_widget(other_control);
     control->swap(other_control);
     std::swap(m_song_labels[song_id], m_song_labels[next_song_id]);
     if (direction) {
@@ -527,8 +527,6 @@ void PlayerWindow::on_move_event(const uint32_t song_id,
             set_next_song(sequence.second);
         }
     }
-
-    update_window_title(true);
 }
 
 
@@ -642,7 +640,7 @@ void PlayerWindow::on_mode_up_button_clicked(wxCommandEvent &event)
 }
 
 
-void PlayerWindow::on_mode_down_button_clicked(wxCommandEvent & event)
+void PlayerWindow::on_mode_down_button_clicked(wxCommandEvent &event)
 {
     if (m_current_config.mode > 1U) {
         --m_current_config.mode;
@@ -678,31 +676,130 @@ void PlayerWindow::on_sync_button_clicked(wxCommandEvent &event)
 
 void PlayerWindow::on_select_multi(wxCommandEvent &event)
 {
+    static_cast<void>(event);
+    if (!select_multi_menu->IsChecked()) {
+        const auto sid = (nullptr != m_selected_control ?
+                          m_selected_control->get_song_id() : 0U);
+        for (auto &[song_id, control] : m_song_labels) {
+            if (sid != song_id) {
+                control->select(false);
+            }
+        }
+    }
 }
 
 
-void PlayerWindow::on_clear_selection(wxCommandEvent & event)
+void PlayerWindow::on_clear_selection(wxCommandEvent &event)
 {
+    static_cast<void>(event);
+    if (select_multi_menu->IsChecked()) {
+        for (auto &[_, control] : m_song_labels) {
+            control->select(false);
+        }
+    } else if (nullptr != m_selected_control) {
+        m_selected_control->select(false);
+    }
+    m_selected_control = nullptr;
 }
 
 
-void PlayerWindow::on_shift_up(wxCommandEvent & event)
+void PlayerWindow::on_shift_up(wxCommandEvent &event)
 {
+    static_cast<void>(event);
+    if (select_multi_menu->IsChecked()) {
+        auto song_id = m_song_list.first;
+        if (m_song_labels[song_id]->is_selected()) {
+            //  Can't continue first selected is at top of playlist
+            return;
+        }
+
+        auto change_made = false;
+        do {
+            auto control = m_song_labels[song_id].get();
+            const auto sequence = control->get_sequence();
+            if (control->is_selected()) {
+                on_move_event(song_id, control, true);  //  Move up
+                change_made = true;
+            }
+            song_id = sequence.second;
+        } while (song_id > 0U);
+
+        if (change_made) {
+            update_window_title(true);
+        }
+    }
 }
 
 
-void PlayerWindow::on_shift_down(wxCommandEvent & event)
+void PlayerWindow::on_shift_down(wxCommandEvent &event)
 {
+    static_cast<void>(event);
+    if (select_multi_menu->IsChecked()) {
+        auto song_id = m_song_list.second;
+        if (m_song_labels[song_id]->is_selected()) {
+            //  Can't continue last selected is at bottom of playlist
+            return;
+        }
+
+        auto change_made = false;
+        do {
+            auto control = m_song_labels[song_id].get();
+            const auto sequence = control->get_sequence();
+            if (control->is_selected()) {
+                on_move_event(song_id, control, false);  //  Move down
+                change_made = true;
+            }
+            song_id = sequence.first;
+        } while (song_id > 0U);
+
+        if (change_made) {
+            update_window_title(true);
+        }
+    }
 }
 
 
-void PlayerWindow::on_group_edit(wxCommandEvent & event)
+void PlayerWindow::on_group_edit(wxCommandEvent &event)
 {
+    if (select_multi_menu->IsChecked()) {
+        static_cast<void>(event);
+        GroupEditMidiDialog dialog(this);
+        const auto result = dialog.ShowModal();
+        if (wxID_CANCEL == result) {
+            return;
+        }
+
+        auto song_id = m_song_list.first;
+        while (song_id > 0U) {
+            auto control = m_song_labels[song_id].get();
+            const auto sequence = control->get_sequence();
+            if (control->is_selected()) {
+                if (control->apply_group_dialog(dialog)) {
+                    break;
+                }
+            }
+        }
+        
+        update_window_title(true);
+    }
 }
 
 
-void PlayerWindow::on_delete_selected(wxCommandEvent & event)
+void PlayerWindow::on_delete_selected(wxCommandEvent &event)
 {
+    static_cast<void>(event);
+    auto song_id = m_song_list.first;
+    m_selected_control = nullptr;
+    while (song_id > 0U) {
+        auto control = m_song_labels[song_id].get();
+        const auto sequence = control->get_sequence();
+        if (control->is_selected()) {
+            control->select(false);
+            remove_song(control, song_id);
+        }
+
+        song_id = sequence.second;
+    }
 }
 
 
@@ -785,6 +882,7 @@ void PlayerWindow::add_playlist_entry(const PlayListEntry &song)
 
         case PlaylistEntryEventId::ENTRY_MOVED_EVENT:
             on_move_event(song_id, control, flag);
+            update_window_title(true);
             break;
 
         case PlaylistEntryEventId::ENTRY_SET_NEXT_EVENT:
@@ -794,12 +892,7 @@ void PlayerWindow::add_playlist_entry(const PlayListEntry &song)
 
         case PlaylistEntryEventId::ENTRY_SELECTED_EVENT:
             if (flag) {
-                for (auto &[sid, entry]: m_song_labels) {
-                    if (sid != song_id) {
-                        entry->deselect();
-                    }
-                }
-                m_selected_control = control;
+                on_control_selected(song_id, control);
             }
             break;
 
@@ -993,10 +1086,6 @@ void PlayerWindow::remove_song(PlaylistEntryControl *const widget,
     if (sequence.second > 0U) {
         auto next_song = m_song_labels[sequence.second].get();
         next_song->set_sequence(int(sequence.first));
-
-        if (nullptr != prev_song) {
-            
-        }
     } else {
         //  Removing last entry in playlist
         assert(song_id == m_song_list.second);
@@ -1007,10 +1096,55 @@ void PlayerWindow::remove_song(PlaylistEntryControl *const widget,
         set_next_song(sequence.second, true);
     }
 
+    if (widget == m_selected_control) {
+        widget->select(false);
+        m_selected_control = nullptr;
+    }
+
     playlist_container->Detach(widget);
     layout_scroll_panel();
     update_window_title(true);
     m_song_labels.erase(song_id);
+}
+
+
+void PlayerWindow::on_control_selected(const uint32_t song_id,
+                                       PlaylistEntryControl *const widget)
+{
+    if (!select_multi_menu->IsChecked()) {
+        for (auto &[sid, entry]: m_song_labels) {
+            if (sid != song_id) {
+                entry->select(false);
+            }
+        }
+    } else if ((nullptr != m_selected_control) &&
+               (widget != m_selected_control) &&
+               wxGetKeyState(WXK_SHIFT)) {
+        auto select = false;
+        const auto range = std::make_pair(
+            m_selected_control->get_song_id(),
+            widget->get_song_id());
+        
+        auto song_id = m_song_list.first;
+        do {
+            auto control = m_song_labels[song_id].get();
+            const auto control_song_id = control->get_song_id();
+            if (control_song_id == range.first || control_song_id == range.second) {
+                if (select) {
+                    //  Reached the end, done
+                    break;
+                }
+                select = true;
+            }
+
+            if (select) {
+                control->select();
+            }
+            const auto sequence = control->get_sequence();
+            song_id = sequence.second;
+        } while (song_id > 0U);
+    }
+    m_selected_control = widget;
 }
 
 

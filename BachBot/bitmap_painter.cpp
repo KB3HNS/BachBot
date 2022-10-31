@@ -26,8 +26,6 @@
 //  system includes
 #include <wx/stdpaths.h>  //  wxStandardPaths::Get
 #include <wx/filename.h>  //  wxFileName
-//  module includes
-// -none-
 
 //  local includes
 #include "bitmap_painter.h"  //  local include
@@ -50,25 +48,22 @@ BitmapPainter::BitmapPainter(const wxString &filename) :
 
 bool BitmapPainter::ProcessEvent(wxEvent &e)
 {
+#ifndef __linux__
     if (e.GetEventType() == wxEVT_ERASE_BACKGROUND) {
         auto &erase_event = dynamic_cast<wxEraseEvent&>(e);
         auto *const dc = erase_event.GetDC();
         wxMemoryDC mdc(m_bitmap);
         dc->StretchBlit(wxPoint(0, 0), dc->GetSize(),
                         &mdc, wxPoint(0, 0), mdc.GetSize(), 
-                        wxCOPY,  true);
+                        wxCOPY, true);
 
-        // const auto size = m_bitmap.GetSize();
-        // const auto dc_size = dc->GetSize();
-        // for (auto x = 0; x < dc_size.x; x += size.x) {
-        //     for (auto y = 0; y < dc_size.y; y += size.y) {
-        //         dc->DrawBitmap(m_bitmap, 0, 0, false);
-        //     }
-        // }
         return true;
     } else {
+#endif // __linux__
         return wxEvtHandler::ProcessEvent(e);
+#ifndef __linux__
     }
+#endif // __linux__
 }
 
 }  //  end ui

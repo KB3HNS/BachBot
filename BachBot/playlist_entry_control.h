@@ -198,11 +198,34 @@ public:
     void update_color_state(const bool up_next);
 
     /**
-     * @brief Unselect the select radio button.
+     * @brief Externally set the selected state without triggering a callback.
+     * @param selected set to selected or not
      */
-    void deselect();
+    void select(const bool selected=true);
 
+    /**
+     * @brief Get the "am I selected" flag
+     * @return control selected flag
+     */
+    bool is_selected() const
+    {
+        return now_playing->GetValue();
+    }
+
+    /**
+     * @brief Get the starting regstration of this entry in the playlist.
+     * @return Starting registration (memory, bank)
+     */
     BankConfig get_starting_registration() const;
+
+    /**
+     * @brief Apply changes from a group dialog box.
+     * @param dialog reference to group edit dialog.
+     * @returns `false` if some sort of import error occurred, `true` otherwise
+     * @note In the event of an import error, a dialow box will pop-up with
+     *       a detail of the failure.
+     */
+    bool apply_group_dialog(const GroupEditMidiDialog& dialog);
 
 protected:
     virtual void on_configure_clicked(wxCommandEvent& event) override final;
@@ -245,7 +268,7 @@ private:
     static const size_t ARRAY_SIZE = PlaylistControlState::SIZE_COLOR_ARRAY;
     const std::array<wxColor, ARRAY_SIZE> m_colors;
     CallBack m_event_handler;
-
+    bool m_currently_selected;
 };
 
 }  //  end ui

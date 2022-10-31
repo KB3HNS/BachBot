@@ -55,15 +55,15 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	wxBoxSizer* bSizer14;
 	bSizer14 = new wxBoxSizer( wxHORIZONTAL );
 
-	next_button = new wxButton( this, wxID_ANY, wxT("Next\nBank"), wxDefaultPosition, wxDefaultSize, 0 );
-	next_button->SetToolTip( wxT("<ALT>+<+>") );
-
-	bSizer14->Add( next_button, 0, wxALL, 5 );
-
 	prev_button = new wxButton( this, wxID_ANY, wxT("Prev\nBank"), wxDefaultPosition, wxDefaultSize, 0 );
-	prev_button->SetToolTip( wxT("<ALT>+<->") );
+	prev_button->SetToolTip( wxT("<ALT>+<+>") );
 
 	bSizer14->Add( prev_button, 0, wxALL, 5 );
+
+	next_button = new wxButton( this, wxID_ANY, wxT("Next\nBank"), wxDefaultPosition, wxDefaultSize, 0 );
+	next_button->SetToolTip( wxT("<ALT>+<->") );
+
+	bSizer14->Add( next_button, 0, wxALL, 5 );
 
 	cancel_button = new wxButton( this, wxID_ANY, wxT("Gen.\nCan"), wxDefaultPosition, wxDefaultSize, 0 );
 	cancel_button->SetToolTip( wxT("<ALT>+<0>") );
@@ -287,7 +287,7 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	m_menubar1->Append( m_menu1, wxT("&File") );
 
 	edit_menu = new wxMenu();
-	select_multi_menu = new wxMenuItem( edit_menu, wxID_ANY, wxString( wxT("Select Multi") ) , wxEmptyString, wxITEM_NORMAL );
+	select_multi_menu = new wxMenuItem( edit_menu, wxID_ANY, wxString( wxT("Select Multi") ) , wxEmptyString, wxITEM_CHECK );
 	edit_menu->Append( select_multi_menu );
 
 	wxMenuItem* m_menuItem16;
@@ -349,8 +349,8 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	this->Connect( wxEVT_DROP_FILES, wxDropFilesEventHandler( MainWindow::on_drop_midi_file ) );
 	play_advance_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_play_advance ), NULL, this );
 	stop_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_stop ), NULL, this );
-	next_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::next_buttonOnButtonClick ), NULL, this );
 	prev_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::prev_buttonOnButtonClick ), NULL, this );
+	next_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::next_buttonOnButtonClick ), NULL, this );
 	cancel_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::cancel_buttonOnButtonClick ), NULL, this );
 	sync_button->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_sync_button_clicked ), NULL, this );
 	next_memory_label->Connect( wxEVT_LEFT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_next ), NULL, this );
@@ -388,8 +388,8 @@ MainWindow::~MainWindow()
 	this->Disconnect( wxEVT_DROP_FILES, wxDropFilesEventHandler( MainWindow::on_drop_midi_file ) );
 	play_advance_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_play_advance ), NULL, this );
 	stop_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_stop ), NULL, this );
-	next_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::next_buttonOnButtonClick ), NULL, this );
 	prev_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::prev_buttonOnButtonClick ), NULL, this );
+	next_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::next_buttonOnButtonClick ), NULL, this );
 	cancel_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::cancel_buttonOnButtonClick ), NULL, this );
 	sync_button->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MainWindow::on_sync_button_clicked ), NULL, this );
 	next_memory_label->Disconnect( wxEVT_LEFT_DCLICK, wxMouseEventHandler( MainWindow::on_bank_change_next ), NULL, this );
@@ -689,4 +689,190 @@ PlaylistEntryPanel::~PlaylistEntryPanel()
 	auto_play->Disconnect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( PlaylistEntryPanel::on_checkbox_checked ), NULL, this );
 
 	delete context_menu;
+}
+
+GroupEditMidiDialog::GroupEditMidiDialog( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxDialog( parent, id, title, pos, size, style )
+{
+	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
+
+	wxFlexGridSizer* fgSizer3;
+	fgSizer3 = new wxFlexGridSizer( 8, 1, 0, 0 );
+	fgSizer3->SetFlexibleDirection( wxBOTH );
+	fgSizer3->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
+
+	fgSizer3->SetMinSize( wxSize( 360,-1 ) );
+	m_staticText1 = new wxStaticText( this, wxID_ANY, wxT("apply"), wxDefaultPosition, wxSize( 380,-1 ), wxALIGN_RIGHT );
+	m_staticText1->Wrap( -1 );
+	m_staticText1->SetFont( wxFont( wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxEmptyString ) );
+
+	fgSizer3->Add( m_staticText1, 0, wxALL, 5 );
+
+	wxBoxSizer* bSizer11;
+	bSizer11 = new wxBoxSizer( wxHORIZONTAL );
+
+	bSizer11->SetMinSize( wxSize( 360,-1 ) );
+	m_staticText10 = new wxStaticText( this, wxID_ANY, wxT("Adjust Tempo"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText10->Wrap( -1 );
+	bSizer11->Add( m_staticText10, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+
+	bSizer11->Add( 0, 0, 1, wxEXPAND, 5 );
+
+	select_tempo = new wxSpinCtrl( this, wxID_ANY, wxT("0"), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, -500, 500, 0 );
+	select_tempo->SetToolTip( wxT("Change playback speed") );
+
+	bSizer11->Add( select_tempo, 0, wxALL, 5 );
+
+	m_staticText14 = new wxStaticText( this, wxID_ANY, wxT("bpm"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText14->Wrap( -1 );
+	bSizer11->Add( m_staticText14, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+	tempo_checkbox = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer11->Add( tempo_checkbox, 0, wxALIGN_CENTER|wxALL, 5 );
+
+
+	fgSizer3->Add( bSizer11, 1, wxEXPAND, 5 );
+
+	wxBoxSizer* bSizer17;
+	bSizer17 = new wxBoxSizer( wxHORIZONTAL );
+
+	initial_gap_label = new wxStaticText( this, wxID_ANY, wxT("Add silence gap before first note"), wxDefaultPosition, wxDefaultSize, 0 );
+	initial_gap_label->Wrap( -1 );
+	initial_gap_label->SetToolTip( wxT("Add a gap of silence of N beats before playing song.") );
+
+	bSizer17->Add( initial_gap_label, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+
+	bSizer17->Add( 0, 0, 1, wxEXPAND, 5 );
+
+	initial_gap_text_box = new wxTextCtrl( this, wxID_ANY, wxT("0.0"), wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer17->Add( initial_gap_text_box, 0, wxALL, 5 );
+
+	m_staticText17 = new wxStaticText( this, wxID_ANY, wxT("beats"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText17->Wrap( -1 );
+	bSizer17->Add( m_staticText17, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+	silence_checkbox = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer17->Add( silence_checkbox, 0, wxALIGN_CENTER|wxALL, 5 );
+
+
+	fgSizer3->Add( bSizer17, 1, wxEXPAND, 5 );
+
+	wxBoxSizer* bSizer19;
+	bSizer19 = new wxBoxSizer( wxHORIZONTAL );
+
+	m_staticText19 = new wxStaticText( this, wxID_ANY, wxT("Set starting registration"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText19->Wrap( -1 );
+	bSizer19->Add( m_staticText19, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+
+	bSizer19->Add( 0, 0, 1, wxEXPAND, 5 );
+
+	memory_select = new wxSpinCtrl( this, wxID_ANY, wxT("1"), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 100, 0 );
+	memory_select->SetToolTip( wxT("Set starting memory number (1-100)") );
+
+	bSizer19->Add( memory_select, 0, wxALL, 5 );
+
+	m_staticText20 = new wxStaticText( this, wxID_ANY, wxT("/"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText20->Wrap( -1 );
+	bSizer19->Add( m_staticText20, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+	mode_select = new wxSpinCtrl( this, wxID_ANY, wxT("1"), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 8, 0 );
+	mode_select->SetToolTip( wxT("Set starting general piston mode number (1-8)") );
+
+	bSizer19->Add( mode_select, 0, wxALL, 5 );
+
+	bank_config_checkbox = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer19->Add( bank_config_checkbox, 0, wxALIGN_CENTER|wxALL, 5 );
+
+
+	fgSizer3->Add( bSizer19, 1, wxEXPAND, 5 );
+
+	wxBoxSizer* bSizer20;
+	bSizer20 = new wxBoxSizer( wxHORIZONTAL );
+
+	m_staticText21 = new wxStaticText( this, wxID_ANY, wxT("Change Pitch"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText21->Wrap( -1 );
+	bSizer20->Add( m_staticText21, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+
+	bSizer20->Add( 0, 0, 1, wxEXPAND, 5 );
+
+	pitch_change = new wxSpinCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, -12, 12, 0 );
+	bSizer20->Add( pitch_change, 0, wxALL, 5 );
+
+	m_staticText22 = new wxStaticText( this, wxID_ANY, wxT("half steps"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText22->Wrap( -1 );
+	bSizer20->Add( m_staticText22, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+	pitch_checkbox = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer20->Add( pitch_checkbox, 0, wxALIGN_CENTER|wxALL, 5 );
+
+
+	fgSizer3->Add( bSizer20, 1, wxEXPAND, 5 );
+
+	wxBoxSizer* bSizer14;
+	bSizer14 = new wxBoxSizer( wxHORIZONTAL );
+
+	extended_ending_label = new wxStaticText( this, wxID_ANY, wxT("Extend last note by"), wxDefaultPosition, wxDefaultSize, 0 );
+	extended_ending_label->Wrap( -1 );
+	extended_ending_label->SetToolTip( wxT("Extends duration of final note by multiplying the length by this number.") );
+
+	bSizer14->Add( extended_ending_label, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+
+	bSizer14->Add( 0, 0, 1, wxEXPAND, 5 );
+
+	m_staticText15 = new wxStaticText( this, wxID_ANY, wxT("X"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText15->Wrap( -1 );
+	bSizer14->Add( m_staticText15, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+	extend_ending_textbox = new wxTextCtrl( this, wxID_ANY, wxT("1.0"), wxDefaultPosition, wxDefaultSize, 0 );
+	extend_ending_textbox->SetToolTip( wxT("Extends duration of final note by multiplying the length by this number.") );
+
+	bSizer14->Add( extend_ending_textbox, 0, wxALL, 5 );
+
+	extend_ending_checkbox = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer14->Add( extend_ending_checkbox, 0, wxALIGN_CENTER|wxALL, 5 );
+
+
+	fgSizer3->Add( bSizer14, 1, wxEXPAND, 5 );
+
+	wxBoxSizer* bSizer18;
+	bSizer18 = new wxBoxSizer( wxHORIZONTAL );
+
+	m_staticText18 = new wxStaticText( this, wxID_ANY, wxT("Continue playing after track?"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText18->Wrap( -1 );
+	bSizer18->Add( m_staticText18, 0, wxALL, 5 );
+
+
+	bSizer18->Add( 0, 0, 1, wxEXPAND, 5 );
+
+	play_next_checkbox = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer18->Add( play_next_checkbox, 0, wxALIGN_CENTER|wxALL, 5 );
+
+	apply_play_next_checkbox = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer18->Add( apply_play_next_checkbox, 0, wxALIGN_CENTER|wxALL, 5 );
+
+
+	fgSizer3->Add( bSizer18, 1, wxBOTTOM|wxEXPAND, 5 );
+
+	m_sdbSizer1 = new wxStdDialogButtonSizer();
+	m_sdbSizer1OK = new wxButton( this, wxID_OK );
+	m_sdbSizer1->AddButton( m_sdbSizer1OK );
+	m_sdbSizer1Cancel = new wxButton( this, wxID_CANCEL );
+	m_sdbSizer1->AddButton( m_sdbSizer1Cancel );
+	m_sdbSizer1->Realize();
+
+	fgSizer3->Add( m_sdbSizer1, 1, wxALIGN_BOTTOM|wxALL|wxEXPAND, 5 );
+
+
+	this->SetSizer( fgSizer3 );
+	this->Layout();
+
+	this->Centre( wxBOTH );
+}
+
+GroupEditMidiDialog::~GroupEditMidiDialog()
+{
 }

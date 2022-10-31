@@ -259,6 +259,14 @@ private:
     void remove_song(PlaylistEntryControl *const widget,
                      const uint32_t song_id);
 
+    /**
+     * @brief Logic to handle when a playlist entry has been selected.
+     * @param song_id song ID of entry
+     * @param widget widget emitting selected
+     */
+    void on_control_selected(const uint32_t song_id,
+                             PlaylistEntryControl *const widget);
+
     std::unique_ptr<PlayerThread> m_player_thread;
     std::list<wxMenuItem> m_midi_devices;
     RtMidiOut m_midi_out;

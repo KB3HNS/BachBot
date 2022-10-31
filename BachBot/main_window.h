@@ -50,8 +50,8 @@ namespace bach_bot
 			protected:
 				wxButton* play_advance_button;
 				wxButton* stop_button;
-				wxButton* next_button;
 				wxButton* prev_button;
+				wxButton* next_button;
 				wxButton* cancel_button;
 				wxStaticBoxSizer* next_song_box_sizer;
 				wxPanel* next_song_panel;
@@ -102,8 +102,8 @@ namespace bach_bot
 				virtual void on_drop_midi_file( wxDropFilesEvent& event ) { event.Skip(); }
 				virtual void on_play_advance( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_stop( wxCommandEvent& event ) { event.Skip(); }
-				virtual void next_buttonOnButtonClick( wxCommandEvent& event ) { event.Skip(); }
 				virtual void prev_buttonOnButtonClick( wxCommandEvent& event ) { event.Skip(); }
+				virtual void next_buttonOnButtonClick( wxCommandEvent& event ) { event.Skip(); }
 				virtual void cancel_buttonOnButtonClick( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_sync_button_clicked( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_bank_change_next( wxMouseEvent& event ) { event.Skip(); }
@@ -238,6 +238,51 @@ namespace bach_bot
 				{
 					this->PopupMenu( context_menu, event.GetPosition() );
 				}
+
+		};
+
+		///////////////////////////////////////////////////////////////////////////////
+		/// Class GroupEditMidiDialog
+		///////////////////////////////////////////////////////////////////////////////
+		class GroupEditMidiDialog : public wxDialog
+		{
+			private:
+
+			protected:
+				wxStaticText* m_staticText1;
+				wxStaticText* m_staticText10;
+				wxStaticText* m_staticText14;
+				wxStaticText* m_staticText17;
+				wxStaticText* m_staticText19;
+				wxStaticText* m_staticText20;
+				wxStaticText* m_staticText21;
+				wxStaticText* m_staticText22;
+				wxStaticText* m_staticText15;
+				wxStaticText* m_staticText18;
+
+			public:
+				wxSpinCtrl* select_tempo;
+				wxCheckBox* tempo_checkbox;
+				wxStaticText* initial_gap_label;
+				wxTextCtrl* initial_gap_text_box;
+				wxCheckBox* silence_checkbox;
+				wxSpinCtrl* memory_select;
+				wxSpinCtrl* mode_select;
+				wxCheckBox* bank_config_checkbox;
+				wxSpinCtrl* pitch_change;
+				wxCheckBox* pitch_checkbox;
+				wxStaticText* extended_ending_label;
+				wxTextCtrl* extend_ending_textbox;
+				wxCheckBox* extend_ending_checkbox;
+				wxCheckBox* play_next_checkbox;
+				wxCheckBox* apply_play_next_checkbox;
+				wxStdDialogButtonSizer* m_sdbSizer1;
+				wxButton* m_sdbSizer1OK;
+				wxButton* m_sdbSizer1Cancel;
+
+				GroupEditMidiDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Group Edit Midi"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 400,286 ), long style = wxDEFAULT_DIALOG_STYLE );
+
+				~GroupEditMidiDialog();
 
 		};
 
