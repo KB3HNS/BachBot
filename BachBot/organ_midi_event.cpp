@@ -198,6 +198,13 @@ void OrganMidiEvent::calculate_delta(const OrganMidiEvent& rhs)
 }
 
 
+void OrganMidiEvent::offset_time(const double seconds, const int ticks)
+{
+    m_seconds -= seconds;
+    m_midi_time -= ticks;
+}
+
+
 OrganMidiEvent::~OrganMidiEvent()
 {
     if (nullptr != m_partner) {
@@ -237,7 +244,15 @@ bool OrganNote::operator< (const OrganNote& rhs) const
     if (nullptr == this_event || nullptr == rhs.get()) {
         throw std::runtime_error("operator< on null instance");
     }
-    return (this_event->m_seconds < rhs->m_seconds);
+
+    const auto time_compare = (this_event->m_seconds < rhs->m_seconds);
+    if (rhs->m_midi_time == this_event->m_midi_time) {
+        if (this_event->is_mode_change_event() == rhs->is_mode_change_event()) {
+            return time_compare;
+        }
+        return rhs->is_mode_change_event();
+    }
+    return time_compare;
 }
 
 

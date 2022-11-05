@@ -235,7 +235,9 @@ void PlayerThread::process_notes()
             break;
         }
 
-        midi_event.send_event(m_midi_out);
+        if (!midi_event.is_mode_change_event()) {
+            midi_event.send_event(m_midi_out);
+        }
         if (m_playing_test_pattern) {
             const BankConfig msg{uint32_t(midi_event.m_byte1.value()),
                                  uint8_t(midi_event.m_event_code & 0x0FU)};

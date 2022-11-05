@@ -774,10 +774,11 @@ void PlayerWindow::on_group_edit(wxCommandEvent &event)
             auto control = m_song_labels[song_id].get();
             const auto sequence = control->get_sequence();
             if (control->is_selected()) {
-                if (control->apply_group_dialog(dialog)) {
+                if (!control->apply_group_dialog(dialog)) {
                     break;
                 }
             }
+            song_id = sequence.second;
         }
         
         update_window_title(true);

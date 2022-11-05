@@ -705,7 +705,7 @@ GroupEditMidiDialog::GroupEditMidiDialog( wxWindow* parent, wxWindowID id, const
 	m_staticText1->Wrap( -1 );
 	m_staticText1->SetFont( wxFont( wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxEmptyString ) );
 
-	fgSizer3->Add( m_staticText1, 0, wxALL, 5 );
+	fgSizer3->Add( m_staticText1, 0, wxALIGN_RIGHT|wxRIGHT, 5 );
 
 	wxBoxSizer* bSizer11;
 	bSizer11 = new wxBoxSizer( wxHORIZONTAL );

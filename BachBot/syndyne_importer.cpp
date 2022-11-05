@@ -369,8 +369,8 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
             current_config = i->get_bank_config();
         } else {
             i->set_bank_config(current_config);
-            m_file_events.push_back(i);
         }
+        m_file_events.push_back(i);
     }
 
     //  5th pass: remove start dead time from song, assign song id
@@ -379,8 +379,7 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
     const auto initial_delay_ticks = last_element->m_midi_time;
     for (auto &i: m_file_events) {
         i->m_song_id = m_song_id;
-        i->m_seconds -= initial_delay_s;
-        i->m_midi_time -= initial_delay_ticks;
+        i->offset_time(initial_delay_s, initial_delay_ticks);
         i->calculate_delta(*last_element);
         last_element = i;
     }

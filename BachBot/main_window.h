@@ -249,7 +249,6 @@ namespace bach_bot
 			private:
 
 			protected:
-				wxStaticText* m_staticText1;
 				wxStaticText* m_staticText10;
 				wxStaticText* m_staticText14;
 				wxStaticText* m_staticText17;
@@ -261,6 +260,7 @@ namespace bach_bot
 				wxStaticText* m_staticText18;
 
 			public:
+				wxStaticText* m_staticText1;
 				wxSpinCtrl* select_tempo;
 				wxCheckBox* tempo_checkbox;
 				wxStaticText* initial_gap_label;
@@ -280,7 +280,7 @@ namespace bach_bot
 				wxButton* m_sdbSizer1OK;
 				wxButton* m_sdbSizer1Cancel;
 
-				GroupEditMidiDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Group Edit Midi"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 400,286 ), long style = wxDEFAULT_DIALOG_STYLE );
+				GroupEditMidiDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Group Edit Midi"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 400,275 ), long style = wxDEFAULT_DIALOG_STYLE );
 
 				~GroupEditMidiDialog();
 

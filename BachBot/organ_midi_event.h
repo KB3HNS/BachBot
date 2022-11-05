@@ -167,6 +167,11 @@ struct OrganMidiEvent
     */
     void calculate_delta(const OrganMidiEvent& rhs);
 
+    /**
+     * @brief Offset (subtract) time from this event
+     * @param seconds time in seconds
+     * @param ticks time in midi ticks
+     */
     void offset_time(const double seconds, const int ticks);
 
     ~OrganMidiEvent();

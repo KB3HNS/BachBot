@@ -30,6 +30,8 @@ mode).
 * The progress bar does not seem to work right during import - this is an issue
 with WxWidgets and the wxGauge control.  It can't be fixed without intentionally
 slowing down the import process and I'm not willing to do that.
+* The "Current / Desired Config" panel "flickers".  This seems to be due to
+label animation / redraw.
 
 ## 0.3.0 "Pentecost"
 
