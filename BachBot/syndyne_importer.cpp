@@ -151,14 +151,14 @@ double generate_test_pattern(const SyndyneKeyboards keyboard,
                              double start_time,
                              std::deque<bach_bot::OrganMidiEvent> &event_queue)
 {
-    for (int8_t i = 1; i <= 127; ++i) {
+    for (int i = 1; i <= 127; ++i) {
         event_queue.emplace_back(bach_bot::MidiCommands::NOTE_ON, keyboard,
-                                 i, int8_t(bach_bot::SYNDYNE_NOTE_ON_VELOCITY));
+                                 int8_t(i), int8_t(bach_bot::SYNDYNE_NOTE_ON_VELOCITY));
         event_queue.back().m_seconds = start_time;
         event_queue.back().m_song_id = 0U;
         start_time += 1.0;
         event_queue.emplace_back(bach_bot::MidiCommands::NOTE_OFF, keyboard,
-                                 i, int8_t(0));
+                                 int8_t(i), int8_t(0));
         event_queue.back().m_seconds = start_time;
         event_queue.back().m_song_id = 0U;
     }
@@ -388,9 +388,9 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
 
 void SyndineImporter::adjust_key(int offset_steps)
 {
-    m_note_offset = uint8_t(std::clamp(offset_steps,
-                                       -MIDI_NOTES_IN_OCTAVE,
-                                       MIDI_NOTES_IN_OCTAVE));
+    m_note_offset = int8_t(std::clamp(offset_steps,
+                                      -MIDI_NOTES_IN_OCTAVE,
+                                      MIDI_NOTES_IN_OCTAVE));
 }
 
 

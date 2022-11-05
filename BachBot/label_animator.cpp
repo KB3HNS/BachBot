@@ -100,7 +100,7 @@ void LabelAnimator::animate_tick()
         auto start = (m_state < 0 ? 0 : m_state);
         auto end = start + max_len;
 
-        if (end < m_label_text.size()) {
+        if (end < int(m_label_text.size())) {
             end_elipsis = trim_elipsis;
         } else {
             start = int(m_label_text.size() - 1U) - max_len;

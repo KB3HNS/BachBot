@@ -441,7 +441,7 @@ void PlaylistEntryControl::PlaylistEntryPanelOnSize(wxSizeEvent &event)
     const auto delta_x = double(new_size.x - m_panel_size.x);
     m_text_width = NORMAL_WIDTH;
     if (delta_x > 0.0) {
-        m_text_width += int(delta_x / m_pix_per_char);
+        m_text_width += uint32_t(delta_x / m_pix_per_char);
     }
     setup_widgets();
 }

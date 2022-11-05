@@ -515,13 +515,15 @@ void PlayerWindow::on_move_event(const uint32_t song_id,
     const auto prev_sequence = control->get_sequence().first;
     const auto next_sequence = other_control->get_sequence().second;
     if (0U != prev_sequence) {
-        m_song_labels[prev_sequence]->set_sequence(-1, control->get_song_id());
+        m_song_labels[prev_sequence]->set_sequence(-1,
+                                                   int(control->get_song_id()));
     } else {
         m_song_list.first = control->get_song_id();
     }
 
     if (0U != next_sequence) {
-        m_song_labels[next_sequence]->set_sequence(other_control->get_song_id());
+        m_song_labels[next_sequence]->set_sequence(
+            int(other_control->get_song_id()));
     } else {
         m_song_list.second = other_control->get_song_id();
     }

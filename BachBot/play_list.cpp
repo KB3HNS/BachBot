@@ -58,7 +58,7 @@ bool PlayListEntry::import_midi(SyndineImporter *importer)
 
     try {
         midi_events = importer->get_events(gap_beats, last_note_multiplier);
-    } catch (std::out_of_range) {
+    } catch (std::out_of_range&) {
         midi_events.clear();
     }
     return (midi_events.size() > 0U);
