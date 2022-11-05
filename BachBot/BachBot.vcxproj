@@ -178,6 +178,7 @@
     <ClInclude Include="playlist_entry_control.h" />
     <ClInclude Include="playlist_loader.h" />
     <ClInclude Include="play_list.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="rt_timer.h" />
     <ClInclude Include="syndyne_importer.h" />
     <ClInclude Include="thread_loader.h" />
@@ -189,6 +190,12 @@
     <ProjectReference Include="..\midifile.vcxproj">
       <Project>{70028d4b-8e0d-4ff2-bd05-d7ab19b66f30}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="BachBot.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\BachBot.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

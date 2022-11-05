@@ -134,9 +134,13 @@ PlayerWindow::PlayerWindow() :
 
 #ifdef _WIN32
     playlist_panel->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
+    wxIcon icon;
+    const auto loaded = load_image(icon, wxBITMAP_TYPE_ICO, "BachBot.ico");
+    assert(loaded);
+    assert(icon.IsOk());
+    SetIcons(icon);
 #endif
 
-    // auto background = new wxBackgroundBitmap(R"(D:\devel\BachBot\x64\Debug\test.jpg)");
     PushEventHandler(&m_background);
 }
 
@@ -263,6 +267,7 @@ void PlayerWindow::on_save_playlist(wxCommandEvent &event)
 
 void PlayerWindow::on_open_midi(wxCommandEvent &event)
 {
+    static_cast<void>(event);
     wxFileDialog open_dialog(this, "Open MIDI File", "", "",
                              "MIDI Files|*.mid",
                              wxFD_OPEN | wxFD_FILE_MUST_EXIST);
@@ -323,6 +328,7 @@ void PlayerWindow::on_quit(wxCommandEvent &event)
 
 void PlayerWindow::on_about(wxCommandEvent &event)
 {
+    static_cast<void>(event);
     wxMessageBox(fmt::format(
         L"BachBot MIDI player for Schlicker Organs \"{}\" edition:\n\n"
          "BachBot is a MIDI player intended Schlicker Pipe Organs or other "
@@ -521,12 +527,12 @@ void PlayerWindow::on_move_event(const uint32_t song_id,
     }
 
     if (0U != m_current_song_id) {
-        const auto sequence = m_song_labels[m_current_song_id]->get_sequence();
-        if ((sequence.second != m_next_song_id.first) && !m_next_song_id.second) {
+        const auto cur_sequence = m_song_labels[m_current_song_id]->get_sequence();
+        if ((cur_sequence.second != m_next_song_id.first) && !m_next_song_id.second) {
             if (0U != m_next_song_id.first) {
                 m_song_labels[m_next_song_id.first]->reset_status();
             }
-            set_next_song(sequence.second);
+            set_next_song(cur_sequence.second);
         }
     }
 }
@@ -635,6 +641,7 @@ void PlayerWindow::on_drop_midi_file(wxDropFilesEvent &event)
 
 void PlayerWindow::on_mode_up_button_clicked(wxCommandEvent &event)
 {
+    static_cast<void>(event);
     if (m_current_config.mode < 8U) {
         ++m_current_config.mode;
     }
@@ -644,6 +651,7 @@ void PlayerWindow::on_mode_up_button_clicked(wxCommandEvent &event)
 
 void PlayerWindow::on_mode_down_button_clicked(wxCommandEvent &event)
 {
+    static_cast<void>(event);
     if (m_current_config.mode > 1U) {
         --m_current_config.mode;
     }
@@ -808,6 +816,7 @@ void PlayerWindow::on_delete_selected(wxCommandEvent &event)
 
 void PlayerWindow::on_memory_up_button_clicked(wxCommandEvent &event)
 {
+    static_cast<void>(event);
     if (m_current_config.memory < 100U) {
         ++m_current_config.memory;
     }
@@ -817,6 +826,7 @@ void PlayerWindow::on_memory_up_button_clicked(wxCommandEvent &event)
 
 void PlayerWindow::on_memory_down_button_clicked(wxCommandEvent &event)
 {
+    static_cast<void>(event);
     if (m_current_config.memory > 1U) {
         --m_current_config.memory;
     }
@@ -1128,9 +1138,9 @@ void PlayerWindow::on_control_selected(const uint32_t song_id,
             m_selected_control->get_song_id(),
             widget->get_song_id());
 
-        auto song_id = m_song_list.first;
+        auto next_song_id = m_song_list.first;
         do {
-            auto control = m_song_labels[song_id].get();
+            auto control = m_song_labels[next_song_id].get();
             const auto control_song_id = control->get_song_id();
             if (control_song_id == range.first || control_song_id == range.second) {
                 if (select) {
@@ -1144,8 +1154,8 @@ void PlayerWindow::on_control_selected(const uint32_t song_id,
                 control->select();
             }
             const auto sequence = control->get_sequence();
-            song_id = sequence.second;
-        } while (song_id > 0U);
+            next_song_id = sequence.second;
+        } while (next_song_id > 0U);
     }
     m_selected_control = widget;
 }

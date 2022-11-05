@@ -5,7 +5,8 @@
 This update was _supposed to_ introduce the first port to Linux.  However, all
 porting efforts have been scratched for now because there are massive
 inconsistencies between the Linux GTK renderer and Windows' native
-implementation to the point that the entire UI is not useable.  
+implementation to the point that the entire UI is not useable without removing
+several effects.  
 Additional changes and improvements from September and October:
 
 * _Minor_ tweaks to the UI, particularly with respect to the current playlist.
@@ -25,7 +26,7 @@ mode).
 * Add support for removing a file from the playlist.
 * Add support for editing multiple files.
 
-### Known issues
+### Known issues (Reformation)
 
 * The progress bar does not seem to work right during import - this is an issue
 with WxWidgets and the wxGauge control.  It can't be fixed without intentionally
@@ -60,7 +61,7 @@ September, October, and possibly early November.
   * **The `Go to mode 0` bug has been identified and fixed!**
   * "Configure" button becomes re-enabled when altering the song selection
 
-### Known issues
+### Known issues (Pentecost)
 
 * Current Accelerator strategy is incompatible with GTK
 * The progress bar does not seem to work right during import

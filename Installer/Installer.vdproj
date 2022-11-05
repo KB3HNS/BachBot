@@ -75,6 +75,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_81F3148BF2E3465CAAC2B4AF834B780F"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_977B8B687C8B4C45B85361979710C143"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -352,6 +358,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_81F3148BF2E3465CAAC2B4AF834B780F"
+            {
+            "SourcePath" = "8:..\\BachBot.ico"
+            "TargetName" = "8:BachBot.ico"
+            "Tag" = "8:"
+            "Folder" = "8:_835A4C9DF9C34F169D1371430949F997"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_977B8B687C8B4C45B85361979710C143"
             {
             "SourcePath" = "8:..\\x64\\Release\\libpng16.dll"
@@ -480,7 +506,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:BachBot"
         "ProductCode" = "8:{8B143991-2034-4FAA-B564-3ADB79566310}"
-        "PackageCode" = "8:{1960A664-2764-4C8E-B1E8-5EDC0724F5E9}"
+        "PackageCode" = "8:{F8E537BD-5D7D-4AB1-A215-9D136861D7AD}"
         "UpgradeCode" = "8:{C0C4ED75-DDEC-4DCA-8465-B26B622DFE3E}"
         "AspNetVersion" = "8:"
         "RestartWWWService" = "11:FALSE"
@@ -497,7 +523,7 @@
         "Keywords" = "8:"
         "ARPCOMMENTS" = "8:Install BachBot"
         "ARPURLINFOABOUT" = "8:www.cletis.net"
-        "ARPPRODUCTICON" = "8:"
+        "ARPPRODUCTICON" = "8:_81F3148BF2E3465CAAC2B4AF834B780F"
         "ARPIconIndex" = "3:0"
         "SearchPath" = "8:"
         "UseSystemSearchPath" = "11:TRUE"
@@ -611,7 +637,7 @@
             "Target" = "8:_EDD781D05DDD4719B228F0C8B54A5909"
             "Folder" = "8:_BA70D24549564D8BA5B3AD2AB018CFE8"
             "WorkingFolder" = "8:_835A4C9DF9C34F169D1371430949F997"
-            "Icon" = "8:"
+            "Icon" = "8:_81F3148BF2E3465CAAC2B4AF834B780F"
             "Feature" = "8:"
             }
             "{970C0BB2-C7D0-45D7-ABFA-7EC378858BC0}:_B98A763521B3489DAE1064BCC7EB2920"
@@ -625,7 +651,7 @@
             "Target" = "8:_EDD781D05DDD4719B228F0C8B54A5909"
             "Folder" = "8:_31D778A6DFAC4879A612F61C996A551E"
             "WorkingFolder" = "8:_835A4C9DF9C34F169D1371430949F997"
-            "Icon" = "8:"
+            "Icon" = "8:_81F3148BF2E3465CAAC2B4AF834B780F"
             "Feature" = "8:"
             }
         }
@@ -1179,7 +1205,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_EDD781D05DDD4719B228F0C8B54A5909"
             {
-            "SourcePath" = "8:..\\x64\\Release\\BachBot.exe"
+            "SourcePath" = "8:..\\x64\\Debug\\BachBot.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_835A4C9DF9C34F169D1371430949F997"

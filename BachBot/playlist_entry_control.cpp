@@ -327,11 +327,11 @@ bool PlaylistEntryControl::apply_group_dialog(const GroupEditMidiDialog &dialog)
 
 void PlaylistEntryControl::on_configure_clicked(wxCommandEvent &event)
 {
+    static_cast<void>(event);
     LoadMidiDialog update_dialog(m_parent->GetGrandParent());
     m_playlist_entry.populate_dialog(update_dialog);
 
     std::optional<wxString> error_text;
-    auto imported = false;
     do {
         if (error_text.has_value()) {
             wxMessageBox(error_text.value(), wxT("Form Error"),
@@ -359,6 +359,7 @@ void PlaylistEntryControl::on_configure_clicked(wxCommandEvent &event)
 
 void PlaylistEntryControl::on_checkbox_checked(wxCommandEvent &event)
 {
+    static_cast<void>(event);
     const auto checked = auto_play->IsChecked();
     const auto changed = (m_playlist_entry.play_next != checked);
     m_playlist_entry.play_next = checked;
@@ -373,6 +374,7 @@ void PlaylistEntryControl::on_checkbox_checked(wxCommandEvent &event)
 
 void PlaylistEntryControl::on_set_next(wxCommandEvent &event)
 {
+    static_cast<void>(event);
     m_event_handler(PlaylistEntryEventId::ENTRY_SET_NEXT_EVENT,
                     m_playlist_entry.song_id,
                     this,
@@ -380,8 +382,9 @@ void PlaylistEntryControl::on_set_next(wxCommandEvent &event)
 }
 
 
-void PlaylistEntryControl::on_move_up(wxCommandEvent & event)
+void PlaylistEntryControl::on_move_up(wxCommandEvent &event)
 {
+    static_cast<void>(event);
     if (0U != m_prev_song_id) {
         m_event_handler(PlaylistEntryEventId::ENTRY_MOVED_EVENT,
                         m_playlist_entry.song_id,
@@ -391,8 +394,9 @@ void PlaylistEntryControl::on_move_up(wxCommandEvent & event)
 }
 
 
-void PlaylistEntryControl::on_move_down(wxCommandEvent & event)
+void PlaylistEntryControl::on_move_down(wxCommandEvent &event)
 {
+    static_cast<void>(event);
     if (0U != m_next_song_id) {
         m_event_handler(PlaylistEntryEventId::ENTRY_MOVED_EVENT,
                         m_playlist_entry.song_id,
@@ -404,6 +408,7 @@ void PlaylistEntryControl::on_move_down(wxCommandEvent & event)
 
 void PlaylistEntryControl::on_radio_selected(wxCommandEvent &event)
 {
+    static_cast<void>(event);
     const auto selected = now_playing->GetValue();
     if (selected != m_currently_selected) {
         m_currently_selected = selected;
