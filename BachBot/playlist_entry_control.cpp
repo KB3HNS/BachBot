@@ -12,7 +12,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -26,7 +26,6 @@
 #include <utility>  //  std::swap
 #include <stdexcept>  //  std::runtime_error
 #include <optional>  //  std::optional
-#include <fmt/xchar.h>  //  fmt::format(L
 #include <fmt/format.h>  //  fmt::format
 
 //  module includes
@@ -260,7 +259,7 @@ bool PlaylistEntryControl::apply_group_dialog(const GroupEditMidiDialog &dialog)
         const auto tempo = update_dialog.select_tempo->GetValue() +
                            dialog.select_tempo->GetValue();
 
-        if (tempo < update_dialog.select_tempo->GetMin() || 
+        if (tempo < update_dialog.select_tempo->GetMin() ||
                 tempo > update_dialog.select_tempo->GetMax()) {
             wxMessageBox(
                 fmt::format(L"Tempo adjust {} results in a tempo out-of-range {}",
@@ -453,7 +452,7 @@ void PlaylistEntryControl::setup_widgets()
     } else {
         now_playing->SetLabelText(wxT(""));
     }
-    
+
     const auto edit_forbidden = (m_playing || m_up_next);
     static_cast<void>(configure_button->Enable(!edit_forbidden));
     if (edit_forbidden && (nullptr != m_active_dialog)) {
@@ -467,7 +466,7 @@ void PlaylistEntryControl::setup_widgets()
 
 
 void PlaylistEntryControl::dummy_event(const PlaylistEntryEventId reason,
-                                       uint32_t song_id, 
+                                       uint32_t song_id,
                                        PlaylistEntryControl*,
                                        bool value)
 {

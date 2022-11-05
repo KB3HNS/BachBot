@@ -211,7 +211,7 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 
 	bSizer2->Add( sbSizer1, 0, wxALL|wxEXPAND, 5 );
 
-	playlist_panel = new wxScrolledWindow( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxALWAYS_SHOW_SB|wxVSCROLL );
+	playlist_panel = new wxScrolledWindow( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL );
 	playlist_panel->SetScrollRate( 5, 5 );
 	playlist_panel->SetMinSize( wxSize( -1,500 ) );
 

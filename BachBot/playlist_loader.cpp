@@ -12,7 +12,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,7 +25,7 @@
 //  system includes
 #include <cstdint>  //  uint32_t
 #include <limits>  //  std::numeric_limits
-#include <fmt/xchar.h>  //  fmt::format(L
+#include <fmt/format.h>  //  fmt::format(L
 
 //  module includes
 // -none-
@@ -72,7 +72,7 @@ void PlaylistXmlLoader::build_playlist_entry(PlayListEntry &song_entry,
 {
     const auto *const child = m_entries[song_number - 1U].second;
     if (!song_entry.load_config(child)) {
-        set_error_text(fmt::format(L"Invalid song data line {}", 
+        set_error_text(fmt::format(L"Invalid song data line {}",
                                    child->GetLineNumber()));
     }
 }
@@ -82,7 +82,7 @@ int PlaylistXmlLoader::_count_children(const wxXmlNode *const playlist_root)
 {
     const auto *child = playlist_root->GetChildren();
     while (nullptr != child) {
-        if (child->GetName() == L"song" && 
+        if (child->GetName() == L"song" &&
                 child->GetType() == wxXML_ELEMENT_NODE)
         {
             const auto &order_text = child->GetAttribute(wxT("order"));

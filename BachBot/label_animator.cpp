@@ -12,7 +12,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,7 +25,7 @@
 
 //  system includes
 #include <string_view>  //  sv
-#include <fmt/xchar.h>  //  fmt::format(L
+#include <fmt/format.h>  //  fmt::format(L
 
 //  module includes
 // -none-
@@ -76,7 +76,7 @@ void LabelAnimator::animate_tick()
         }
         return;
     }
-    
+
     const auto size = m_label->GetContainingSizer()->GetSize();
     const auto config = m_pix_config.value();
     const auto label_width = double(size.x - config.second);

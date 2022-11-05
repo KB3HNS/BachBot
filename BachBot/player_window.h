@@ -35,10 +35,6 @@
 #include <map>  //  std::map
 #include <optional>  //  std::optional
 #include <wx/wx.h>  //  wxLog, wxThread, etc
-#include <RtMidi.h>  //  RtMidiOut
-
-//  module includes
-// -none-
 
 //  local includes
 #include "main_window.h"  //  MainWindow
@@ -48,6 +44,7 @@
 #include "organ_midi_event.h"  //  BankConfig
 #include "label_animator.h"  //  LabelAnimator
 #include "bitmap_painter.h"  //  BitmapPainter
+#include "midi_interface.h"  //  RtMidiOut
 
 
 namespace bach_bot {
@@ -71,7 +68,7 @@ enum PlayerWindowEvents : int
     /**
      * @brief Periodic message sent to UI to refresh screen.
      * @note
-     * "Int" value contains events remaining. 
+     * "Int" value contains events remaining.
      */
     TICK_EVENT = wxID_HIGHEST,
     SONG_START_EVENT,  ///< On start playing song, "Int" is song id.
@@ -119,7 +116,7 @@ public:
     virtual ~PlayerWindow() override;
 
 protected:
-    
+
     // Events defined in the UI builder
     virtual void on_play_advance(wxCommandEvent &event) override final;
     virtual void on_stop(wxCommandEvent &event) override final;

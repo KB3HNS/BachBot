@@ -37,14 +37,13 @@
 #include <deque>  //  std::deque
 #include <atomic>  //  std::atomic
 #include <utility>  //  std::pair
-#include <RtMidi.h>  //  RtMidiOut
 #include <wx/wx.h>  //  wxCondition, wxThread, etc
-#include <RtMidi.h>  //  RtMidiOut
 
 //  module includes
 // -none-
 
 //  local includes
+#include "midi_interface.h"  //  RtMidiOut
 #include "common_defs.h"
 #include "organ_midi_event.h"  //  OrganNote, BankConfig
 
@@ -55,7 +54,7 @@ namespace bach_bot {
  * @param midi_out[in] MIDI output handler
  * @param value message to send
  */
-void send_bank_change_message(RtMidiOut &midi_out, 
+void send_bank_change_message(RtMidiOut &midi_out,
                               const SyndyneBankCommands value);
 
 //  Forward declare this to prevent a circular dependency:
@@ -87,7 +86,7 @@ class PlayerThread : public wxThread
 public:
     /**
      * @brief Constructor
-     * @param frame reference to main window 
+     * @param frame reference to main window
      * @param[in] intf Midi interface to send events to
      */
     PlayerThread(wxFrame *const frame, RtMidiOut &intf);
@@ -118,7 +117,7 @@ public:
 
     /**
      * @brief Play music, upon completion `EXIT_EVENT` will be issued.
-     * @note 
+     * @note
      * Currently there is no check to prevent this from re-triggering.
      * Therefore, external logic should prevent this from being called until
      * after the `EXIT_EVENT` has been issued.
@@ -133,13 +132,13 @@ public:
     void enqueue_next_song(std::deque<OrganMidiEvent> song_events);
 
     BankConfig get_desired_config() const;
-    
+
     /**
      * @brief Set the current state of the organ bank externally.
      * @param current_memory current bank (1-100)
      * @param current_mode current general piston mode (1-8)
      */
-    void set_bank_config(const uint32_t current_memory, 
+    void set_bank_config(const uint32_t current_memory,
                          const uint8_t current_mode);
 
     /**
@@ -163,25 +162,25 @@ private:
      * @retval `false` received stop signal
      */
     bool run_song();
-    
+
     /**
      * @brief General message posting API
      * @param msg_id Message to be posted
      * @param value extra message data - meaning may be message specific.
      */
     void post_message(const MessageId msg_id, const uintptr_t value = 0U);
-    
+
     /**
      * @brief Thread call: Block and wait for a message event
      * @returns next message to process
      */
     Message wait_for_message();
-    
+
     /**
      * @brief Process midi notes continuouly until state >= now.
      */
     void process_notes();
-    
+
     /**
      * @brief Advance logic to reset internal player time to the next event's
      *        time.
@@ -238,9 +237,9 @@ private:
      *         _should_ be at.  Range 1-100
      */
     uint32_t m_memory_number;
-    
+
     /**
-     * @brief Value of the general piston mode that organ _should_ be at.  
+     * @brief Value of the general piston mode that organ _should_ be at.
      *        Range 1-8 (with caveat).
      * @sa `BankConfig`
      */
@@ -250,7 +249,7 @@ private:
 
     wxFrame *const m_frame;  ///<  Pointer to parent window
     RtMidiOut &m_midi_out;  ///<  Reference to MIDI port
-    
+
     /**
      * @brief Thread signal that player pends on.  Set `nullptr_t` if thread is
      *        not waiting (prevents false signals)
@@ -260,15 +259,15 @@ private:
     wxStopWatch m_current_time;  ///<  Current time and event time measurement.
     wxStopWatch m_bank_change_delay;  ///<  Holdoff delay between bank changes.
     MessageId m_last_message;  ///< The most recently processed message
-    
+
     /**
      * @brief Flag: don't start processing notes on first run until either the
      *        player state matches the desired state, or a force-advance event
      *        comes in.
      */
     bool m_first_match;
-    
-    /** 
+
+    /**
      * @briefCopy of current "desired config" that can be read easily by the UI
      * thread.
      */

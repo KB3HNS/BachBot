@@ -36,11 +36,10 @@
 #include <optional>  //  std::optional
 #include <utility>  //  std::pair
 #include <wx/wx.h>  //  wxLongLong
-#include <RtMidi.h>  //  RtMidiOut
 
-#include "MidiEvent.h"  //  smf::MidiEvent
-
+//  local includes
 #include "common_defs.h"  //  SyndyneKeyboards
+#include "midi_interface.h"  //  RtMidiOut, smf::MidiEvent
 
 namespace bach_bot {
 
@@ -57,7 +56,7 @@ namespace bach_bot {
  */
 struct BankConfig
 {
-    constexpr BankConfig(uint32_t mem, uint8_t bank) : 
+    constexpr BankConfig(uint32_t mem, uint8_t bank) :
         memory{mem},
         mode{bank}
     { }
@@ -95,7 +94,7 @@ struct OrganMidiEvent
      * @param midi_event Midi event to take timing and note information from.
      * @param channel Route MIDI event to this keyboard.
      */
-    OrganMidiEvent(const smf::MidiEvent& midi_event, 
+    OrganMidiEvent(const smf::MidiEvent& midi_event,
                    const SyndyneKeyboards channel);
 
     /**
@@ -112,7 +111,7 @@ struct OrganMidiEvent
      * @param byte1 first byte of payload (optional)
      * @param byte2 second byte of payload (optional)
     */
-    OrganMidiEvent(const MidiCommands command, 
+    OrganMidiEvent(const MidiCommands command,
                    const SyndyneKeyboards channel,
                    const int8_t byte1=-1,
                    const int8_t byte2=-1);
@@ -124,42 +123,42 @@ struct OrganMidiEvent
      */
     OrganMidiEvent(const int metadata_value,
                    const OrganMidiEvent *const src = nullptr);
-    
+
     OrganMidiEvent(OrganMidiEvent &&) = default;
-    
+
     /**
      * @brief Send this event to the organ.
      * @param player MIDI device Output reference.
      */
     void send_event(RtMidiOut &player) const;
-    
+
     /**
      * @brief Get the event timing in microseconds.
      * @return Event time relative to the start of song.
      */
     wxLongLong get_us() const;
-    
+
     /**
-     * @brief Set the desired bank configuration that this note should be 
+     * @brief Set the desired bank configuration that this note should be
      *        played at.
      * @param cfg Bank configuration
      */
     void set_bank_config(const BankConfig &cfg);
-    
+
     /**
-     * @brief Get the desired bank configuration that this note should be 
+     * @brief Get the desired bank configuration that this note should be
      *        played at.
      * @return Bank configuration
      */
     BankConfig get_bank_config() const;
-    
+
     /**
      * @brief Test if this event is a bank change event.
      * @retval `true` Event represents a bank change event
      * @retval `false` Event represents a note event
      */
     bool is_mode_change_event() const;
-    
+
     /**
      * @brief Calculate the real time and midi time delta between this event
      *        and another event.  Internal deltas updated.

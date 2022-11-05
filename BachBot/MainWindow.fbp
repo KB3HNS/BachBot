@@ -1989,7 +1989,7 @@
                         <property name="tooltip"></property>
                         <property name="window_extra_style"></property>
                         <property name="window_name"></property>
-                        <property name="window_style">wxALWAYS_SHOW_SB|wxVSCROLL</property>
+                        <property name="window_style">wxVSCROLL</property>
                         <event name="OnKeyDown">on_keydown_event</event>
                         <event name="OnKeyUp">on_keyup_event</event>
                         <object class="wxBoxSizer" expanded="0">

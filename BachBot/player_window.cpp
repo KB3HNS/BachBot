@@ -29,7 +29,6 @@
 #include <string>  //  std::string
 #include <string_view>  //  sv, std::swap
 #include <array>  //  std::array
-#include <fmt/xchar.h>  //  fmt::format(L
 #include <fmt/format.h>  //  fmt::format
 #include <wx/xml/xml.h>  //  wxXml API
 
@@ -60,7 +59,7 @@ namespace {
         PLAY_ACTIVATE_ACCEL,
         NUM_ACCEL_ENTRIES
     };
-    
+
     std::array<wxAcceleratorEntry, NUM_ACCEL_ENTRIES> g_accel_entries;
 
     constexpr const auto image_name = L"wood.png"sv;
@@ -116,7 +115,7 @@ PlayerWindow::PlayerWindow() :
             wxEmptyString, wxITEM_RADIO
         );
         device_select->Append(&m_midi_devices.back());
-        device_select->Bind(wxEVT_COMMAND_MENU_SELECTED, 
+        device_select->Bind(wxEVT_COMMAND_MENU_SELECTED,
                             [=](wxCommandEvent&) { on_device_changed(i); },
                             m_midi_devices.back().GetId());
     }
@@ -133,7 +132,10 @@ PlayerWindow::PlayerWindow() :
     SetAcceleratorTable(m_accel_table);
     m_ui_animation_timer.Start(LabelAnimator::RECOMMENDED_TICK_MS);
 
-    
+#ifdef _WIN32
+    playlist_panel->ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
+#endif
+
     // auto background = new wxBackgroundBitmap(R"(D:\devel\BachBot\x64\Debug\test.jpg)");
     PushEventHandler(&m_background);
 }
@@ -193,8 +195,8 @@ void PlayerWindow::on_load_playlist(wxCommandEvent &event)
         }
     }
 
-    wxFileDialog open_dialog(this, "Open Playlist", "", "", 
-                             "BachBot Playlist|*.bbp", 
+    wxFileDialog open_dialog(this, "Open Playlist", "", "",
+                             "BachBot Playlist|*.bbp",
                              wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
     [[maybe_unused]] auto s1 = m_staticline1->GetSize();
@@ -233,7 +235,7 @@ void PlayerWindow::on_save_playlist(wxCommandEvent &event)
         on_save_as(event);
     } else if (m_playlist_changed) {
         wxXmlDocument playlist_doc;
-        auto playlist_root = new wxXmlNode(nullptr, 
+        auto playlist_root = new wxXmlNode(nullptr,
                                            wxXML_ELEMENT_NODE,
                                            wxT("BachBot_Playlist"));
 
@@ -241,8 +243,8 @@ void PlayerWindow::on_save_playlist(wxCommandEvent &event)
         auto song_id = m_song_list.first;
         auto order = 0U;
         while (song_id > 0U) {
-            auto playlist_entry = new wxXmlNode(playlist_root, 
-                                                wxXML_ELEMENT_NODE, 
+            auto playlist_entry = new wxXmlNode(playlist_root,
+                                                wxXML_ELEMENT_NODE,
                                                 wxT("song"));
 
             const auto *const song = m_song_labels[song_id].get();
@@ -261,8 +263,8 @@ void PlayerWindow::on_save_playlist(wxCommandEvent &event)
 
 void PlayerWindow::on_open_midi(wxCommandEvent &event)
 {
-    wxFileDialog open_dialog(this, "Open MIDI File", "", "", 
-                             "MIDI Files|*.mid", 
+    wxFileDialog open_dialog(this, "Open MIDI File", "", "",
+                             "MIDI Files|*.mid",
                              wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
     if (open_dialog.ShowModal() == wxID_CANCEL) {
@@ -282,7 +284,7 @@ void PlayerWindow::on_open_midi(wxCommandEvent &event)
     }
 
     LoadMidiDialog import_dialog(this);
-    
+
     set_label_filename(import_dialog.file_name_label,
                        open_dialog.GetPath(),
                        PlayListEntry::CFGMIDI_DIALOG_MAX_LEN);
@@ -490,7 +492,7 @@ void PlayerWindow::on_timer_tick(wxTimerEvent &event)
 
 
 void PlayerWindow::on_move_event(const uint32_t song_id,
-                                 PlaylistEntryControl *control, 
+                                 PlaylistEntryControl *control,
                                  const bool direction)
 {
     const auto sequence = control->get_sequence();
@@ -594,8 +596,8 @@ void PlayerWindow::on_close(wxCloseEvent &event)
 
 void PlayerWindow::on_save_as(wxCommandEvent &event)
 {
-    wxFileDialog save_dialog(this, "Save Playlist", "", "", 
-                             "BachBot Playlist|*.bbp", 
+    wxFileDialog save_dialog(this, "Save Playlist", "", "",
+                             "BachBot Playlist|*.bbp",
                              wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 
     if (save_dialog.ShowModal() == wxID_CANCEL) {
@@ -780,7 +782,7 @@ void PlayerWindow::on_group_edit(wxCommandEvent &event)
             }
             song_id = sequence.second;
         }
-        
+
         update_window_title(true);
     }
 }
@@ -866,7 +868,7 @@ void PlayerWindow::add_playlist_entry(const PlayListEntry &song)
         prev_song->set_sequence(-1, int(song.song_id));
     }
 
-    static_cast<void>(playlist_container->Add(p_label.get(), 1, 
+    static_cast<void>(playlist_container->Add(p_label.get(), 1,
                                               wxALL|wxEXPAND, 5));
     header_container->Show(true);
     p_label->set_sequence(int(m_song_list.second));
@@ -938,7 +940,7 @@ void PlayerWindow::set_next_song(uint32_t song_id, bool priority)
             const auto next_song = m_song_labels[song_id].get();
             m_up_next_label.set_label_text(next_song->get_filename());
             const auto cur_song = m_song_labels.find(m_current_song_id);
-            if ((m_song_labels.end() != cur_song) && 
+            if ((m_song_labels.end() != cur_song) &&
                 cur_song->second->get_autoplay() &&
                 (nullptr != m_player_thread.get()))
             {
@@ -978,7 +980,7 @@ void PlayerWindow::start_player_thread()
 {
     m_player_thread = std::make_unique<PlayerThread>(this, m_midi_out);
     m_midi_out.openPort(m_current_device_id);
-    m_player_thread->set_bank_config(m_current_config.memory, 
+    m_player_thread->set_bank_config(m_current_config.memory,
                                      m_current_config.mode);
 
     if (0U != m_next_song_id.first) {
@@ -991,7 +993,7 @@ void PlayerWindow::start_player_thread()
     }
 
     m_player_thread->play();
-    std::for_each(m_midi_devices.begin(), m_midi_devices.end(), 
+    std::for_each(m_midi_devices.begin(), m_midi_devices.end(),
                   [](wxMenuItem &i) { i.Enable(false); });
 
     new_playlist_menu->Enable(false);
@@ -1125,7 +1127,7 @@ void PlayerWindow::on_control_selected(const uint32_t song_id,
         const auto range = std::make_pair(
             m_selected_control->get_song_id(),
             widget->get_song_id());
-        
+
         auto song_id = m_song_list.first;
         do {
             auto control = m_song_labels[song_id].get();
@@ -1152,10 +1154,10 @@ void PlayerWindow::on_control_selected(const uint32_t song_id,
 PlayerWindow::~PlayerWindow()
 {
     static_cast<void>(PopEventHandler());
-    
+
     wxCommandEvent e;
     on_stop(e);
-    std::for_each(m_midi_devices.begin(), m_midi_devices.end(), 
+    std::for_each(m_midi_devices.begin(), m_midi_devices.end(),
                   [=](wxMenuItem &i) { device_select->Remove(&i); });
 
     clear_playlist_window();
@@ -1164,10 +1166,10 @@ PlayerWindow::~PlayerWindow()
 
 wxBEGIN_EVENT_TABLE(PlayerWindow, wxFrame)
     EVT_THREAD(PlayerWindowEvents::TICK_EVENT, PlayerWindow::on_thread_tick)
-    EVT_THREAD(PlayerWindowEvents::SONG_START_EVENT, 
+    EVT_THREAD(PlayerWindowEvents::SONG_START_EVENT,
                PlayerWindow::on_song_starts_playing)
     EVT_THREAD(PlayerWindowEvents::BANK_CHANGE_EVENT, PlayerWindow::on_bank_changed)
-    EVT_THREAD(PlayerWindowEvents::SONG_END_EVENT, 
+    EVT_THREAD(PlayerWindowEvents::SONG_END_EVENT,
                PlayerWindow::on_song_done_playing)
     EVT_THREAD(PlayerWindowEvents::EXIT_EVENT, PlayerWindow::on_thread_exit)
     EVT_MENU(PlayerWindowEvents::MOVE_DOWN_EVENT, PlayerWindow::on_accel_down_event)

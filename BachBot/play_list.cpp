@@ -26,7 +26,6 @@
 //  system includes
 #include <stdexcept>  //  std::out_of_range
 #include <fmt/format.h>  //  fmt::format
-#include <fmt/xchar.h>  //  fmt::format(L
 #include <memory>  //  std::make_unique
 
 //  module includes
@@ -79,7 +78,7 @@ bool PlayListEntry::load_config(const wxXmlNode *const playlist_node)
         }
     };
 
-    auto test_int = [&](int &dest, 
+    auto test_int = [&](int &dest,
                         const wxString &str,
                         const int min,
                         const int max) {
@@ -95,7 +94,7 @@ bool PlayListEntry::load_config(const wxXmlNode *const playlist_node)
 
     file_name = playlist_node->GetNodeContent();
     if (file_name.length() == 0U) {
-        throw std::out_of_range(fmt::format("Invalid filename line {}", 
+        throw std::out_of_range(fmt::format("Invalid filename line {}",
                                             playlist_node->GetLineNumber()));
     }
 
@@ -196,13 +195,13 @@ void PlayListEntry::save_config(wxXmlNode *const playlist_node) const
         wxT("pitch"),
         wxString::Format(wxT("%i"), delta_pitch));
     playlist_node->AddAttribute(
-        wxT("last_note_multiplier"), 
+        wxT("last_note_multiplier"),
         wxString::FromDouble(last_note_multiplier));
     playlist_node->AddAttribute(
         wxT("auto_play_next"),
         wxString::Format(wxT("%i"), int(play_next)));
-    playlist_node->AddChild(new wxXmlNode(wxXML_TEXT_NODE, 
-                                           wxT(""), 
+    playlist_node->AddChild(new wxXmlNode(wxXML_TEXT_NODE,
+                                           wxT(""),
                                            file_name));
 }
 
