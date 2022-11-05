@@ -33,6 +33,8 @@ with WxWidgets and the wxGauge control.  It can't be fixed without intentionally
 slowing down the import process and I'm not willing to do that.
 * The "Current / Desired Config" panel "flickers".  This seems to be due to
 label animation / redraw.
+* The exe uses the default "WxWidgets" icon and not our own.  I will need to
+come up with a 32x32 variant to use for the exe file.
 
 ## 0.3.0 "Pentecost"
 

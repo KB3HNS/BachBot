@@ -53,7 +53,6 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_ICON1               ICON                    "..\BachBot.ico"
-#include "wx/msw/wx.rc"
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
