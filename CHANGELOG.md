@@ -35,6 +35,7 @@ slowing down the import process and I'm not willing to do that.
 label animation / redraw.
 * The exe uses the default "WxWidgets" icon and not our own.  I will need to
 come up with a 32x32 variant to use for the exe file.
+* Local install is still somewhat broken.
 
 ## 0.3.0 "Pentecost"
 
