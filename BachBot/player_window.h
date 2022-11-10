@@ -35,10 +35,6 @@
 #include <map>  //  std::map
 #include <optional>  //  std::optional
 #include <wx/wx.h>  //  wxLog, wxThread, etc
-#include <RtMidi.h>  //  RtMidiOut
-
-//  module includes
-// -none-
 
 //  local includes
 #include "main_window.h"  //  MainWindow
@@ -48,6 +44,7 @@
 #include "organ_midi_event.h"  //  BankConfig
 #include "label_animator.h"  //  LabelAnimator
 #include "bitmap_painter.h"  //  BitmapPainter
+#include "midi_interface.h"  //  RtMidiOut
 
 
 namespace bach_bot {
@@ -71,7 +68,7 @@ enum PlayerWindowEvents : int
     /**
      * @brief Periodic message sent to UI to refresh screen.
      * @note
-     * "Int" value contains events remaining. 
+     * "Int" value contains events remaining.
      */
     TICK_EVENT = wxID_HIGHEST,
     SONG_START_EVENT,  ///< On start playing song, "Int" is song id.
@@ -119,7 +116,7 @@ public:
     virtual ~PlayerWindow() override;
 
 protected:
-    
+
     // Events defined in the UI builder
     virtual void on_play_advance(wxCommandEvent &event) override final;
     virtual void on_stop(wxCommandEvent &event) override final;
@@ -139,9 +136,16 @@ protected:
     virtual void on_memory_down_button_clicked(wxCommandEvent &event) override final;
     virtual void on_mode_up_button_clicked(wxCommandEvent &event) override final;
     virtual void on_mode_down_button_clicked(wxCommandEvent &event) override final;
-    virtual void next_buttonOnButtonClick(wxCommandEvent& event) override final;
-    virtual void prev_buttonOnButtonClick(wxCommandEvent& event) override final;
-    virtual void cancel_buttonOnButtonClick(wxCommandEvent& event) override final;
+    virtual void next_buttonOnButtonClick(wxCommandEvent &event) override final;
+    virtual void prev_buttonOnButtonClick(wxCommandEvent &event) override final;
+    virtual void cancel_buttonOnButtonClick(wxCommandEvent &event) override final;
+    virtual void on_sync_button_clicked(wxCommandEvent &event) override final;
+    virtual void on_select_multi(wxCommandEvent &event) override final;
+    virtual void on_clear_selection(wxCommandEvent &event) override final;
+    virtual void on_shift_up(wxCommandEvent &event) override final;
+    virtual void on_shift_down(wxCommandEvent &event) override final;
+    virtual void on_group_edit(wxCommandEvent &event) override final;
+    virtual void on_delete_selected(wxCommandEvent &event) override final;
 
 private:
     //  Locally bound UI events
@@ -239,6 +243,27 @@ private:
      */
     void update_config_ui(const bool send_update=true);
 
+    /**
+     * @brief Update the window title with platlist data
+     * @param playlist_changed flag to set if playlist changed or not
+     */
+    void update_window_title(const bool playlist_changed);
+
+    /**
+     * @brief Remove a song from the playlist.
+     * @param widget control representing song to remove.
+     */
+    void remove_song(PlaylistEntryControl *const widget,
+                     const uint32_t song_id);
+
+    /**
+     * @brief Logic to handle when a playlist entry has been selected.
+     * @param song_id song ID of entry
+     * @param widget widget emitting selected
+     */
+    void on_control_selected(const uint32_t song_id,
+                             PlaylistEntryControl *const widget);
+
     std::unique_ptr<PlayerThread> m_player_thread;
     std::list<wxMenuItem> m_midi_devices;
     RtMidiOut m_midi_out;
@@ -257,6 +282,7 @@ private:
     LabelAnimator m_up_next_label;
     LabelAnimator m_playing_label;
     BitmapPainter m_background;
+    bool m_sync_config;
 
     wxDECLARE_EVENT_TABLE();
 

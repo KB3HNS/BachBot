@@ -76,8 +76,8 @@ void MidiNoteTracker::add_event(const smf::MidiEvent &ev)
         process_new_note_off_event(organ_event);
     } else if (ev.isNoteOn() && is_same_time(ev, m_midi_ticks_on_time)) {
         ++m_note_nesting_count;
-    } else if (ev.isNoteOff() && 
-               is_same_time(ev, m_last_midi_off_time) && 
+    } else if (ev.isNoteOff() &&
+               is_same_time(ev, m_last_midi_off_time) &&
                (m_note_nesting_count > 0U)) {
         --m_note_nesting_count;
     } else if (ev.isNoteOn() && m_on_now) {
@@ -155,7 +155,7 @@ void MidiNoteTracker::process_new_note_off_event(OrganNote &organ_ev)
     --m_note_nesting_count;
     m_on_now = false;
     m_last_midi_off_time = organ_ev->m_midi_time;
-    organ_ev->m_byte2 = 0U;
+    organ_ev->m_byte2 = uint8_t(0U);
     m_event_list.push_back({m_note_on, m_note_off});
 }
 
@@ -163,7 +163,7 @@ void MidiNoteTracker::process_new_note_off_event(OrganNote &organ_ev)
 void MidiNoteTracker::insert_off_event(OrganNote &organ_ev)
 {
     OrganNote organ_event(*organ_ev);
-    organ_event->m_event_code = make_midi_command_byte(m_keyboard, 
+    organ_event->m_event_code = make_midi_command_byte(m_keyboard,
                                                        MidiCommands::NOTE_OFF);
     process_new_note_off_event(organ_event);
     ++m_note_nesting_count;
@@ -172,8 +172,9 @@ void MidiNoteTracker::insert_off_event(OrganNote &organ_ev)
 
 void MidiNoteTracker::backfill_on_event(OrganNote &organ_ev)
 {
+    static_cast<void>(organ_ev);
     OrganNote organ_event(*m_note_off);
-    organ_event->m_event_code = make_midi_command_byte(m_keyboard, 
+    organ_event->m_event_code = make_midi_command_byte(m_keyboard,
                                                        MidiCommands::NOTE_ON);
     process_new_note_on_event(organ_event);
     --m_note_nesting_count;

@@ -1,5 +1,42 @@
 # Change Log
 
+## 0.4.0 "Reformation"
+
+This update was _supposed to_ introduce the first port to Linux.  However, all
+porting efforts have been scratched for now because there are massive
+inconsistencies between the Linux GTK renderer and Windows' native
+implementation to the point that the entire UI is not useable without removing
+several effects.  
+Additional changes and improvements from September and October:
+
+* _Minor_ tweaks to the UI, particularly with respect to the current playlist.
+* Several bugfixes including:
+  * Playlist has changes flag not cleared on new / loaded playlist.
+  * Playlist name survives a "new playlist" operation.
+  * The memory/bank numbers stop being centered if they are updated after
+  program launch.
+  * Animated labels are 1 character short at the end of the animation.
+* A new "sync" button has been added to the requested config to "fast copy" to
+the current config.  This makes the process of changing memories/banks a little
+quicker.
+* Reworked the `midifile` sub-project so it does not require changing the file
+in the submodule.
+* First pass at making an installer (including verifying the build in "Release"
+mode).
+* Add support for removing a file from the playlist.
+* Add support for editing multiple files.
+
+### Known issues (Reformation)
+
+* The progress bar does not seem to work right during import - this is an issue
+with WxWidgets and the wxGauge control.  It can't be fixed without intentionally
+slowing down the import process and I'm not willing to do that.
+* The "Current / Desired Config" panel "flickers".  This seems to be due to
+label animation / redraw.
+* The exe uses the default "WxWidgets" icon and not our own.  I will need to
+come up with a 32x32 variant to use for the exe file.
+* Local install is still somewhat broken.
+
 ## 0.3.0 "Pentecost"
 
 This represents a set of changes made from my first outing.  The next update
@@ -27,7 +64,7 @@ September, October, and possibly early November.
   * **The `Go to mode 0` bug has been identified and fixed!**
   * "Configure" button becomes re-enabled when altering the song selection
 
-### Known issues
+### Known issues (Pentecost)
 
 * Current Accelerator strategy is incompatible with GTK
 * The progress bar does not seem to work right during import

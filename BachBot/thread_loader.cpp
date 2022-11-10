@@ -12,7 +12,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,7 +23,7 @@
  */
 
 //  system includes
-#include <fmt/xchar.h>  //  fmt::format(L
+#include <fmt/format.h>  //  fmt::format(L
 #include <stdexcept>  //  std::runtime_error
 
 //  module includes
@@ -166,9 +166,6 @@ void ThreadLoader::on_filename_event(wxThreadEvent &event)
     const auto string_len = MAX_FILENAME_LEN -
                             progress_label->GetLabelText().Length();
     set_label_filename(filename_label, event.GetString(), string_len);
-    if (progress_bar->GetValue() > 8) {
-        event.GetInt();
-    }
 }
 
 
@@ -189,7 +186,7 @@ void ThreadLoader::parse_playlist()
         wxQueueEvent(this, file_event.Clone());
 
         if (!song_entry.import_midi()) {
-            set_error_text(fmt::format(L"Unable to import song: {}", 
+            set_error_text(fmt::format(L"Unable to import song: {}",
                                        song_entry.file_name));
         } else {
             m_playlist.push_back(std::move(song_entry));

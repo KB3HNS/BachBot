@@ -22,7 +22,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * @section DESCRIPTION
- * These are the values that define aspects of either the MIDI standard, 
+ * These are the values that define aspects of either the MIDI standard,
  * the Syndyne computer used in the organ console, or the "magic" timing values
  * used for note-deduplication and retriggering.
  */
@@ -78,7 +78,7 @@ constexpr const size_t MIDI_MESSAGE_SIZE = 3U;
 constexpr const auto DEFAULT_NO_TEMPO = 120;
 
 /**
- * @brief Adding or subtracting this from the note yields a note 1 octave up 
+ * @brief Adding or subtracting this from the note yields a note 1 octave up
  *        or down from the current note.
  */
 constexpr const auto MIDI_NOTES_IN_OCTAVE = 12;
@@ -88,7 +88,7 @@ constexpr const auto MIDI_NOTES_IN_OCTAVE = 12;
  * @tparam T Type associated with each keyboard-note combination.
  */
 template <typename T>
-using SyndyneMidiEventTable = std::array<std::array<T, 127U>, 
+using SyndyneMidiEventTable = std::array<std::array<T, 127U>,
                                          NUM_SYNDYNE_KEYBOARDS>;
 
 /**
@@ -112,10 +112,10 @@ enum MidiCommands : uint8_t
  * @param chan MIDI tack/channel (0-15)
  * @param command MIDI command
  */
-constexpr uint8_t make_midi_command_byte(const uint8_t chan, 
+constexpr uint8_t make_midi_command_byte(const uint8_t chan,
                                          const MidiCommands command)
 {
-    return (command << 4U) | (chan & 0x0FU);
+    return uint8_t(command << 4U) | (chan & 0x0FU);
 }
 
 
@@ -152,7 +152,7 @@ constexpr const auto EMPTY_FIRST_META_EVENT = -900;
 
 /** Last duration in a song set by the syndyne importer */
 constexpr const auto LAST_NOTE_META_CODE = -901;
-/** 
+/**
  * @brief Meta code for an event generated that indicates sequence is that of
  *        the test pattern.
  */

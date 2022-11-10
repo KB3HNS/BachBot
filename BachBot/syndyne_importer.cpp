@@ -45,89 +45,89 @@ namespace {
 /** Map of keyboard index to keyboard channel */
 const std::array<SyndyneKeyboards,
                  bach_bot::NUM_SYNDYNE_KEYBOARDS> g_keyboard_indexes = {
-    SyndyneKeyboards::MANUAL1_GREAT, 
-    SyndyneKeyboards::MANUAL2_SWELL, 
+    SyndyneKeyboards::MANUAL1_GREAT,
+    SyndyneKeyboards::MANUAL2_SWELL,
     SyndyneKeyboards::PETAL
 };
 
 /** Map drums to commands */
 const std::pair<uint8_t, SyndyneBankCommands> g_drum_map[] = {
     // Drumkit
-    {36U, SyndyneBankCommands::PREV_BANK},
-    {35U, SyndyneBankCommands::PREV_BANK},
-    {38U, SyndyneBankCommands::PREV_BANK},
-    {40U, SyndyneBankCommands::PREV_BANK},
-    {37U, SyndyneBankCommands::PREV_BANK},
+    {uint8_t(36U), SyndyneBankCommands::PREV_BANK},
+    {uint8_t(35U), SyndyneBankCommands::PREV_BANK},
+    {uint8_t(38U), SyndyneBankCommands::PREV_BANK},
+    {uint8_t(40U), SyndyneBankCommands::PREV_BANK},
+    {uint8_t(37U), SyndyneBankCommands::PREV_BANK},
 
     // Hi-hat
-    {42U, SyndyneBankCommands::GENERAL_CANCEL},
-    {46U, SyndyneBankCommands::GENERAL_CANCEL},
-    {44U, SyndyneBankCommands::GENERAL_CANCEL},
+    {uint8_t(42U), SyndyneBankCommands::GENERAL_CANCEL},
+    {uint8_t(46U), SyndyneBankCommands::GENERAL_CANCEL},
+    {uint8_t(44U), SyndyneBankCommands::GENERAL_CANCEL},
 
     // Cymbal
-    {49U, SyndyneBankCommands::NEXT_BANK},
-    {57U, SyndyneBankCommands::NEXT_BANK},
-    {55U, SyndyneBankCommands::NEXT_BANK},
-    {52U, SyndyneBankCommands::NEXT_BANK},
-    {51U, SyndyneBankCommands::NEXT_BANK},
-    {59U, SyndyneBankCommands::NEXT_BANK},
-    {53U, SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(49U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(57U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(55U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(52U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(51U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(59U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(53U), SyndyneBankCommands::NEXT_BANK},
 
     // Toms
-    {41U, SyndyneBankCommands::PREV_BANK},
-    {43U, SyndyneBankCommands::PREV_BANK},
-    {45U, SyndyneBankCommands::PREV_BANK},
-    {47U, SyndyneBankCommands::PREV_BANK},
-    {48U, SyndyneBankCommands::PREV_BANK},
-    {50U, SyndyneBankCommands::PREV_BANK},
+    {uint8_t(41U), SyndyneBankCommands::PREV_BANK},
+    {uint8_t(43U), SyndyneBankCommands::PREV_BANK},
+    {uint8_t(45U), SyndyneBankCommands::PREV_BANK},
+    {uint8_t(47U), SyndyneBankCommands::PREV_BANK},
+    {uint8_t(48U), SyndyneBankCommands::PREV_BANK},
+    {uint8_t(50U), SyndyneBankCommands::PREV_BANK},
 
     // African
-    {76U, SyndyneBankCommands::GENERAL_CANCEL},
-    {77U, SyndyneBankCommands::GENERAL_CANCEL},
-    {69U, SyndyneBankCommands::GENERAL_CANCEL},
-    {67U, SyndyneBankCommands::GENERAL_CANCEL},
-    {68U, SyndyneBankCommands::GENERAL_CANCEL},
-    {58U, SyndyneBankCommands::GENERAL_CANCEL},
-    {62U, SyndyneBankCommands::GENERAL_CANCEL},
-    {63U, SyndyneBankCommands::GENERAL_CANCEL},
-    {64U, SyndyneBankCommands::GENERAL_CANCEL},
+    {uint8_t(76U), SyndyneBankCommands::GENERAL_CANCEL},
+    {uint8_t(77U), SyndyneBankCommands::GENERAL_CANCEL},
+    {uint8_t(69U), SyndyneBankCommands::GENERAL_CANCEL},
+    {uint8_t(67U), SyndyneBankCommands::GENERAL_CANCEL},
+    {uint8_t(68U), SyndyneBankCommands::GENERAL_CANCEL},
+    {uint8_t(58U), SyndyneBankCommands::GENERAL_CANCEL},
+    {uint8_t(62U), SyndyneBankCommands::GENERAL_CANCEL},
+    {uint8_t(63U), SyndyneBankCommands::GENERAL_CANCEL},
+    {uint8_t(64U), SyndyneBankCommands::GENERAL_CANCEL},
 
     // Latin
-    {73U, SyndyneBankCommands::NEXT_BANK},
-    {74U, SyndyneBankCommands::NEXT_BANK},
-    {75U, SyndyneBankCommands::NEXT_BANK},
-    {78U, SyndyneBankCommands::NEXT_BANK},
-    {79U, SyndyneBankCommands::NEXT_BANK},
-    {70U, SyndyneBankCommands::NEXT_BANK},
-    {56U, SyndyneBankCommands::NEXT_BANK},
-    {60U, SyndyneBankCommands::NEXT_BANK},
-    {61U, SyndyneBankCommands::NEXT_BANK},
-    {85U, SyndyneBankCommands::NEXT_BANK},
-    {86U, SyndyneBankCommands::NEXT_BANK},
-    {87U, SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(73U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(74U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(75U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(78U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(79U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(70U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(56U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(60U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(61U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(85U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(86U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(87U), SyndyneBankCommands::NEXT_BANK},
 
     // Others
-    {54U, SyndyneBankCommands::PREV_BANK},
-    {65U, SyndyneBankCommands::PREV_BANK},
-    {66U, SyndyneBankCommands::PREV_BANK},
-    {71U, SyndyneBankCommands::PREV_BANK},
-    {72U, SyndyneBankCommands::PREV_BANK},
-    {80U, SyndyneBankCommands::PREV_BANK},
-    {81U, SyndyneBankCommands::PREV_BANK},
-    {82U, SyndyneBankCommands::PREV_BANK},
-    {83U, SyndyneBankCommands::PREV_BANK},
-    {84U, SyndyneBankCommands::PREV_BANK},
-    {31U, SyndyneBankCommands::PREV_BANK},
+    {uint8_t(54U), SyndyneBankCommands::PREV_BANK},
+    {uint8_t(65U), SyndyneBankCommands::PREV_BANK},
+    {uint8_t(66U), SyndyneBankCommands::PREV_BANK},
+    {uint8_t(71U), SyndyneBankCommands::PREV_BANK},
+    {uint8_t(72U), SyndyneBankCommands::PREV_BANK},
+    {uint8_t(80U), SyndyneBankCommands::PREV_BANK},
+    {uint8_t(81U), SyndyneBankCommands::PREV_BANK},
+    {uint8_t(82U), SyndyneBankCommands::PREV_BANK},
+    {uint8_t(83U), SyndyneBankCommands::PREV_BANK},
+    {uint8_t(84U), SyndyneBankCommands::PREV_BANK},
+    {uint8_t(31U), SyndyneBankCommands::PREV_BANK},
 
     // Sound Effects
-    {34U, SyndyneBankCommands::NEXT_BANK},
-    {33U, SyndyneBankCommands::NEXT_BANK},
-    {32U, SyndyneBankCommands::NEXT_BANK},
-    {30U, SyndyneBankCommands::NEXT_BANK},
-    {29U, SyndyneBankCommands::NEXT_BANK},
-    {28U, SyndyneBankCommands::NEXT_BANK},
-    {27U, SyndyneBankCommands::NEXT_BANK},
-    {39U, SyndyneBankCommands::NEXT_BANK}
+    {uint8_t(34U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(33U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(32U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(30U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(29U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(28U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(27U), SyndyneBankCommands::NEXT_BANK},
+    {uint8_t(39U), SyndyneBankCommands::NEXT_BANK}
 };
 
 /** Map MIDI channel to keyboard / special event */
@@ -147,18 +147,18 @@ const std::array<uint8_t, 16U> g_channel_mapping = {
  * @param event_queue[in/out] add events to list
  * @returns time of last "note_off" event
  */
-double generate_test_pattern(const SyndyneKeyboards keyboard, 
+double generate_test_pattern(const SyndyneKeyboards keyboard,
                              double start_time,
                              std::deque<bach_bot::OrganMidiEvent> &event_queue)
 {
-    for (uint8_t i = 1U; i <= 127U; ++i) {
+    for (int i = 1; i <= 127; ++i) {
         event_queue.emplace_back(bach_bot::MidiCommands::NOTE_ON, keyboard,
-                                 i, bach_bot::SYNDYNE_NOTE_ON_VELOCITY);
+                                 int8_t(i), int8_t(bach_bot::SYNDYNE_NOTE_ON_VELOCITY));
         event_queue.back().m_seconds = start_time;
         event_queue.back().m_song_id = 0U;
         start_time += 1.0;
-        event_queue.emplace_back(bach_bot::MidiCommands::NOTE_OFF, keyboard, 
-                                 i, 0U);
+        event_queue.emplace_back(bach_bot::MidiCommands::NOTE_OFF, keyboard,
+                                 int8_t(i), int8_t(0));
         event_queue.back().m_seconds = start_time;
         event_queue.back().m_song_id = 0U;
     }
@@ -177,7 +177,7 @@ std::deque<OrganMidiEvent> generate_test_pattern()
     auto midi_time = 0.0;
     midi_time = ::generate_test_pattern(SyndyneKeyboards::PETAL,
                                         midi_time, event_queue);
-    midi_time = ::generate_test_pattern(SyndyneKeyboards::MANUAL1_GREAT, 
+    midi_time = ::generate_test_pattern(SyndyneKeyboards::MANUAL1_GREAT,
                                         midi_time, event_queue);
     ::generate_test_pattern(SyndyneKeyboards::MANUAL2_SWELL,
                             midi_time, event_queue);
@@ -187,7 +187,7 @@ std::deque<OrganMidiEvent> generate_test_pattern()
 }
 
 
-SyndineImporter::SyndineImporter(const std::string &file_name, 
+SyndineImporter::SyndineImporter(const std::string &file_name,
                                  const uint32_t song_id) :
     m_midifile(),
     m_file_events(),
@@ -267,7 +267,7 @@ size_t SyndineImporter::get_control_index(const int channel) const
 }
 
 
-uint8_t SyndineImporter::remap_note(const int note, 
+uint8_t SyndineImporter::remap_note(const int note,
                                     const SyndyneKeyboards keyboard) const
 {
     uint8_t low_limit = 36U;  //  Standard range of organ keys.
@@ -337,7 +337,7 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
         if (midi_event.isNote()) {
             const auto channel_id = get_control_index(midi_event.getChannel());
             if (channel_id < m_current_state.size()) {
-                const auto note = remap_note(midi_event.getKeyNumber(), 
+                const auto note = remap_note(midi_event.getKeyNumber(),
                                              g_keyboard_indexes[channel_id]);
                 midi_event[1] = note;
                 m_current_state[channel_id][note].add_event(midi_event);
@@ -369,8 +369,8 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
             current_config = i->get_bank_config();
         } else {
             i->set_bank_config(current_config);
-            m_file_events.push_back(i);
         }
+        m_file_events.push_back(i);
     }
 
     //  5th pass: remove start dead time from song, assign song id
@@ -379,8 +379,7 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
     const auto initial_delay_ticks = last_element->m_midi_time;
     for (auto &i: m_file_events) {
         i->m_song_id = m_song_id;
-        i->m_seconds -= initial_delay_s;
-        i->m_midi_time -= initial_delay_ticks;
+        i->offset_time(initial_delay_s, initial_delay_ticks);
         i->calculate_delta(*last_element);
         last_element = i;
     }
@@ -389,9 +388,9 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
 
 void SyndineImporter::adjust_key(int offset_steps)
 {
-    m_note_offset = uint8_t(std::clamp(offset_steps, 
-                                       -MIDI_NOTES_IN_OCTAVE, 
-                                       MIDI_NOTES_IN_OCTAVE));
+    m_note_offset = int8_t(std::clamp(offset_steps,
+                                      -MIDI_NOTES_IN_OCTAVE,
+                                      MIDI_NOTES_IN_OCTAVE));
 }
 
 
@@ -433,8 +432,8 @@ std::list<OrganNote> SyndineImporter::get_events(
         OrganNote blank_note(new OrganMidiEvent(EMPTY_FIRST_META_EVENT,
                                                 first_entry.get()));
         first_entry->m_delta_time = initial_delay;
-        std::for_each(m_file_events.begin(), 
-                      m_file_events.end(), 
+        std::for_each(m_file_events.begin(),
+                      m_file_events.end(),
                       [=](OrganNote &evt) {
             evt->m_seconds += spb * initial_delay_beats;
         });

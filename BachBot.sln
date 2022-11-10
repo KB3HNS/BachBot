@@ -5,7 +5,11 @@ VisualStudioVersion = 16.0.31515.178
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BachBot", "BachBot\BachBot.vcxproj", "{8A040FA5-1C81-4E15-9920-4D6D9D2AE1F1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "midifile", "midifile\visual-studio\midifile.vcxproj", "{70028D4B-8E0D-4FF2-BD05-D7AB19B66F30}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{463923FC-1A35-41C0-B5C0-E5952F2252C4}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "midifile", "midifile.vcxproj", "{70028D4B-8E0D-4FF2-BD05-D7AB19B66F30}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Installer", "Installer\Installer.vdproj", "{06C0A1D1-5886-42A5-938D-971E76B195F0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,11 +29,17 @@ Global
 		{8A040FA5-1C81-4E15-9920-4D6D9D2AE1F1}.Release|x86.Build.0 = Release|Win32
 		{70028D4B-8E0D-4FF2-BD05-D7AB19B66F30}.Debug|x64.ActiveCfg = Debug|x64
 		{70028D4B-8E0D-4FF2-BD05-D7AB19B66F30}.Debug|x64.Build.0 = Debug|x64
-		{70028D4B-8E0D-4FF2-BD05-D7AB19B66F30}.Debug|x86.ActiveCfg = Debug|x64
-		{70028D4B-8E0D-4FF2-BD05-D7AB19B66F30}.Debug|x86.Build.0 = Debug|x64
-		{70028D4B-8E0D-4FF2-BD05-D7AB19B66F30}.Release|x64.ActiveCfg = Release|Win32
+		{70028D4B-8E0D-4FF2-BD05-D7AB19B66F30}.Debug|x86.ActiveCfg = Debug|Win32
+		{70028D4B-8E0D-4FF2-BD05-D7AB19B66F30}.Debug|x86.Build.0 = Debug|Win32
+		{70028D4B-8E0D-4FF2-BD05-D7AB19B66F30}.Release|x64.ActiveCfg = Release|x64
+		{70028D4B-8E0D-4FF2-BD05-D7AB19B66F30}.Release|x64.Build.0 = Release|x64
 		{70028D4B-8E0D-4FF2-BD05-D7AB19B66F30}.Release|x86.ActiveCfg = Release|Win32
 		{70028D4B-8E0D-4FF2-BD05-D7AB19B66F30}.Release|x86.Build.0 = Release|Win32
+		{06C0A1D1-5886-42A5-938D-971E76B195F0}.Debug|x64.ActiveCfg = Debug
+		{06C0A1D1-5886-42A5-938D-971E76B195F0}.Debug|x86.ActiveCfg = Debug
+		{06C0A1D1-5886-42A5-938D-971E76B195F0}.Release|x64.ActiveCfg = Release
+		{06C0A1D1-5886-42A5-938D-971E76B195F0}.Release|x64.Build.0 = Release
+		{06C0A1D1-5886-42A5-938D-971E76B195F0}.Release|x86.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

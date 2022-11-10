@@ -12,7 +12,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -26,7 +26,6 @@
 #include <utility>  //  std::swap
 #include <stdexcept>  //  std::runtime_error
 #include <optional>  //  std::optional
-#include <fmt/xchar.h>  //  fmt::format(L
 #include <fmt/format.h>  //  fmt::format
 
 //  module includes
@@ -62,10 +61,6 @@ void set_label_filename(wxStaticText *const label,
 PlaylistEntryControl::PlaylistEntryControl(wxWindow *const parent,
                                            PlayListEntry song) :
     PlaylistEntryPanel(parent),
-    checkbox_event(dummy_event),
-    move_event(dummy_event),
-    set_next_event(dummy_event),
-    selected_event(dummy_event),
     m_parent{parent},
     m_up_next{false},
     m_playing{false},
@@ -79,11 +74,12 @@ PlaylistEntryControl::PlaylistEntryControl(wxWindow *const parent,
     m_colors{parent->GetBackgroundColour(),
              *wxYELLOW,
              *wxGREEN,
-             *wxLIGHT_GREY}
+             *wxLIGHT_GREY},
+    m_event_handler(dummy_event),
+    m_currently_selected{false}
 {
     auto_play->SetValue(song.play_next);
     setup_widgets();
-    // SetSize(-1, m_panel_size.y);
 }
 
 
@@ -96,7 +92,6 @@ const wxString& PlaylistEntryControl::get_filename() const
 void PlaylistEntryControl::set_next()
 {
     m_up_next = true;
-    // m_playing = false;
     setup_widgets();
 }
 
@@ -130,6 +125,12 @@ bool PlaylistEntryControl::get_autoplay() const
 }
 
 
+void PlaylistEntryControl::set_callback(CallBack event_handler)
+{
+    m_event_handler = event_handler;
+}
+
+
 void PlaylistEntryControl::swap(PlaylistEntryControl *const other)
 {
     auto update_ui = [](PlaylistEntryControl *const control) {
@@ -149,14 +150,30 @@ void PlaylistEntryControl::swap(PlaylistEntryControl *const other)
 
     if (now_playing->GetValue()) {
         now_playing->SetValue(false);
-        selected_event(m_playlist_entry.song_id, this, false);
+        m_event_handler(PlaylistEntryEventId::ENTRY_SELECTED_EVENT,
+                        m_playlist_entry.song_id,
+                        this,
+                        false);
+
         other->now_playing->SetValue(true);
-        selected_event(other->m_playlist_entry.song_id, other, true);
+        m_event_handler(PlaylistEntryEventId::ENTRY_SELECTED_EVENT,
+                        other->m_playlist_entry.song_id,
+                        other,
+                        true);
     } else if (other->now_playing->GetValue()) {
         other->now_playing->SetValue(false);
-        selected_event(other->m_playlist_entry.song_id, other, false);
+
+
+        m_event_handler(PlaylistEntryEventId::ENTRY_SELECTED_EVENT,
+                        other->m_playlist_entry.song_id,
+                        other,
+                        false);
+
         now_playing->SetValue(true);
-        selected_event(m_playlist_entry.song_id, this, true);
+        m_event_handler(PlaylistEntryEventId::ENTRY_SELECTED_EVENT,
+                        m_playlist_entry.song_id,
+                        this,
+                        true);
     }
 
     std::swap(m_playlist_entry, other->m_playlist_entry);
@@ -217,9 +234,12 @@ void PlaylistEntryControl::update_color_state(const bool up_next)
 }
 
 
-void PlaylistEntryControl::deselect()
+void PlaylistEntryControl::select(const bool selected)
 {
-    now_playing->SetValue(false);
+    m_currently_selected = selected;
+    if (now_playing->GetValue() != selected) {
+        now_playing->SetValue(selected);
+    }
 }
 
 
@@ -229,16 +249,92 @@ BankConfig PlaylistEntryControl::get_starting_registration() const
 }
 
 
-void PlaylistEntryControl::on_configure_clicked(wxCommandEvent &event)
+bool PlaylistEntryControl::apply_group_dialog(const GroupEditMidiDialog &dialog)
 {
     LoadMidiDialog update_dialog(m_parent->GetGrandParent());
     m_playlist_entry.populate_dialog(update_dialog);
 
+    //  Apply edit dialog
+    if (dialog.tempo_checkbox->IsChecked()) {
+        const auto tempo = update_dialog.select_tempo->GetValue() +
+                           dialog.select_tempo->GetValue();
+
+        if (tempo < update_dialog.select_tempo->GetMin() ||
+                tempo > update_dialog.select_tempo->GetMax()) {
+            wxMessageBox(
+                fmt::format(L"Tempo adjust {} results in a tempo out-of-range {}",
+                            dialog.select_tempo->GetValue(), tempo),
+                wxT("Form Error"),
+                wxOK | wxICON_INFORMATION);
+
+            return false;
+        }
+
+        update_dialog.select_tempo->SetValue(tempo);
+    }
+
+    if (dialog.silence_checkbox->IsChecked()) {
+        update_dialog.initial_gap_text_box->SetValue(
+            dialog.initial_gap_text_box->GetValue());
+    }
+
+    if (dialog.bank_config_checkbox->IsChecked()) {
+        update_dialog.memory_select->SetValue(dialog.memory_select->GetValue());
+        update_dialog.mode_select->SetValue(dialog.mode_select->GetValue());
+    }
+
+    if (dialog.pitch_checkbox->IsChecked()) {
+        update_dialog.pitch_change->SetValue(dialog.pitch_change->GetValue());
+    }
+
+    if (dialog.extend_ending_checkbox->IsChecked()) {
+        update_dialog.extend_ending_textbox->SetValue(
+            dialog.extend_ending_textbox->GetValue());
+    }
+
+    if (dialog.apply_play_next_checkbox->IsChecked()) {
+        update_dialog.play_next_checkbox->SetValue(
+            dialog.play_next_checkbox->IsChecked());
+    }
+
+    auto error_text = m_playlist_entry.load_config(update_dialog);
+    if (error_text.has_value()) {
+        wxMessageBox(error_text.value(), wxT("Form Error"),
+                     wxOK | wxICON_INFORMATION);
+        return false;
+    }
+
+    if (m_playlist_entry.import_midi()) {
+        auto_play->SetValue(m_playlist_entry.play_next);
+        if (dialog.apply_play_next_checkbox->IsChecked()) {
+            m_event_handler(PlaylistEntryEventId::ENTRY_CHECKBOX_EVENT,
+                            m_playlist_entry.song_id,
+                            this,
+                            m_playlist_entry.play_next);
+        }
+    } else {
+        wxMessageBox(
+            fmt::format(L"Failed to import for {}", m_playlist_entry.file_name),
+            wxT("Import Error"),
+            wxOK | wxICON_INFORMATION);
+
+        return false;
+    }
+
+    return true;
+}
+
+
+void PlaylistEntryControl::on_configure_clicked(wxCommandEvent &event)
+{
+    static_cast<void>(event);
+    LoadMidiDialog update_dialog(m_parent->GetGrandParent());
+    m_playlist_entry.populate_dialog(update_dialog);
+
     std::optional<wxString> error_text;
-    auto imported = false;
     do {
         if (error_text.has_value()) {
-            wxMessageBox(error_text.value(), "Form Error",
+            wxMessageBox(error_text.value(), wxT("Form Error"),
                          wxOK | wxICON_INFORMATION);
         }
 
@@ -249,55 +345,93 @@ void PlaylistEntryControl::on_configure_clicked(wxCommandEvent &event)
             return;
         }
 
-        error_text = m_playlist_entry.load_config(update_dialog);
     } while (error_text.has_value());
 
     if (m_playlist_entry.import_midi()) {
         auto_play->SetValue(m_playlist_entry.play_next);
-        checkbox_event(m_playlist_entry.song_id, 
-                       this, 
-                       m_playlist_entry.play_next);
+        m_event_handler(PlaylistEntryEventId::ENTRY_CHECKBOX_EVENT,
+                        m_playlist_entry.song_id,
+                        this,
+                        m_playlist_entry.play_next);
     }
 }
 
 
 void PlaylistEntryControl::on_checkbox_checked(wxCommandEvent &event)
 {
+    static_cast<void>(event);
     const auto checked = auto_play->IsChecked();
     const auto changed = (m_playlist_entry.play_next != checked);
     m_playlist_entry.play_next = checked;
     if (changed) {
-        checkbox_event(m_playlist_entry.song_id, this, checked);
+        m_event_handler(PlaylistEntryEventId::ENTRY_CHECKBOX_EVENT,
+                        m_playlist_entry.song_id,
+                        this,
+                        checked);
     }
 }
 
 
 void PlaylistEntryControl::on_set_next(wxCommandEvent &event)
 {
-    set_next_event(m_playlist_entry.song_id, this, true);
+    static_cast<void>(event);
+    m_event_handler(PlaylistEntryEventId::ENTRY_SET_NEXT_EVENT,
+                    m_playlist_entry.song_id,
+                    this,
+                    true);
 }
 
 
-void PlaylistEntryControl::on_move_up(wxCommandEvent & event)
+void PlaylistEntryControl::on_move_up(wxCommandEvent &event)
 {
+    static_cast<void>(event);
     if (0U != m_prev_song_id) {
-        move_event(m_playlist_entry.song_id, this, true);
+        m_event_handler(PlaylistEntryEventId::ENTRY_MOVED_EVENT,
+                        m_playlist_entry.song_id,
+                        this,
+                        true);
     }
 }
 
 
-void PlaylistEntryControl::on_move_down(wxCommandEvent & event)
+void PlaylistEntryControl::on_move_down(wxCommandEvent &event)
 {
+    static_cast<void>(event);
     if (0U != m_next_song_id) {
-        move_event(m_playlist_entry.song_id, this, false);
+        m_event_handler(PlaylistEntryEventId::ENTRY_MOVED_EVENT,
+                        m_playlist_entry.song_id,
+                        this,
+                        false);
     }
 }
 
 
 void PlaylistEntryControl::on_radio_selected(wxCommandEvent &event)
 {
-    selected_event(m_playlist_entry.song_id, this, now_playing->GetValue());
+    static_cast<void>(event);
+    const auto selected = now_playing->GetValue();
+    if (selected != m_currently_selected) {
+        m_currently_selected = selected;
+        m_event_handler(PlaylistEntryEventId::ENTRY_SELECTED_EVENT,
+                        m_playlist_entry.song_id,
+                        this,
+                        selected);
+    }
     setup_widgets();
+}
+
+
+void PlaylistEntryControl::on_remove_song(wxCommandEvent &event)
+{
+    static_cast<void>(event);
+    CallAfter([=]() {
+        if (!m_playing) {
+            m_event_handler(PlaylistEntryEventId::ENTRY_DELETED_EVENT,
+                            m_playlist_entry.song_id,
+                            this,
+                            false);
+        }
+    });
 }
 
 
@@ -307,7 +441,7 @@ void PlaylistEntryControl::PlaylistEntryPanelOnSize(wxSizeEvent &event)
     const auto delta_x = double(new_size.x - m_panel_size.x);
     m_text_width = NORMAL_WIDTH;
     if (delta_x > 0.0) {
-        m_text_width += int(delta_x / m_pix_per_char);
+        m_text_width += uint32_t(delta_x / m_pix_per_char);
     }
     setup_widgets();
 }
@@ -316,13 +450,14 @@ void PlaylistEntryControl::PlaylistEntryPanelOnSize(wxSizeEvent &event)
 void PlaylistEntryControl::setup_widgets()
 {
     auto width = m_text_width;
+    delete_entry_menu->Enable(!m_playing);
     if (m_playing) {
         now_playing->SetLabelText(wxT("==>"));
         width -= 6U;
     } else {
         now_playing->SetLabelText(wxT(""));
     }
-    
+
     const auto edit_forbidden = (m_playing || m_up_next);
     static_cast<void>(configure_button->Enable(!edit_forbidden));
     if (edit_forbidden && (nullptr != m_active_dialog)) {
@@ -335,12 +470,13 @@ void PlaylistEntryControl::setup_widgets()
 }
 
 
-void PlaylistEntryControl::dummy_event(uint32_t song_id, 
+void PlaylistEntryControl::dummy_event(const PlaylistEntryEventId reason,
+                                       uint32_t song_id,
                                        PlaylistEntryControl*,
                                        bool value)
 {
-    wxMessageBox(fmt::format(L"PlayerWindow::unhandled_dummy_event {} value: {}",
-                             song_id, int(value)),
+    wxMessageBox(fmt::format(L"PlayerWindow::unhandled_dummy_event {} value: {} me={}",
+                             int(reason), int(value), song_id),
                  wxT("Debug"),
                  wxOK | wxICON_INFORMATION);
 }

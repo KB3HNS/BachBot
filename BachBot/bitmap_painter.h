@@ -34,6 +34,8 @@
 
 //  system includes
 #include <wx/wx.h>  //  wxEvtHandler, wxBitmap, etc
+#include <wx/stdpaths.h>  //  wxStandardPaths::Get
+#include <wx/filename.h>  //  wxFileName
 
 //  module includes
 // -none-
@@ -63,6 +65,26 @@ public:
 private:
     wxBitmap m_bitmap;
 };
+
+/**
+ * @brief Inline routine for loading an image resource from the program directory.
+ * @tparam T image class type
+ * @param image_container[in/out] refernce to already created container
+ * @param image_type type of image to load
+ * @param filename image filename
+ * @return `true` file loaded successfully, `false` error loading.
+*/
+template <typename T>
+bool load_image(T &image_container,
+                const wxBitmapType image_type,
+                const wxString &filename)
+{
+    const auto &std = wxStandardPaths::Get();
+    wxFileName exe_name(std.GetExecutablePath());
+    const auto path = exe_name.GetPath() + exe_name.GetPathSeparator();
+    const auto loaded = image_container.LoadFile(path + filename, image_type);
+    return loaded;
+}
 
 }  //  end ui
 }  //  end bach_bot

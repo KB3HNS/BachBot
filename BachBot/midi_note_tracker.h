@@ -22,7 +22,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * @section DESCRIPTION
- * Normal realtime midi playback devices implement a "5-phase" playback system 
+ * Normal realtime midi playback devices implement a "5-phase" playback system
  * when playing back a note:
  *   1. Silence
  *   2. Pre-strike
@@ -48,12 +48,10 @@
 #include <list>  //  std::list
 #include <utility>  //  std::pari
 
-//  module includes
-#include "MidiEvent.h"  //  smf::MidiEven
-
 //  local includes
 #include "common_defs.h"  //  Orgain timing "magic numbers"
 #include "organ_midi_event.h"  //  OrganMidiEvent
+#include "midi_interface.h"  //  smf::MidiEven
 
 namespace bach_bot {
 
@@ -82,7 +80,7 @@ public:
      * @param[in/out] event_list current list of midi events
     */
     void append_events(std::list<OrganNote> &event_list) const;
-    
+
     /**
      * @brief Set the keyboard that we will use.
      * @param keyboard_id keyboard to route all events to.
@@ -93,31 +91,31 @@ private:
     /**
      * @brief Logic for a new note-on event in the event list.
      * @param organ_ev event to process
-     * @note this occurs *any* time that the note is turned on including 
+     * @note this occurs *any* time that the note is turned on including
      *       restrikes.
      */
     void process_new_note_on_event(OrganNote &organ_ev);
-    
+
     /**
      * @brief Logic for a new not-off event in the event list.
      * @param organ_ev event to process
      * @note this will always append a complete (note-on+note-off pair).
      */
     void process_new_note_off_event(OrganNote &organ_ev);
-    
+
     /**
      * @brief Insert a simulated note-off event in the case of a restrike.
      * @param organ_ev note-on event that caused the restrike.
     */
     void insert_off_event(OrganNote &organ_ev);
-    
+
     /**
      * @brief Insert a simulated note-on event from last note-off.
      * @param organ_ev note-off event that necessitated the backfill.
      * @note
-     * This occurs when multiple note-on events are active and the 
-     * corresponding note-off events occur at different times.  In this event, 
-     * the first note-off, which would have turned the channel off, was 
+     * This occurs when multiple note-on events are active and the
+     * corresponding note-off events occur at different times.  In this event,
+     * the first note-off, which would have turned the channel off, was
      * actually supposed to be a restrike and this note-off is the end of that
      * restrike event.
      */

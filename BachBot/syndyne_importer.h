@@ -26,8 +26,8 @@
  * understood and that can be played by the organ.  Importing requires multiple
  * passes through the MIDI sequence applying different transforms at each step
  * with the final result being a list of OrganMidiEvents with appropriate
- * timing information that can be sent to the organ using a timer.  This 
- * application uses the Windows Multimedia Timer (or an empty select loop in 
+ * timing information that can be sent to the organ using a timer.  This
+ * application uses the Windows Multimedia Timer (or an empty select loop in
  * the case of Linux) as the timing generator.  Timing should be accurate to
  * < +/- 1ms or better with an ideal timing accuracy of +/- 100nS.
  */
@@ -43,13 +43,11 @@
 #include <deque>  //  std::deque
 #include <unordered_map>  //  std::unordered_map
 
-//  module includes
-#include "MidiFile.h"  //  smf::MidiFile
-
 //  local includes
 #include "midi_note_tracker.h"  //  MidiNoteTracker
 #include "organ_midi_event.h"  //  OrganMidiEvent
 #include "common_defs.h"  //  MIDI Event definitions
+#include "midi_interface.h"  //  smf::MidiFile
 
 namespace bach_bot {
 
@@ -85,7 +83,7 @@ public:
      * @param initial_memory number that song starts on
      * @param initial_mode desired general piston mode to begin song
      */
-    void set_bank_config(const uint32_t initial_memory, 
+    void set_bank_config(const uint32_t initial_memory,
                          const uint8_t initial_mode);
 
     /**
@@ -104,19 +102,19 @@ public:
 
     /**
      * @brief Get the sequence of timed organ midi events from song.
-     * @param initial_delay_beats a number of empty "rest" beats before first 
+     * @param initial_delay_beats a number of empty "rest" beats before first
                                   note-on event
      * @param extend_final_duration multiply the length of the final note
      *                              on duration by this value to extend the
      *                              final chord.
      * @throws std::out_of_range when the resulting song has too few events.
-     * @returns timed event list to send to player 
+     * @returns timed event list to send to player
      */
     std::list<OrganNote> get_events(const double initial_delay_beats,
                                     const double extend_final_duration);
 
 private:
-    /** 
+    /**
     * @brief Get the the appropriate index of the channel event map based on
     *        the reported MIDI channel of a MIDI event.
     * @param channel midi event channel
