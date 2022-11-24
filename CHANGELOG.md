@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.4.1 "Reformation R1"
+
+This is an emergency point release that corrects a citical showstopper bug
+where the LoadMidiDialog box attached to individual playlist entries was
+incapable of editing a song.
+
 ## 0.4.0 "Reformation"
 
 This update was _supposed to_ introduce the first port to Linux.  However, all

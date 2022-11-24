@@ -45,7 +45,7 @@
 
 namespace {
     using namespace std::literals::string_view_literals;
-    constexpr const auto EDITION = L"Reformation"sv;
+    constexpr const auto EDITION = L"Reformation R1"sv;
 
     constexpr const auto NOW_PLAYING_LEN = 78U;
     constexpr const auto UP_NEXT_LEN = 76U;
