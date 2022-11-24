@@ -345,6 +345,7 @@ void PlaylistEntryControl::on_configure_clicked(wxCommandEvent &event)
             return;
         }
 
+        error_text = m_playlist_entry.load_config(update_dialog);
     } while (error_text.has_value());
 
     if (m_playlist_entry.import_midi()) {
