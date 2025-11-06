@@ -307,7 +307,7 @@ void SyndineImporter::update_bank_event(const int note)
 
         case SyndyneBankCommands::NEXT_BANK:
             ++m_current_config.mode;
-            if (m_current_config.mode >= 8U) {
+            if (m_current_config.mode > 8U) {
                 m_current_config.mode = 1U;
                 ++m_current_config.memory;
             }

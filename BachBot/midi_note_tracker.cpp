@@ -110,7 +110,6 @@ void MidiNoteTracker::append_events(std::list<OrganNote> &event_list) const
             grouped_length = i->second->m_seconds - grouped_note_on->m_seconds;
         }
 
-
         if (i->second->m_seconds - i->first->m_seconds > MINIMUM_NOTE_LENGTH_S) {
             append_pair(i->first, i->second);
         } else if (grouped_note_on.get() == nullptr) {
