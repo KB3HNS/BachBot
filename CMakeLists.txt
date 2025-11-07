@@ -65,7 +65,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${INCLUDE_DIRS}
 )
 
-targt_compile_definitions(${PROJECT_NAME} PUBLIC
+target_compile_definitions(${PROJECT_NAME} PUBLIC
     _CRT_SECURE_NO_WARNINGS
 )
 

@@ -212,7 +212,7 @@ SyndineImporter::SyndineImporter(const std::string &file_name,
         }
     }
 
-    for (const auto [note, bank_command]: g_drum_map) {
+    for (const auto &[note, bank_command]: g_drum_map) {
         m_drum_map[note] = bank_command;
     }
 }
