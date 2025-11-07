@@ -25,8 +25,8 @@
 
 //  system includes
 #include <stdexcept>  //  std::out_of_range
-#include <fmt/format.h>  //  fmt::format
 #include <memory>  //  std::make_unique
+#include <fmt/format.h>  //  fmt::format
 
 //  module includes
 // -none-
@@ -153,13 +153,13 @@ std::optional<wxString> PlayListEntry::load_config(
 
     if (!test(last_note_multiplier,
               dialog.extend_ending_textbox)) {
-        return fmt::format(L"Error in field: {}",
-                           dialog.extended_ending_label->GetLabelText());
+        return wxString::Format(wxT("Error in field: %s"),
+                                dialog.extended_ending_label->GetLabelText());
     }
 
     if (!test(gap_beats, dialog.initial_gap_text_box)) {
-        return fmt::format(L"Error in field: {}",
-                           dialog.initial_gap_label->GetLabelText());
+        return wxString::Format(wxT("Error in field: %s"),
+                                dialog.initial_gap_label->GetLabelText());
     }
 
     tempo_requested = dialog.select_tempo->GetValue();
@@ -214,7 +214,7 @@ void PlayListEntry::populate_dialog(ui::LoadMidiDialog &dialog) const
 
     if (tempo_detected.has_value()) {
         dialog.tempo_label->SetLabelText(
-            fmt::format(L"{}bpm", tempo_detected.value()));
+            wxString::Format(wxT("%ibpm"), tempo_detected.value()));
         dialog.select_tempo->SetValue(
             (tempo_requested > 0 ? tempo_requested : tempo_detected.value()));
     } else {

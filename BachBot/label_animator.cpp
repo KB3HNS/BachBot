@@ -25,7 +25,6 @@
 
 //  system includes
 #include <string_view>  //  sv
-#include <fmt/format.h>  //  fmt::format(L
 
 //  module includes
 // -none-
@@ -81,7 +80,7 @@ void LabelAnimator::animate_tick()
     const auto config = m_pix_config.value();
     const auto label_width = double(size.x - config.second);
     auto max_len = int(label_width / config.first);
-    const auto trim_elipsis = L"..."sv;
+    const auto trim_elipsis = "..."sv;
     max_len = std::max(int(trim_elipsis.size() * 2U) + 1,
                        max_len);
 
@@ -89,8 +88,8 @@ void LabelAnimator::animate_tick()
         m_label->SetLabelText(m_label_text);
         m_state = 0;
     } else {
-        auto start_elipsis = L""sv;
-        auto end_elipsis = L""sv;
+        auto start_elipsis = ""sv;
+        auto end_elipsis = ""sv;
 
         if (m_state > 0) {
             start_elipsis = trim_elipsis;
@@ -111,11 +110,10 @@ void LabelAnimator::animate_tick()
         start += int(start_elipsis.size());
         end -= int(end_elipsis.size());
 
-        m_label->SetLabelText(fmt::format(
-            L"{}{}{}",
-            start_elipsis,
+        m_label->SetLabelText(wxString::Format("%s%s%s",
+            start_elipsis.data(),
             m_label_text.SubString(size_t(start), size_t(end)),
-            end_elipsis));
+            end_elipsis.data()));
 
         if (final_ticks > START_END_TICKS) {
             m_state = -START_END_TICKS;

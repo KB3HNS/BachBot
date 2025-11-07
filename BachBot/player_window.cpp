@@ -29,7 +29,6 @@
 #include <string>  //  std::string
 #include <string_view>  //  sv, std::swap
 #include <array>  //  std::array
-#include <fmt/format.h>  //  fmt::format
 #include <wx/xml/xml.h>  //  wxXml API
 
 //  module includes
@@ -45,7 +44,7 @@
 
 namespace {
     using namespace std::literals::string_view_literals;
-    constexpr const auto EDITION = L"Reformation"sv;
+    constexpr const auto EDITION = "Reformation"sv;
 
     constexpr const auto NOW_PLAYING_LEN = 78U;
     constexpr const auto UP_NEXT_LEN = 76U;
@@ -225,9 +224,9 @@ void PlayerWindow::on_load_playlist(wxCommandEvent &event)
     });
 
     if (loader.ShowModal() != wxID_OK) {
-        wxMessageBox(fmt::format(L"Error loading playlist:\n"
-                                  "Error reported was: {}",
-                                 loader.get_error_text().value()));
+        wxMessageBox(wxString::Format(wxT("Error loading playlist:\n"
+                                          "Error reported was: %s"),
+                                      loader.get_error_text().value()));
         return;
     }
 }
@@ -293,7 +292,8 @@ void PlayerWindow::on_open_midi(wxCommandEvent &event)
     set_label_filename(import_dialog.file_name_label,
                        open_dialog.GetPath(),
                        PlayListEntry::CFGMIDI_DIALOG_MAX_LEN);
-    import_dialog.tempo_label->SetLabelText(fmt::format(L"{}bpm", tempo));
+    import_dialog.tempo_label->SetLabelText(wxString::Format(wxT("%ibpm"),
+                                                             tempo));
     import_dialog.select_tempo->SetValue(tempo);
 
     std::optional<wxString> error_text;
@@ -329,14 +329,14 @@ void PlayerWindow::on_quit(wxCommandEvent &event)
 void PlayerWindow::on_about(wxCommandEvent &event)
 {
     static_cast<void>(event);
-    wxMessageBox(fmt::format(
-        L"BachBot MIDI player for Schlicker Organs \"{}\" edition:\n\n"
-         "BachBot is a MIDI player intended Schlicker Pipe Organs or other "
-         "Organs using the Syndyne Console Control system.\n"
-         "Written By Andrew Buettner for Zion Lutheran Church and School "
-         "Hartland, WI\n"
-         "https://www.github.com/KB3HNS/BachBot"
-         "\n\nImage by rawpixel.com on Freepik.com", EDITION),
+    wxMessageBox(wxString::Format(
+        wxT("BachBot MIDI player for Schlicker Organs \"%s\" edition:\n\n"
+            "BachBot is a MIDI player intended Schlicker Pipe Organs or other "
+            "Organs using the Syndyne Console Control system.\n"
+            "Written By Andrew Buettner for Zion Lutheran Church and School "
+            "Hartland, WI\n"
+            "https://www.github.com/KB3HNS/BachBot"
+            "\n\nImage by rawpixel.com on Freepik.com"), _(EDITION.data())),
         wxT("About BachBot"), wxOK | wxICON_INFORMATION);
 }
 
@@ -633,10 +633,9 @@ void PlayerWindow::on_drop_midi_file(wxDropFilesEvent &event)
     });
 
     if (loader.ShowModal() != wxID_OK) {
-        wxMessageBox(fmt::format(L"Error with import:\n"
-                                 "Error reported was: {}",
-                                 loader.get_error_text().value()));
-        return;
+        wxMessageBox(wxString::Format(wxT("Error with import:\n"
+                                          "Error reported was: %s"),
+                                      loader.get_error_text().value()));
     }
 }
 
@@ -1071,10 +1070,10 @@ void PlayerWindow::update_window_title(const bool playlist_changed)
 
     const auto &title = s_window_title.value();
     if (m_playlist_name.has_value()) {
-        const auto change_flag = (m_playlist_changed ? L"*"sv : L""sv);
-        SetTitle(fmt::format(L"{} - {}{}",
-                             title, m_playlist_name.value(),
-                             change_flag));
+        const auto change_flag = (m_playlist_changed ? "*"sv : ""sv);
+        SetTitle(wxString::Format(wxT("%s - %s%s"),
+                                  title, m_playlist_name.value(),
+                                  change_flag.data()));
     } else {
         SetTitle(title);
     }

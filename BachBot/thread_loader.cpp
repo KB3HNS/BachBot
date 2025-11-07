@@ -23,7 +23,6 @@
  */
 
 //  system includes
-#include <fmt/format.h>  //  fmt::format(L
 #include <stdexcept>  //  std::runtime_error
 
 //  module includes
@@ -186,8 +185,8 @@ void ThreadLoader::parse_playlist()
         wxQueueEvent(this, file_event.Clone());
 
         if (!song_entry.import_midi()) {
-            set_error_text(fmt::format(L"Unable to import song: {}",
-                                       song_entry.file_name));
+            set_error_text(wxString::Format(wxT("Unable to import song: %s"),
+                                            song_entry.file_name));
         } else {
             m_playlist.push_back(std::move(song_entry));
             wxThreadEvent tick_event(wxEVT_THREAD, LoaderEvents::TICK_EVENT);

@@ -25,7 +25,6 @@
 //  system includes
 #include <cstdint>  //  uint32_t
 #include <limits>  //  std::numeric_limits
-#include <fmt/format.h>  //  fmt::format(L
 
 //  module includes
 // -none-
@@ -72,8 +71,8 @@ void PlaylistXmlLoader::build_playlist_entry(PlayListEntry &song_entry,
 {
     const auto *const child = m_entries[song_number - 1U].second;
     if (!song_entry.load_config(child)) {
-        set_error_text(fmt::format(L"Invalid song data line {}",
-                                   child->GetLineNumber()));
+        set_error_text(wxString::Format(wxT("Invalid song data line %i"),
+                                        child->GetLineNumber()));
     }
 }
 

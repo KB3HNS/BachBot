@@ -50,8 +50,8 @@ void set_label_filename(wxStaticText *const label,
                         const size_t max_len)
 {
     if (filename.length() > max_len) {
-        label->SetLabelText(fmt::format(L"...{}",
-                                        filename.Right(max_len - 3U)));
+        label->SetLabelText(wxString::Format(
+            wxT("...%s"), filename.Right(max_len - 3U)));
     } else {
         label->SetLabelText(filename);
     }
@@ -262,8 +262,9 @@ bool PlaylistEntryControl::apply_group_dialog(const GroupEditMidiDialog &dialog)
         if (tempo < update_dialog.select_tempo->GetMin() ||
                 tempo > update_dialog.select_tempo->GetMax()) {
             wxMessageBox(
-                fmt::format(L"Tempo adjust {} results in a tempo out-of-range {}",
-                            dialog.select_tempo->GetValue(), tempo),
+                wxString::Format(
+                    wxT("Tempo adjust %i results in a tempo out-of-range %i"),
+                    dialog.select_tempo->GetValue(), tempo),
                 wxT("Form Error"),
                 wxOK | wxICON_INFORMATION);
 
@@ -314,7 +315,8 @@ bool PlaylistEntryControl::apply_group_dialog(const GroupEditMidiDialog &dialog)
         }
     } else {
         wxMessageBox(
-            fmt::format(L"Failed to import for {}", m_playlist_entry.file_name),
+            wxString::Format(wxT("Failed to import for %s"),
+                             m_playlist_entry.file_name),
             wxT("Import Error"),
             wxOK | wxICON_INFORMATION);
 
@@ -475,10 +477,12 @@ void PlaylistEntryControl::dummy_event(const PlaylistEntryEventId reason,
                                        PlaylistEntryControl*,
                                        bool value)
 {
-    wxMessageBox(fmt::format(L"PlayerWindow::unhandled_dummy_event {} value: {} me={}",
-                             int(reason), int(value), song_id),
-                 wxT("Debug"),
-                 wxOK | wxICON_INFORMATION);
+    wxMessageBox(
+        wxString::Format(
+            wxT("PlayerWindow::unhandled_dummy_event %i value: %i me=%u"),
+            int(reason), int(value), song_id),
+        wxT("Debug"),
+        wxOK | wxICON_INFORMATION);
 }
 
 

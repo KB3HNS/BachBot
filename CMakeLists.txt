@@ -15,11 +15,6 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     find_package(RtMidi REQUIRED)
 endif()
 
-add_compile_definitions(
-    _CRT_SECURE_NO_WARNINGS
-    FMT_DEPRECATED_INCLUDE_XCHAR
-)
-
 include(${wxWidgets_USE_FILE})
 include(CompilerWarnings.cmake)
 
@@ -68,6 +63,10 @@ set_project_warnings(${PROJECT_NAME} False)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${INCLUDE_DIRS}
+)
+
+targt_compile_definitions(${PROJECT_NAME} PUBLIC
+    _CRT_SECURE_NO_WARNINGS
 )
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
