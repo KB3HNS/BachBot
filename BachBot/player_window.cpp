@@ -45,7 +45,7 @@
 
 namespace {
     using namespace std::literals::string_view_literals;
-    constexpr const auto EDITION = "Reformation"sv;
+    constexpr const auto EDITION = "Advent"sv;
 #ifdef WIN32
 
     // constexpr const auto NOW_PLAYING_LEN = 82U;
