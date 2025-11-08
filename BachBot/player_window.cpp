@@ -547,6 +547,8 @@ void PlayerWindow::on_move_event(const uint32_t song_id,
             set_next_song(cur_sequence.second);
         }
     }
+
+    update_window_title(true);
 }
 
 
