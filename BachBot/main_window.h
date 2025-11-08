@@ -134,7 +134,7 @@ namespace bach_bot
 
 			public:
 
-				MainWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("BachBot Player"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 815,727 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
+				MainWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("BachBot Player"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 864,727 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
 
 				~MainWindow();
 
@@ -159,6 +159,7 @@ namespace bach_bot
 				wxStaticText* m_staticText18;
 
 			public:
+				wxFlexGridSizer* container_sizer;
 				wxStaticText* file_name_label;
 				wxStaticText* tempo_label;
 				wxSpinCtrl* select_tempo;
@@ -174,7 +175,7 @@ namespace bach_bot
 				wxButton* m_sdbSizer1OK;
 				wxButton* m_sdbSizer1Cancel;
 
-				LoadMidiDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Import MIDI File"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 400,286 ), long style = wxDEFAULT_DIALOG_STYLE );
+				LoadMidiDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Import MIDI File"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( -1,-1 ), long style = wxDEFAULT_DIALOG_STYLE );
 
 				~LoadMidiDialog();
 
@@ -211,6 +212,7 @@ namespace bach_bot
 			protected:
 				wxBoxSizer* layout;
 				wxRadioButton* now_playing;
+				wxRadioButton* not_playing;
 				wxStaticText* song_label;
 				wxButton* configure_button;
 				wxCheckBox* auto_play;

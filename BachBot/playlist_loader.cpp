@@ -118,6 +118,7 @@ PlaylistDndLoader::PlaylistDndLoader(wxFrame *const parent,
     }
 }
 
+
 int PlaylistDndLoader::count_children()
 {
     return int(m_files.size());

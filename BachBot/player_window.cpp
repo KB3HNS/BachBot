@@ -30,6 +30,7 @@
 #include <string_view>  //  sv, std::swap
 #include <array>  //  std::array
 #include <wx/xml/xml.h>  //  wxXml API
+#include <wx/wupdlock.h>  //  wxWindowUpdateLocker
 
 //  module includes
 // -none-
@@ -45,9 +46,19 @@
 namespace {
     using namespace std::literals::string_view_literals;
     constexpr const auto EDITION = "Reformation"sv;
+#ifdef WIN32
 
-    constexpr const auto NOW_PLAYING_LEN = 78U;
-    constexpr const auto UP_NEXT_LEN = 76U;
+    // constexpr const auto NOW_PLAYING_LEN = 82U;
+    // constexpr const auto UP_NEXT_LEN = 80U;
+    constexpr const auto NOW_PLAYING_LEN = 20U;
+    constexpr const auto UP_NEXT_LEN = 30U;
+
+#else
+    constexpr const auto NOW_PLAYING_LEN = 20U;
+    constexpr const auto UP_NEXT_LEN = 30U;
+
+#endif // WIN32
+
 
     enum AcceleratorEntries : size_t
     {
@@ -211,6 +222,7 @@ void PlayerWindow::on_load_playlist(wxCommandEvent &event)
 
     PlaylistXmlLoader loader(this, open_dialog.GetPath());
     loader.set_on_success_callback([&](std::list<PlayListEntry> playlist) {
+        wxWindowUpdateLocker lock(playlist_panel);
         clear_playlist_window();
         if (playlist.size() > 0U) {
             for (const auto &i: playlist) {
@@ -289,9 +301,7 @@ void PlayerWindow::on_open_midi(wxCommandEvent &event)
 
     LoadMidiDialog import_dialog(this);
 
-    set_label_filename(import_dialog.file_name_label,
-                       open_dialog.GetPath(),
-                       PlayListEntry::CFGMIDI_DIALOG_MAX_LEN);
+    set_midi_dialog_filename(import_dialog, open_dialog.GetPath());
     import_dialog.tempo_label->SetLabelText(wxString::Format(wxT("%ibpm"),
                                                              tempo));
     import_dialog.select_tempo->SetValue(tempo);
@@ -623,6 +633,7 @@ void PlayerWindow::on_drop_midi_file(wxDropFilesEvent &event)
     PlaylistDndLoader loader(this, event, uint32_t(m_song_labels.size()) + 1U);
     loader.set_on_success_callback([=](std::list<PlayListEntry> playlist) {
         if (playlist.size() > 0U) {
+            wxWindowUpdateLocker lock(playlist_panel);
             std::for_each(playlist.begin(), playlist.end(),
                           [=](const PlayListEntry &i) {
                               add_playlist_entry(i);

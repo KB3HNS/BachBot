@@ -33,7 +33,7 @@
 
 //  local includes
 #include "play_list.h"  //  local include
-#include "playlist_entry_control.h"  //  ui::set_label_filename
+#include "playlist_entry_control.h"  //  ui::set_midi_dialog_filename
 
 
 namespace bach_bot {
@@ -208,9 +208,7 @@ void PlayListEntry::save_config(wxXmlNode *const playlist_node) const
 
 void PlayListEntry::populate_dialog(ui::LoadMidiDialog &dialog) const
 {
-    ui::set_label_filename(dialog.file_name_label,
-                           file_name,
-                           CFGMIDI_DIALOG_MAX_LEN);
+    ui::set_midi_dialog_filename(dialog, file_name);
 
     if (tempo_detected.has_value()) {
         dialog.tempo_label->SetLabelText(

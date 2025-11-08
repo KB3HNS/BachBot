@@ -12,7 +12,7 @@ using namespace bach_bot::ui;
 
 MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxFrame( parent, id, title, pos, size, style )
 {
-	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
+	this->SetSizeHints( wxSize( 864,727 ), wxDefaultSize );
 	this->DragAcceptFiles( true );
 
 	wxBoxSizer* bSizer2;
@@ -93,7 +93,7 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 
 	next_song_grid_sizer->Add( sync_button, 0, wxALL, 5 );
 
-	m_staticText5 = new wxStaticText( next_song_panel, wxID_ANY, wxT("Mode"), wxDefaultPosition, wxSize( 30,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	m_staticText5 = new wxStaticText( next_song_panel, wxID_ANY, wxT("Mode"), wxDefaultPosition, wxSize( -1,-1 ), wxALIGN_CENTER_HORIZONTAL );
 	m_staticText5->Wrap( -1 );
 	next_song_grid_sizer->Add( m_staticText5, 1, wxALL|wxEXPAND, 8 );
 
@@ -409,22 +409,20 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 {
 	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
 
-	wxFlexGridSizer* fgSizer3;
-	fgSizer3 = new wxFlexGridSizer( 8, 1, 0, 0 );
-	fgSizer3->SetFlexibleDirection( wxBOTH );
-	fgSizer3->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
+	container_sizer = new wxFlexGridSizer( 8, 1, 0, 0 );
+	container_sizer->SetFlexibleDirection( wxBOTH );
+	container_sizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
 
-	fgSizer3->SetMinSize( wxSize( 360,-1 ) );
-	file_name_label = new wxStaticText( this, wxID_ANY, wxT("foo.mid"), wxDefaultPosition, wxSize( 380,-1 ), 0 );
+	file_name_label = new wxStaticText( this, wxID_ANY, wxT("foo.mid"), wxDefaultPosition, wxSize( -1,-1 ), 0 );
 	file_name_label->Wrap( -1 );
 	file_name_label->SetFont( wxFont( 12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Courier New") ) );
 
-	fgSizer3->Add( file_name_label, 0, wxALL, 5 );
+	container_sizer->Add( file_name_label, 0, wxALL, 5 );
 
 	wxBoxSizer* bSizer11;
 	bSizer11 = new wxBoxSizer( wxHORIZONTAL );
 
-	bSizer11->SetMinSize( wxSize( 360,-1 ) );
+	bSizer11->SetMinSize( wxSize( 380,-1 ) );
 	m_staticText10 = new wxStaticText( this, wxID_ANY, wxT("Tempo Reported"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText10->Wrap( -1 );
 	bSizer11->Add( m_staticText10, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
@@ -446,7 +444,7 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 	bSizer11->Add( m_staticText14, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
 
-	fgSizer3->Add( bSizer11, 1, wxEXPAND, 5 );
+	container_sizer->Add( bSizer11, 1, wxEXPAND|wxLEFT, 5 );
 
 	wxBoxSizer* bSizer17;
 	bSizer17 = new wxBoxSizer( wxHORIZONTAL );
@@ -468,7 +466,7 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 	bSizer17->Add( m_staticText17, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
 
-	fgSizer3->Add( bSizer17, 1, wxEXPAND, 5 );
+	container_sizer->Add( bSizer17, 1, wxEXPAND|wxLEFT, 5 );
 
 	wxBoxSizer* bSizer19;
 	bSizer19 = new wxBoxSizer( wxHORIZONTAL );
@@ -495,7 +493,7 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 	bSizer19->Add( mode_select, 0, wxALL, 5 );
 
 
-	fgSizer3->Add( bSizer19, 1, wxEXPAND, 5 );
+	container_sizer->Add( bSizer19, 1, wxEXPAND|wxLEFT, 5 );
 
 	wxBoxSizer* bSizer20;
 	bSizer20 = new wxBoxSizer( wxHORIZONTAL );
@@ -515,7 +513,7 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 	bSizer20->Add( m_staticText22, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
 
-	fgSizer3->Add( bSizer20, 1, wxEXPAND, 5 );
+	container_sizer->Add( bSizer20, 1, wxEXPAND|wxLEFT, 5 );
 
 	wxBoxSizer* bSizer14;
 	bSizer14 = new wxBoxSizer( wxHORIZONTAL );
@@ -539,7 +537,7 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 	bSizer14->Add( extend_ending_textbox, 0, wxALL, 5 );
 
 
-	fgSizer3->Add( bSizer14, 1, wxEXPAND, 5 );
+	container_sizer->Add( bSizer14, 1, wxEXPAND|wxLEFT, 5 );
 
 	wxBoxSizer* bSizer18;
 	bSizer18 = new wxBoxSizer( wxHORIZONTAL );
@@ -555,7 +553,7 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 	bSizer18->Add( play_next_checkbox, 0, wxALL, 5 );
 
 
-	fgSizer3->Add( bSizer18, 1, wxBOTTOM|wxEXPAND, 5 );
+	container_sizer->Add( bSizer18, 1, wxBOTTOM|wxEXPAND|wxLEFT, 5 );
 
 	m_sdbSizer1 = new wxStdDialogButtonSizer();
 	m_sdbSizer1OK = new wxButton( this, wxID_OK );
@@ -564,11 +562,12 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 	m_sdbSizer1->AddButton( m_sdbSizer1Cancel );
 	m_sdbSizer1->Realize();
 
-	fgSizer3->Add( m_sdbSizer1, 1, wxALIGN_BOTTOM|wxALL|wxEXPAND, 5 );
+	container_sizer->Add( m_sdbSizer1, 1, wxALIGN_BOTTOM|wxALL|wxEXPAND, 5 );
 
 
-	this->SetSizer( fgSizer3 );
+	this->SetSizer( container_sizer );
 	this->Layout();
+	container_sizer->Fit( this );
 
 	this->Centre( wxBOTH );
 }
@@ -599,7 +598,7 @@ LoadingPopup::LoadingPopup( wxWindow* parent, wxWindowID id, const wxString& tit
 
 	bSizer15->Add( progress_label, 0, wxALL, 5 );
 
-	filename_label = new wxStaticText( this, wxID_ANY, wxT("Preparing..."), wxDefaultPosition, wxDefaultSize, 0 );
+	filename_label = new wxStaticText( this, wxID_ANY, wxT("Preparing..."), wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_START );
 	filename_label->Wrap( -1 );
 	filename_label->SetFont( wxFont( wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Courier New") ) );
 
@@ -628,14 +627,21 @@ PlaylistEntryPanel::PlaylistEntryPanel( wxWindow* parent, wxWindowID id, const w
 {
 	layout = new wxBoxSizer( wxHORIZONTAL );
 
-	now_playing = new wxRadioButton( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	now_playing = new wxRadioButton( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxRB_GROUP );
 	now_playing->SetFont( wxFont( 12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Courier New") ) );
 
 	layout->Add( now_playing, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
-	song_label = new wxStaticText( this, wxID_ANY, wxT("*.mid"), wxDefaultPosition, wxDefaultSize, 0 );
+	not_playing = new wxRadioButton( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	not_playing->SetValue( true );
+	not_playing->Hide();
+
+	layout->Add( not_playing, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+	song_label = new wxStaticText( this, wxID_ANY, wxT("*.mid"), wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_START );
 	song_label->Wrap( -1 );
 	song_label->SetFont( wxFont( 8, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Courier New") ) );
+	song_label->SetForegroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOWTEXT ) );
 
 	layout->Add( song_label, 1, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 

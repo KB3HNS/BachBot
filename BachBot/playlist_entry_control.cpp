@@ -35,13 +35,6 @@
 #include "playlist_entry_control.h"  //  local include
 
 
-namespace {
-/** The amount of text normally allowed in the filename label */
-constexpr const auto NORMAL_WIDTH = 87U;
-
-const wxColor default_color(uint8_t(171), uint8_t(171), uint8_t(171));
-}  //  end anonymous namespace
-
 namespace bach_bot {
 namespace ui {
 
@@ -66,15 +59,14 @@ PlaylistEntryControl::PlaylistEntryControl(wxWindow *const parent,
     m_playing{false},
     m_prev_song_id{0U},
     m_next_song_id{0U},
-    m_panel_size{GetSize()},
-    m_text_width{NORMAL_WIDTH},
-    m_pix_per_char{calculate_pix_per_char(song_label)},
     m_playlist_entry(std::move(song)),
     m_active_dialog{nullptr},
     m_colors{parent->GetBackgroundColour(),
              *wxYELLOW,
              *wxGREEN,
-             *wxLIGHT_GREY},
+             *wxLIGHT_GREY,
+             parent->GetForegroundColour(),
+             *wxBLACK},
     m_event_handler(dummy_event),
     m_currently_selected{false}
 {
@@ -217,18 +209,23 @@ void PlaylistEntryControl::set_sequence(const int prev, const int next)
 
 void PlaylistEntryControl::update_color_state(const bool up_next)
 {
-    auto index = (now_playing->GetValue() ?
-                  PlaylistControlState::ENTRY_SELECTED :
-                  PlaylistControlState::ENTRY_NORMAL);
+    auto text_index = PlaylistControlState::ENTRY_BLACK_TEXT;
+    auto bg_index = PlaylistControlState::ENTRY_NORMAL;
+ 
     if (m_playing) {
-        index = PlaylistControlState::ENTRY_PLAYING;
+        bg_index = PlaylistControlState::ENTRY_PLAYING;
     } else if (up_next) {
-        index = PlaylistControlState::ENTRY_NEXT;
+        bg_index = PlaylistControlState::ENTRY_NEXT;
+    } else if (now_playing->GetValue()) {
+        bg_index = PlaylistControlState::ENTRY_SELECTED;
+    } else {
+        text_index = PlaylistControlState::ENTRY_TEXT;
     }
 
-    const auto &color = m_colors[index];
+    const auto &color = m_colors[bg_index];
     if (GetBackgroundColour() != color) {
         SetBackgroundColour(color);
+        song_label->SetForegroundColour(m_colors[text_index]);
         Refresh();
     }
 }
@@ -237,8 +234,10 @@ void PlaylistEntryControl::update_color_state(const bool up_next)
 void PlaylistEntryControl::select(const bool selected)
 {
     m_currently_selected = selected;
-    if (now_playing->GetValue() != selected) {
-        now_playing->SetValue(selected);
+    if (now_playing->GetValue() && !selected) {
+        not_playing->SetValue(true);
+    } else if (!now_playing->GetValue() && selected) {
+        now_playing->SetValue(true);
     }
 }
 
@@ -437,25 +436,11 @@ void PlaylistEntryControl::on_remove_song(wxCommandEvent &event)
 }
 
 
-void PlaylistEntryControl::PlaylistEntryPanelOnSize(wxSizeEvent &event)
-{
-    const auto new_size = event.GetSize();
-    const auto delta_x = double(new_size.x - m_panel_size.x);
-    m_text_width = NORMAL_WIDTH;
-    if (delta_x > 0.0) {
-        m_text_width += uint32_t(delta_x / m_pix_per_char);
-    }
-    setup_widgets();
-}
-
-
 void PlaylistEntryControl::setup_widgets()
 {
-    auto width = m_text_width;
     delete_entry_menu->Enable(!m_playing);
     if (m_playing) {
         now_playing->SetLabelText(wxT("==>"));
-        width -= 6U;
     } else {
         now_playing->SetLabelText(wxT(""));
     }
@@ -466,8 +451,7 @@ void PlaylistEntryControl::setup_widgets()
         m_active_dialog->Close();
     }
 
-    set_label_filename(song_label, m_playlist_entry.file_name, width);
-
+    song_label->SetLabelText(m_playlist_entry.file_name);
     Layout();
 }
 
@@ -486,11 +470,33 @@ void PlaylistEntryControl::dummy_event(const PlaylistEntryEventId reason,
 }
 
 
-double PlaylistEntryControl::calculate_pix_per_char(
-    const wxStaticText *const label)
+void set_midi_dialog_filename(LoadMidiDialog &dialog, const wxString &filename)
 {
-    const auto label_size = label->GetSize();
-    return double(label_size.x) / double(NORMAL_WIDTH);
+    dialog.file_name_label->SetLabelText("foo.mi");
+    const auto new_size = dialog.file_name_label->GetSize();
+
+    dialog.file_name_label->SetLabelText("foo.mid");
+    const auto old_size = dialog.file_name_label->GetSize();
+
+    auto pix_per_char = old_size.x - new_size.x;
+
+    const auto size = dialog.container_sizer->GetSize();
+
+    //  Include padding
+    auto max_len = uint32_t((size.x - 10) / pix_per_char);
+
+#ifdef __GNUC__ 
+    // This compensates for a bug in GTK
+    max_len -= 3U;
+#endif // __GNUC__
+
+
+    if (filename.Len() > max_len) {
+        dialog.file_name_label->SetLabelText(wxString::Format(
+            wxT("...%s"), filename.Right(max_len - 3U)));
+    } else {
+        dialog.file_name_label->SetLabelText(filename);
+    }
 }
 
 }  //  end ui

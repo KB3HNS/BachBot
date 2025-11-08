@@ -42,12 +42,12 @@ namespace ui {
 
 using namespace std::literals::string_view_literals;
 
-LabelAnimator::LabelAnimator(wxStaticText *const label, const uint32_t max_len) :
+LabelAnimator::LabelAnimator(wxStaticText *const label, const int padding) :
     m_label{label},
     m_label_text{label->GetLabelText()},
-    m_max_len{max_len},
+    m_padding{padding},
     m_state{0U},
-    m_pix_config()
+    m_pix_per_char()
 {
 }
 
@@ -64,22 +64,27 @@ void LabelAnimator::set_label_text(const wxString &text)
 
 void LabelAnimator::animate_tick()
 {
-    if (!m_pix_config.has_value()) {
-        const auto sizer = m_label->GetContainingSizer();
-        if (nullptr != sizer) {
-            const auto label_size = m_label->GetSize();
-            const auto container_size = sizer->GetSize();
-            const auto pix_per_char = double(label_size.x) / double(m_max_len);
-            const auto container_delta = container_size.x - label_size.x;
-            m_pix_config = std::make_pair(pix_per_char, container_delta);
-        }
+    if (m_label_text.empty()) {
+        return;
+    }
+
+    if (!m_pix_per_char.has_value()) {
+        auto len = m_label_text.Len() - 1U;
+
+        m_label->SetLabel(m_label_text.substr(0U, len));
+        auto label_size_new = m_label->GetSize();
+
+        m_label->SetLabel(m_label_text);
+        auto label_size_orig = m_label->GetSize();
+
+        m_pix_per_char = double(label_size_orig.x - label_size_new.x);
         return;
     }
 
     const auto size = m_label->GetContainingSizer()->GetSize();
-    const auto config = m_pix_config.value();
-    const auto label_width = double(size.x - config.second);
-    auto max_len = int(label_width / config.first);
+    const auto pix_per_char = m_pix_per_char.value();
+    const auto label_width = double(size.x - m_padding);
+    auto max_len = int(label_width / pix_per_char);
     const auto trim_elipsis = "..."sv;
     max_len = std::max(int(trim_elipsis.size() * 2U) + 1,
                        max_len);
