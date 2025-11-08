@@ -45,7 +45,7 @@ namespace bach_bot {
 /**
  * @brief Bank control command values sent to "General Controller 1"
  */
-enum SyndyneBankCommands : uint8_t
+enum class SyndyneBankCommands : uint8_t
 {
     GENERAL_CANCEL = 0U,
     PREV_BANK = 1U,
@@ -59,7 +59,7 @@ enum SyndyneKeyboards : uint8_t
 {
     MANUAL1_GREAT = 1U,  ///<  Bottom keyboard
     MANUAL2_SWELL,  ///<  Top keyboard
-    PETAL
+    PEDAL
 };
 
 /** Number of keyboards in the console */

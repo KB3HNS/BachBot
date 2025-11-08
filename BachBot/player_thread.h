@@ -214,6 +214,8 @@ private:
      */
     void handle_meta_event(const int meta_event_id);
 
+    void update_event_table(const OrganMidiEvent &event);
+
     /**
      * @brief Shared data are protected by mutex
      * @p
@@ -272,6 +274,11 @@ private:
      * thread.
      */
     std::atomic<int> m_desired_config_shared;
+
+    /**
+     * @brief What notes are currently playing?
+     */
+    SyndyneMidiEventTable<uint8_t> m_notes_on;
 };
 
 }  //  end bach_bot
