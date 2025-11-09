@@ -61,6 +61,7 @@ bool PlayListEntry::import_midi(SyndineImporter *importer)
     } catch (std::out_of_range&) {
         midi_events.clear();
     }
+
     return (midi_events.size() > 0U);
 }
 

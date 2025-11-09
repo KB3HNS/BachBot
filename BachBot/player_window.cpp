@@ -1098,11 +1098,9 @@ void PlayerWindow::remove_song(PlaylistEntryControl *const widget,
 {
     const auto sequence = widget->get_sequence();
 
-    PlaylistEntryControl *prev_song = nullptr;
-
     assert(song_id != m_current_song_id);
     if (sequence.first > 0U) {
-        prev_song = m_song_labels[sequence.first].get();
+        auto prev_song = m_song_labels[sequence.first].get();
         prev_song->set_sequence(-1, int(sequence.second));
     } else {
         //  Removing first entry in playlist
