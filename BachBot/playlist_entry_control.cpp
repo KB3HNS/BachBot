@@ -332,17 +332,16 @@ void PlaylistEntryControl::on_configure_clicked(wxCommandEvent &event)
     LoadMidiDialog update_dialog(m_parent->GetGrandParent());
     m_playlist_entry.populate_dialog(update_dialog);
 
+    LoadMidiDialog unchanged_dialog(m_parent->GetGrandParent());
+    m_playlist_entry.populate_dialog(unchanged_dialog);
+
     std::optional<wxString> error_text;
     do {
-        if (error_text.has_value()) {
-            wxMessageBox(error_text.value(), wxT("Form Error"),
-                         wxOK | wxICON_INFORMATION);
-        }
-
         m_active_dialog = &update_dialog;
         const auto result = update_dialog.ShowModal();
         m_active_dialog = nullptr;
         if (wxID_CANCEL == result) {
+            m_playlist_entry.load_config(unchanged_dialog);
             return;
         }
 
@@ -351,7 +350,6 @@ void PlaylistEntryControl::on_configure_clicked(wxCommandEvent &event)
             wxMessageBox(error_text.value(), wxT("Form Error"),
                          wxOK | wxICON_INFORMATION);
         }
-
     } while (error_text.has_value());
 
     if (m_playlist_entry.import_midi()) {
@@ -491,10 +489,10 @@ void set_midi_dialog_filename(LoadMidiDialog &dialog, const wxString &filename)
     //  Include padding
     auto max_len = uint32_t((size.x - 10) / pix_per_char);
 
-#ifdef __GNUC__ 
+#ifdef __linux__ 
     // This compensates for a bug in GTK
     max_len -= 3U;
-#endif // __GNUC__
+#endif // __linux__
 
 
     if (filename.Len() > max_len) {
