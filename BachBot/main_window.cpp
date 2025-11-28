@@ -759,6 +759,8 @@ GroupEditMidiDialog::GroupEditMidiDialog( wxWindow* parent, wxWindowID id, const
 	bSizer17->Add( 0, 0, 1, wxEXPAND, 5 );
 
 	initial_gap_text_box = new wxTextCtrl( this, wxID_ANY, wxT("0.0"), wxDefaultPosition, wxDefaultSize, 0 );
+	initial_gap_text_box->SetValidator( wxTextValidator( wxFILTER_NUMERIC, &initial_gap_text ) );
+
 	bSizer17->Add( initial_gap_text_box, 0, wxALL, 5 );
 
 	m_staticText17 = new wxStaticText( this, wxID_ANY, wxT("beats"), wxDefaultPosition, wxDefaultSize, 0 );
@@ -843,6 +845,8 @@ GroupEditMidiDialog::GroupEditMidiDialog( wxWindow* parent, wxWindowID id, const
 	extend_ending_textbox = new wxTextCtrl( this, wxID_ANY, wxT("1.0"), wxDefaultPosition, wxDefaultSize, 0 );
 	extend_ending_textbox->SetToolTip( wxT("Extends duration of final note by multiplying the length by this number.") );
 
+	extend_ending_textbox->SetValidator( wxTextValidator( wxFILTER_NUMERIC, &extended_ending_text ) );
+
 	bSizer14->Add( extend_ending_textbox, 0, wxALL, 5 );
 
 	extend_ending_checkbox = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
@@ -893,11 +897,10 @@ GroupEditMidiDialog::~GroupEditMidiDialog()
 AppConfigDialog::AppConfigDialog( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxDialog( parent, id, title, pos, size, style )
 {
 	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
+	this->SetToolTip( wxT("Apply a find and replace to the path component when importing playlists.\n\nThis allows for easier porting of playlists between computers where midi files are generally in a \"common\" structure.") );
 
-	wxFlexGridSizer* fgSizer3;
-	fgSizer3 = new wxFlexGridSizer( 6, 1, 0, 0 );
-	fgSizer3->SetFlexibleDirection( wxBOTH );
-	fgSizer3->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
+	wxBoxSizer* bSizer37;
+	bSizer37 = new wxBoxSizer( wxVERTICAL );
 
 	wxBoxSizer* bSizer17;
 	bSizer17 = new wxBoxSizer( wxHORIZONTAL );
@@ -919,7 +922,7 @@ AppConfigDialog::AppConfigDialog( wxWindow* parent, wxWindowID id, const wxStrin
 	bSizer17->Add( m_staticText17, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
 
-	fgSizer3->Add( bSizer17, 1, wxEXPAND, 5 );
+	bSizer37->Add( bSizer17, 0, wxEXPAND, 5 );
 
 	wxBoxSizer* bSizer19;
 	bSizer19 = new wxBoxSizer( wxHORIZONTAL );
@@ -946,7 +949,7 @@ AppConfigDialog::AppConfigDialog( wxWindow* parent, wxWindowID id, const wxStrin
 	bSizer19->Add( mode_select, 0, wxALL, 5 );
 
 
-	fgSizer3->Add( bSizer19, 1, wxEXPAND, 5 );
+	bSizer37->Add( bSizer19, 0, wxEXPAND, 5 );
 
 	wxBoxSizer* bSizer20;
 	bSizer20 = new wxBoxSizer( wxHORIZONTAL );
@@ -966,7 +969,7 @@ AppConfigDialog::AppConfigDialog( wxWindow* parent, wxWindowID id, const wxStrin
 	bSizer20->Add( m_staticText22, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
 
-	fgSizer3->Add( bSizer20, 1, wxEXPAND, 5 );
+	bSizer37->Add( bSizer20, 0, wxEXPAND, 5 );
 
 	wxBoxSizer* bSizer14;
 	bSizer14 = new wxBoxSizer( wxHORIZONTAL );
@@ -990,7 +993,7 @@ AppConfigDialog::AppConfigDialog( wxWindow* parent, wxWindowID id, const wxStrin
 	bSizer14->Add( extend_ending_textbox, 0, wxALL, 5 );
 
 
-	fgSizer3->Add( bSizer14, 1, wxEXPAND, 5 );
+	bSizer37->Add( bSizer14, 0, wxEXPAND, 5 );
 
 	wxBoxSizer* bSizer18;
 	bSizer18 = new wxBoxSizer( wxHORIZONTAL );
@@ -1006,7 +1009,42 @@ AppConfigDialog::AppConfigDialog( wxWindow* parent, wxWindowID id, const wxStrin
 	bSizer18->Add( play_next_checkbox, 0, wxALIGN_CENTER|wxALL, 5 );
 
 
-	fgSizer3->Add( bSizer18, 1, wxBOTTOM|wxEXPAND, 5 );
+	bSizer37->Add( bSizer18, 0, wxBOTTOM|wxEXPAND, 5 );
+
+
+	bSizer37->Add( 0, 10, 1, 0, 5 );
+
+	wxStaticBoxSizer* sbSizer4;
+	sbSizer4 = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, wxT("Playlist Path Configuration") ), wxVERTICAL );
+
+	wxFlexGridSizer* fgSizer8;
+	fgSizer8 = new wxFlexGridSizer( 2, 2, 0, 0 );
+	fgSizer8->AddGrowableCol( 1 );
+	fgSizer8->SetFlexibleDirection( wxBOTH );
+	fgSizer8->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
+
+	m_staticText71 = new wxStaticText( sbSizer4->GetStaticBox(), wxID_ANY, wxT("Find:"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText71->Wrap( -1 );
+	fgSizer8->Add( m_staticText71, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+	path_find = new wxTextCtrl( sbSizer4->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	fgSizer8->Add( path_find, 0, wxALL|wxEXPAND, 5 );
+
+	m_staticText72 = new wxStaticText( sbSizer4->GetStaticBox(), wxID_ANY, wxT("Replace:"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText72->Wrap( -1 );
+	fgSizer8->Add( m_staticText72, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+	path_replace = new wxTextCtrl( sbSizer4->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	fgSizer8->Add( path_replace, 0, wxALL|wxEXPAND, 5 );
+
+
+	sbSizer4->Add( fgSizer8, 1, wxEXPAND, 5 );
+
+
+	bSizer37->Add( sbSizer4, 0, wxEXPAND, 5 );
+
+
+	bSizer37->Add( 0, 10, 0, 0, 5 );
 
 	m_sdbSizer1 = new wxStdDialogButtonSizer();
 	m_sdbSizer1OK = new wxButton( this, wxID_OK );
@@ -1015,12 +1053,11 @@ AppConfigDialog::AppConfigDialog( wxWindow* parent, wxWindowID id, const wxStrin
 	m_sdbSizer1->AddButton( m_sdbSizer1Cancel );
 	m_sdbSizer1->Realize();
 
-	fgSizer3->Add( m_sdbSizer1, 1, wxALIGN_BOTTOM|wxALL|wxEXPAND, 5 );
+	bSizer37->Add( m_sdbSizer1, 0, wxALL|wxEXPAND, 5 );
 
 
-	this->SetSizer( fgSizer3 );
+	this->SetSizer( bSizer37 );
 	this->Layout();
-	fgSizer3->Fit( this );
 
 	this->Centre( wxBOTH );
 }

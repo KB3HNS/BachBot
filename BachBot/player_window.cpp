@@ -31,6 +31,7 @@
 #include <array>  //  std::array
 #include <wx/xml/xml.h>  //  wxXml API
 #include <wx/wupdlock.h>  //  wxWindowUpdateLocker
+#include <wx/valnum.h>  //  wxFloatingPointValidator
 
 //  module includes
 // -none-
@@ -48,8 +49,6 @@ namespace {
     constexpr const auto EDITION = "Advent"sv;
 #ifdef WIN32
 
-    // constexpr const auto NOW_PLAYING_LEN = 82U;
-    // constexpr const auto UP_NEXT_LEN = 80U;
     constexpr const auto NOW_PLAYING_LEN = 20U;
     constexpr const auto UP_NEXT_LEN = 30U;
 
@@ -343,7 +342,7 @@ void PlayerWindow::on_about(wxCommandEvent &event)
         wxT("BachBot MIDI player for Schlicker Organs \"%s\" edition:\n\n"
             "BachBot is a MIDI player intended Schlicker Pipe Organs or other "
             "Organs using the Syndyne Console Control system.\n"
-            "Written By Andrew Buettner for Zion Lutheran Church and School "
+            "Written By Andrew Buettner for Zion Lutheran Church\n"
             "Hartland, WI\n"
             "https://www.github.com/KB3HNS/BachBot"
             "\n\nImage by rawpixel.com on Freepik.com"), _(EDITION.data())),
@@ -357,6 +356,7 @@ void PlayerWindow::on_thread_tick(wxThreadEvent &event)
     if (m_current_song_event_count > 0U) {
         events_complete = int(m_current_song_event_count)-event.GetInt();
     }
+
     event_count->SetValue(events_complete);
 }
 
@@ -788,6 +788,9 @@ void PlayerWindow::on_group_edit(wxCommandEvent &event)
     if (select_multi_menu->IsChecked()) {
         static_cast<void>(event);
         GroupEditMidiDialog dialog(this);
+        dialog.initial_gap_text = L"0.0";
+        dialog.extended_ending_text = L"1.0";
+
         const auto result = dialog.ShowModal();
         if (wxID_CANCEL == result) {
             return;

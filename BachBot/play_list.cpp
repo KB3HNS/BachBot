@@ -24,9 +24,11 @@
 
 
 //  system includes
+#include <algorithm>  //  std::swap
 #include <stdexcept>  //  std::out_of_range
 #include <memory>  //  std::make_unique
 #include <fmt/format.h>  //  fmt::format
+#include <wx/config.h>  //  wxConfig API
 
 //  module includes
 // -none-
@@ -97,6 +99,29 @@ bool PlayListEntry::load_config(const wxXmlNode *const playlist_node)
     if (file_name.length() == 0U) {
         throw std::out_of_range(fmt::format("Invalid filename line {}",
                                             playlist_node->GetLineNumber()));
+    }
+
+    auto config = wxConfig::Get();
+    wxString path_find;
+    wxString path_replace;
+
+    if (config->Read(L"path/find", &path_find) &&
+        config->Read(L"path/replace", &path_replace))
+    {
+        file_name.Replace(path_find, path_replace);
+    }
+
+    auto sep_find = L'\\';
+    auto sep_replace = L'/';
+
+#ifdef WIN32
+    std::swap(sep_find, sep_replace);
+#endif // WIN32
+
+    for (size_t i = 0U; i < file_name.Len(); ++i) {
+        if (sep_find == file_name[i]) {
+            file_name[i] = sep_replace;
+        }
     }
 
     if (playlist_node->HasAttribute(wxT("tempo_requested"))) {

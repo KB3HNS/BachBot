@@ -39,8 +39,8 @@ BachbotConfigDialog::BachbotConfigDialog(MainWindow *parent) :
     m_config{wxConfig::Get()},
     m_gap{m_config->ReadDouble(L"import/gap", 0.0)},
     m_mul{m_config->ReadDouble(L"import/mul", 1.0)},
-    m_gap_validator(m_precision, &m_gap, wxNUM_VAL_NO_TRAILING_ZEROES),
-    m_mul_validator(m_precision, &m_mul, wxNUM_VAL_NO_TRAILING_ZEROES)
+    m_gap_validator(precision, &m_gap, wxNUM_VAL_NO_TRAILING_ZEROES),
+    m_mul_validator(precision, &m_mul, wxNUM_VAL_NO_TRAILING_ZEROES)
 {
     initial_gap_text_box->SetValidator(m_gap_validator);
     extend_ending_textbox->SetValidator(m_mul_validator);
@@ -50,6 +50,8 @@ BachbotConfigDialog::BachbotConfigDialog(MainWindow *parent) :
     pitch_change->SetValue(int(m_config->ReadLong(L"import/pitch", 0)));
     play_next_checkbox->SetValue(m_config->ReadBool(L"import/next", false));
 
+    path_find->SetValue(m_config->Read(L"path/find", L""));
+    path_replace->SetValue(m_config->Read(L"path/replace", L""));
 }
 
 
@@ -63,6 +65,9 @@ void BachbotConfigDialog::run()
         m_config->Write(L"import/mode", long(mode_select->GetValue()));
         m_config->Write(L"import/pitch", long(pitch_change->GetValue()));
         m_config->Write(L"import/next", play_next_checkbox->GetValue());
+
+        m_config->Write(L"path/find", path_find->GetValue());
+        m_config->Write(L"path/replace", path_replace->GetValue());
     }
 }
 

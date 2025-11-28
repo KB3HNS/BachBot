@@ -33,6 +33,7 @@
 #include <wx/checkbox.h>
 #include <wx/dialog.h>
 #include <wx/radiobut.h>
+#include <wx/valtext.h>
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -282,6 +283,8 @@ namespace bach_bot
 				wxCheckBox* extend_ending_checkbox;
 				wxCheckBox* play_next_checkbox;
 				wxCheckBox* apply_play_next_checkbox;
+				wxString initial_gap_text;
+				wxString extended_ending_text;
 
 				GroupEditMidiDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Group Edit Midi"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 400,275 ), long style = wxDEFAULT_DIALOG_STYLE );
 
@@ -314,11 +317,15 @@ namespace bach_bot
 				wxSpinCtrl* pitch_change;
 				wxTextCtrl* extend_ending_textbox;
 				wxCheckBox* play_next_checkbox;
+				wxStaticText* m_staticText71;
+				wxTextCtrl* path_find;
+				wxStaticText* m_staticText72;
+				wxTextCtrl* path_replace;
 
 			public:
 				wxStaticText* extended_ending_label;
 
-				AppConfigDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Default Import Settings"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( -1,-1 ), long style = wxDEFAULT_DIALOG_STYLE );
+				AppConfigDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Default Import Settings"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 437,336 ), long style = wxDEFAULT_DIALOG_STYLE );
 
 				~AppConfigDialog();
 
