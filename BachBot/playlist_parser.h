@@ -31,7 +31,7 @@
 #include <exception>  //  std::exception
 #include <utility>  //  std::pair
 #include <vector>  //  std::vector
-#include <wx/xml/xml.h>  //  wxXmlNode, etc
+#include <wx/xml/xml.h>  //  wxXml API
 
 
 namespace bach_bot {

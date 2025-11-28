@@ -152,6 +152,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bachbot_config.cpp" />
     <ClCompile Include="bitmap_painter.cpp" />
     <ClCompile Include="label_animator.cpp" />
     <ClCompile Include="main.cpp" />
@@ -169,6 +170,7 @@
     <ClCompile Include="thread_loader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bachbot_config.h" />
     <ClInclude Include="bitmap_painter.h" />
     <ClInclude Include="common_defs.h" />
     <ClInclude Include="label_animator.h" />

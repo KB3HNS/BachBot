@@ -41,7 +41,7 @@
 #include "organ_midi_event.h"  //  OrganMidiEvent, BankConfig
 #include "syndyne_importer.h"  //  SyndineImporter
 #include "playlist_loader.h"  //  PlaylistLoader
-
+#include "bachbot_config.h"  //  BachbotConfigDialog
 
 namespace {
     using namespace std::literals::string_view_literals;
@@ -825,6 +825,14 @@ void PlayerWindow::on_delete_selected(wxCommandEvent &event)
 
         song_id = sequence.second;
     }
+}
+
+
+void PlayerWindow::on_edit_preferences(wxCommandEvent &event)
+{
+    auto config = wxConfig::Get();
+    BachbotConfigDialog dialog(this);
+    dialog.run();
 }
 
 

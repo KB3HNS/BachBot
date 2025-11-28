@@ -146,6 +146,7 @@ protected:
     virtual void on_shift_down(wxCommandEvent &event) override final;
     virtual void on_group_edit(wxCommandEvent &event) override final;
     virtual void on_delete_selected(wxCommandEvent &event) override final;
+    virtual void on_edit_preferences(wxCommandEvent &event) override final;
 
 private:
     //  Locally bound UI events

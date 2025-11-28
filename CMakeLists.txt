@@ -5,8 +5,6 @@ project(BachBot VERSION 0.4.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# set(CMAKE_TOOLCHAIN_FILE "D:/devel/vcpkg/scripts/buildsystems/vcpkg.cmake")
-# set(VCPKG_TARGET_TRIPLET "x64-windows")
 set(CMAKE_CL_64 True)
 
 find_package(fmt REQUIRED)
@@ -32,8 +30,8 @@ set(SRCS
     BachBot/play_list.cpp
     BachBot/syndyne_importer.cpp
     BachBot/thread_loader.cpp
-    BachBot/thread_loader.cpp
-
+    BachBot/playlist_parser.cpp
+    BachBot/bachbot_config.cpp
 )
 
 set(INCLUDE_DIRS

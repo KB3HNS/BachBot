@@ -31,7 +31,7 @@
 #include <list>  //  std::list
 #include <variant>  //  std::variant
 #include <vector>  //  std::vector
-#include <wx/xml/xml.h>  //  wxXml API
+#include <wx/config.h>  //  wxConfig API
 #include <wx/wx.h>  //  wxThread, etc
 
  //  module includes
@@ -119,6 +119,7 @@ class PlaylistDndLoader : public ThreadLoader
         PlaylistDndLoader &m_parent;  ///<  Parent
         PlayListEntry &m_entry;  ///<  Entry output
         const uint32_t m_song_number;  ///< Song number to assign to this entry
+        const wxConfigBase *const m_config;  ///<  Global configuration
     };
 
 public:

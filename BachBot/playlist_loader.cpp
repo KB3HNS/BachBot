@@ -127,21 +127,26 @@ PlaylistDndLoader::PlaylistAccess::PlaylistAccess(PlaylistDndLoader &parent,
                                                   const uint32_t song_number) :
     m_parent{parent},
     m_entry{entry},
-    m_song_number{song_number}
+    m_song_number{song_number},
+    m_config{wxConfig::Get()}
 {
 }
 
 
 void PlaylistDndLoader::PlaylistAccess::operator()(const wxString &entry)
 {
+    auto mode = m_config->ReadLong(L"import/mode", 1);
+    auto mem = m_config->ReadLong(L"import/mem", 1);
+    auto pitch = m_config->ReadLong(L"import/pitch", 0);
+
     m_entry.file_name = entry;
     m_entry.song_id = m_song_number;
     m_entry.tempo_requested = -1;
-    m_entry.gap_beats = 0.0;
-    m_entry.starting_config = BankConfig();
-    m_entry.delta_pitch = 0;
-    m_entry.last_note_multiplier = 1.0;
-    m_entry.play_next = false;
+    m_entry.gap_beats = m_config->ReadDouble(L"import/gap", 0.0);
+    m_entry.starting_config = BankConfig(uint32_t(mem), uint8_t(mode));
+    m_entry.delta_pitch = int(pitch);
+    m_entry.last_note_multiplier = m_config->ReadDouble(L"import/mul", 1.0);
+    m_entry.play_next = m_config->ReadBool(L"import/next", false);
 }
 
 
