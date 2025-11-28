@@ -57,6 +57,9 @@
     <ClCompile Include="rt_timer_win.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="playlist_parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main_window.h">
@@ -102,6 +105,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="playlist_parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

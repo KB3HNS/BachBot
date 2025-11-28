@@ -162,6 +162,7 @@
     <ClCompile Include="player_window.cpp" />
     <ClCompile Include="playlist_entry_control.cpp" />
     <ClCompile Include="playlist_loader.cpp" />
+    <ClCompile Include="playlist_parser.cpp" />
     <ClCompile Include="play_list.cpp" />
     <ClCompile Include="rt_timer_win.cpp" />
     <ClCompile Include="syndyne_importer.cpp" />
@@ -178,6 +179,7 @@
     <ClInclude Include="player_window.h" />
     <ClInclude Include="playlist_entry_control.h" />
     <ClInclude Include="playlist_loader.h" />
+    <ClInclude Include="playlist_parser.h" />
     <ClInclude Include="play_list.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="rt_timer.h" />

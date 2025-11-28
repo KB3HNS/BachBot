@@ -31,10 +31,10 @@
 #pragma once
 
 //  system includes
-#include <vector>  //  std::vector
+#include <functional>  //  std::function
 #include <list>  //  std::list
 #include <optional>  //  std::optional
-#include <functional>  //  std::function
+#include <vector>  //  std::vector
 #include <wx/wx.h>  //  wxThread, etc
 
 //  module includes
@@ -53,6 +53,9 @@ namespace ui {
  */
 class ThreadLoader : public LoadingPopup, wxThread
 {
+protected:
+    using SongNode = std::pair<uint32_t, wxXmlNode>;
+
 public:
     using SuccessCallback = std::function<void(std::list<PlayListEntry>)>;
     /**
@@ -98,6 +101,13 @@ protected:
      * @param error error text to report to the user
      */
     void set_error_text(const wxString &error);
+
+    /**
+     * @brief Parse a playlist and return a list of files
+     * @param file_name playlist filename
+     * @return list of files with attributes
+    */
+    std::vector<SongNode> parse_playlist(const wxString &file_name);
 
 private:
     enum LoaderEvents : int

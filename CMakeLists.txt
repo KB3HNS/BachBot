@@ -32,6 +32,8 @@ set(SRCS
     BachBot/play_list.cpp
     BachBot/syndyne_importer.cpp
     BachBot/thread_loader.cpp
+    BachBot/thread_loader.cpp
+
 )
 
 set(INCLUDE_DIRS

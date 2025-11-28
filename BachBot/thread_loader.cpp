@@ -96,8 +96,8 @@ wxThread::ExitCode ThreadLoader::Entry()
     } else {
         exit_event.SetInt(wxID_OK);
     }
-    wxQueueEvent(this, exit_event.Clone());
 
+    wxQueueEvent(this, exit_event.Clone());
     return nullptr;
 }
 
@@ -108,6 +108,16 @@ void ThreadLoader::set_error_text(const wxString &error)
         m_error_text = error;
     }
 }
+
+std::vector<ThreadLoader::SongNode> ThreadLoader::parse_playlist(const wxString &file_name)
+{
+    std::vector<SongNode> result;
+
+
+
+    return result;
+}
+
 
 void ThreadLoader::on_start_event(wxThreadEvent &event)
 {
