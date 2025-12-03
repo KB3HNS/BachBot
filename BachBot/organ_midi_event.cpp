@@ -279,4 +279,25 @@ BankConfig::operator int() const
     return int(mem) + int(mode);
 }
 
+
+NoteConfig::NoteConfig() :
+    min_gap{MINIMUM_NOTE_GAP_S},
+    min_len{MINIMUM_NOTE_LENGTH_S}
+{
+}
+
+
+void NoteConfig::parseMidiEvent(const smf::MidiEvent &midi_event)
+{
+    if (midi_event.isController()) {
+        if (MIDI_CC_ATTACK_TIME == midi_event[1U]) {
+            min_gap = MINIMUM_NOTE_GAP_S * double(midi_event[2U]);
+            min_gap /= 63.0;
+        } else if (MIDI_CC_RELEASE_TIME == midi_event[1]) {
+            min_gap = MINIMUM_NOTE_LENGTH_S * double(midi_event[2U]);
+            min_gap /= 63.0;
+        }
+    }
+}
+
 }  //  end bach_bot

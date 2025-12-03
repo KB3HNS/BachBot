@@ -71,11 +71,17 @@ constexpr const uint8_t SYNDYNE_CONTROLLER_ID = 16U;
 /** Optimal Note-On velocity to use */
 constexpr const uint8_t SYNDYNE_NOTE_ON_VELOCITY = 127U;
 
-/** Message size of [nearly] all midi events */
+/** Message size of _nearly_ all midi events */
 constexpr const size_t MIDI_MESSAGE_SIZE = 3U;
 
 /** Tempo to derive beat timing from if tempo does not exist in song. */
 constexpr const auto DEFAULT_NO_TEMPO = 120;
+
+/** "Attack" time control change event ID */
+constexpr const uint8_t MIDI_CC_ATTACK_TIME = 73U;
+
+/** "Release" or "Decay" time control change event ID */
+constexpr const uint8_t MIDI_CC_RELEASE_TIME = 72U;
 
 /**
  * @brief Adding or subtracting this from the note yields a note 1 octave up

@@ -82,6 +82,17 @@ struct BankConfig
 };
 
 
+struct NoteConfig
+{
+    NoteConfig();
+
+    void parseMidiEvent(const smf::MidiEvent &midi_event);
+
+    double min_gap;
+    double min_len;
+
+};
+
 /**
  * @brief Organ MIDI event storage class.
  */
@@ -198,8 +209,8 @@ private:
 
 
 /**
-* @brief Simplify this type.  Organ event storage.
-*/
+ * @brief Simplify this type.  Organ event storage.
+ */
 class OrganNote : public std::shared_ptr<OrganMidiEvent>
 {
 public:

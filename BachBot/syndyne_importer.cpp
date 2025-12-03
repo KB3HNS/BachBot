@@ -329,23 +329,31 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
     std::list<OrganNote> events;
     auto current_config = m_current_config;
     m_file_events.clear();
+    std::array<NoteConfig, NUM_SYNDYNE_KEYBOARDS> note_configs;
 
     //  1st pass: Process all events
     for (auto i = 0; i < event_list.size(); ++i) {
         auto midi_event = event_list[i];
         midi_event.seconds *= m_time_scaling_factor;
+        const auto channel_id = get_control_index(midi_event.getChannel());
         if (midi_event.isNote()) {
-            const auto channel_id = get_control_index(midi_event.getChannel());
             if (channel_id < m_current_state.size()) {
                 const auto note = remap_note(midi_event.getKeyNumber(),
                                              g_keyboard_indexes[channel_id]);
                 midi_event[1] = note;
-                m_current_state[channel_id][note].add_event(midi_event);
+                m_current_state[channel_id][note].add_event(
+                    midi_event,
+                    note_configs[channel_id]);
             } else if (midi_event.isNoteOn()) {
                 //  Treat as control event
                 update_bank_event(midi_event.getKeyNumber());
-                events.emplace_back(new OrganMidiEvent(midi_event, m_current_config));
+                events.emplace_back(new OrganMidiEvent(midi_event,
+                                                       m_current_config));
             }
+        } else if ((channel_id < note_configs.size()) &&
+                   midi_event.isController())
+        {
+            note_configs[channel_id].parseMidiEvent(midi_event);
         }
     }
 
@@ -426,6 +434,7 @@ std::list<OrganNote> SyndineImporter::get_events(
         if (!m_tempo_detected.has_value()) {
             static_cast<void>(get_tempo());
         }
+
         const auto spb = 60.0 / double(m_bpm);  //  Seconds/beat
         const auto initial_delay = spb * initial_delay_beats;
         auto first_entry = m_file_events.front();

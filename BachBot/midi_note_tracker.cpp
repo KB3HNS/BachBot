@@ -66,14 +66,15 @@ MidiNoteTracker::MidiNoteTracker() :
 }
 
 
-void MidiNoteTracker::add_event(const smf::MidiEvent &ev)
+void MidiNoteTracker::add_event(const smf::MidiEvent &ev,
+                                const NoteConfig &note_config)
 {
     auto organ_event = OrganNote(new OrganMidiEvent(ev, m_keyboard));
 
     if (ev.isNoteOn() && !m_on_now) {
-        process_new_note_on_event(organ_event);
-    } else if (ev.isNoteOff() && m_last_event_was_on){
-        process_new_note_off_event(organ_event);
+        process_new_note_on_event(organ_event, note_config.min_gap);
+    } else if (ev.isNoteOff() && m_last_event_was_on) {
+        process_new_note_off_event(organ_event, note_config.min_len);
     } else if (ev.isNoteOn() && is_same_time(ev, m_midi_ticks_on_time)) {
         ++m_note_nesting_count;
     } else if (ev.isNoteOff() &&
@@ -81,11 +82,11 @@ void MidiNoteTracker::add_event(const smf::MidiEvent &ev)
                (m_note_nesting_count > 0U)) {
         --m_note_nesting_count;
     } else if (ev.isNoteOn() && m_on_now) {
-        insert_off_event(organ_event);
-        process_new_note_on_event(organ_event);
+        insert_off_event(organ_event, note_config.min_len);
+        process_new_note_on_event(organ_event, note_config.min_gap);
     } else if (ev.isNoteOff() && !m_on_now && (m_note_nesting_count > 0U)) {
-        backfill_on_event(organ_event);
-        process_new_note_off_event(organ_event);
+        backfill_on_event(organ_event, note_config.min_gap);
+        process_new_note_off_event(organ_event, note_config.min_len);
     }
 
     m_last_event_was_on = ev.isNoteOn();
@@ -95,6 +96,7 @@ void MidiNoteTracker::add_event(const smf::MidiEvent &ev)
 void MidiNoteTracker::append_events(std::list<OrganNote> &event_list) const
 {
     OrganNote grouped_note_on;
+    double grouped_note_len = MINIMUM_NOTE_LENGTH_S;
 
     auto append_pair = [&](const OrganNote &note_on, const OrganNote &note_off) {
         event_list.emplace_back(note_on);
@@ -102,20 +104,22 @@ void MidiNoteTracker::append_events(std::list<OrganNote> &event_list) const
         event_list.emplace_back(note_off);
         on_event.link(event_list.back());
         grouped_note_on.reset();
+        grouped_note_len = MINIMUM_NOTE_LENGTH_S;
     };
 
-    for (auto i= m_event_list.cbegin(); m_event_list.cend() != i; ++i) {
-        auto grouped_length = 0.0;
-        if (grouped_note_on.get() != nullptr) {
-            grouped_length = i->second->m_seconds - grouped_note_on->m_seconds;
-        }
-
-        if (i->second->m_seconds - i->first->m_seconds > MINIMUM_NOTE_LENGTH_S) {
-            append_pair(i->first, i->second);
+    for (auto i = m_event_list.cbegin(); m_event_list.cend() != i; ++i) {
+        if (i->off->m_seconds - i->on->m_seconds > i->min_note_len) {
+            append_pair(i->on, i->off);
         } else if (grouped_note_on.get() == nullptr) {
-            grouped_note_on = i->first;
-        } else if (grouped_length > MINIMUM_NOTE_LENGTH_S) {
-            append_pair(grouped_note_on, i->second);
+            grouped_note_on = i->on;
+            grouped_note_len = i->min_note_len;
+        } else if (grouped_note_on.get() != nullptr) {
+            auto avg_len = i->min_note_len + grouped_note_len;
+            avg_len /= 2.0;
+            auto grouped_length = i->off->m_seconds - grouped_note_on->m_seconds;
+            if (grouped_length > avg_len) {
+                append_pair(grouped_note_on, i->off);
+            }
         }
     }
 }
@@ -127,15 +131,16 @@ void MidiNoteTracker::set_keyboard(const SyndyneKeyboards keyboard_id)
 }
 
 
-void MidiNoteTracker::process_new_note_on_event(OrganNote &organ_ev)
+void MidiNoteTracker::process_new_note_on_event(OrganNote &organ_ev,
+                                                double min_gap)
 {
     auto last_off_time = -1.0;
     if (nullptr != m_note_off.get()) {
         last_off_time = m_note_off->m_seconds;
     }
 
-    if (organ_ev->m_seconds - last_off_time < MINIMUM_NOTE_GAP_S) {
-        const auto delta = MINIMUM_NOTE_GAP_S / 2.0;
+    if (organ_ev->m_seconds - last_off_time < min_gap) {
+        const auto delta = min_gap / 2.0;
         m_note_off->m_seconds -= delta;
         organ_ev->m_seconds += delta;
     }
@@ -148,34 +153,35 @@ void MidiNoteTracker::process_new_note_on_event(OrganNote &organ_ev)
 }
 
 
-void MidiNoteTracker::process_new_note_off_event(OrganNote &organ_ev)
+void MidiNoteTracker::process_new_note_off_event(OrganNote &organ_ev,
+                                                 double min_length)
 {
     m_note_off = organ_ev;
     --m_note_nesting_count;
     m_on_now = false;
     m_last_midi_off_time = organ_ev->m_midi_time;
     organ_ev->m_byte2 = uint8_t(0U);
-    m_event_list.push_back({m_note_on, m_note_off});
+    m_event_list.push_back({m_note_on, m_note_off, min_length});
 }
 
 
-void MidiNoteTracker::insert_off_event(OrganNote &organ_ev)
+void MidiNoteTracker::insert_off_event(OrganNote &organ_ev, double min_length)
 {
     OrganNote organ_event(*organ_ev);
     organ_event->m_event_code = make_midi_command_byte(m_keyboard,
                                                        MidiCommands::NOTE_OFF);
-    process_new_note_off_event(organ_event);
+    process_new_note_off_event(organ_event, min_length);
     ++m_note_nesting_count;
 }
 
 
-void MidiNoteTracker::backfill_on_event(OrganNote &organ_ev)
+void MidiNoteTracker::backfill_on_event(OrganNote &organ_ev, double min_gap)
 {
     static_cast<void>(organ_ev);
     OrganNote organ_event(*m_note_off);
     organ_event->m_event_code = make_midi_command_byte(m_keyboard,
                                                        MidiCommands::NOTE_ON);
-    process_new_note_on_event(organ_event);
+    process_new_note_on_event(organ_event, min_gap);
     --m_note_nesting_count;
 }
 

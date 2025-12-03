@@ -323,6 +323,7 @@ void PlayerThread::do_mode_check()
         } else {
             --m_mode_number;
         }
+
         send_change(SyndyneBankCommands::PREV_BANK);
     };
 

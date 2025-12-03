@@ -299,6 +299,25 @@ void PlayerWindow::on_open_midi(wxCommandEvent &event)
     }
 
     LoadMidiDialog import_dialog(this);
+    auto config = wxConfig::Get();
+
+    auto gap = config->ReadDouble(L"import/gap", 0.0);
+    import_dialog.initial_gap_text_box->SetValue(wxString::FromDouble(gap));
+
+    auto mem = config->ReadLong(L"import/mem", 1);
+    import_dialog.memory_select->SetValue(int(mem));
+
+    auto mode = config->ReadLong(L"import/mode", 1);
+    import_dialog.mode_select->SetValue(int(mode));
+
+    auto mul = config->ReadDouble(L"import/mul", 1.0);
+    import_dialog.extend_ending_textbox->SetValue(wxString::FromDouble(mul));
+
+    auto pitch = config->ReadLong(L"import/pitch", 0);
+    import_dialog.pitch_change->SetValue(int(pitch));
+
+    auto play_next = config->ReadBool(L"import/next", false);
+    import_dialog.play_next_checkbox->SetValue(play_next);
 
     set_midi_dialog_filename(import_dialog, open_dialog.GetPath());
     import_dialog.tempo_label->SetLabelText(wxString::Format(wxT("%ibpm"),

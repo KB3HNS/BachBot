@@ -62,6 +62,12 @@ namespace bach_bot {
  */
 class MidiNoteTracker
 {
+    struct EventPair
+    {
+        OrganNote on;
+        OrganNote off;
+        double min_note_len;
+    };
 public:
     /**
      * @brief Constructor
@@ -71,9 +77,10 @@ public:
     /**
      * @brief Add a single event to this tracking logic
      * @param ev midi event
+     * @param note_config Note timing config at event
      * @note ev must be either a NoteOn or NoteOff event.
      */
-    void add_event(const smf::MidiEvent &ev);
+    void add_event(const smf::MidiEvent &ev, const NoteConfig &note_config);
 
     /**
      * @brief Append our events to the list
@@ -91,27 +98,31 @@ private:
     /**
      * @brief Logic for a new note-on event in the event list.
      * @param organ_ev event to process
+     * @param min_gap minimum gap to test note "restrike"
      * @note this occurs *any* time that the note is turned on including
      *       restrikes.
      */
-    void process_new_note_on_event(OrganNote &organ_ev);
+    void process_new_note_on_event(OrganNote &organ_ev, double min_gap);
 
     /**
      * @brief Logic for a new not-off event in the event list.
      * @param organ_ev event to process
+     * @param min_length minimum note length
      * @note this will always append a complete (note-on+note-off pair).
      */
-    void process_new_note_off_event(OrganNote &organ_ev);
+    void process_new_note_off_event(OrganNote &organ_ev, double min_length);
 
     /**
      * @brief Insert a simulated note-off event in the case of a restrike.
      * @param organ_ev note-on event that caused the restrike.
-    */
-    void insert_off_event(OrganNote &organ_ev);
+     * @param min_length minimum note length
+     */
+    void insert_off_event(OrganNote &organ_ev, double min_length);
 
     /**
      * @brief Insert a simulated note-on event from last note-off.
      * @param organ_ev note-off event that necessitated the backfill.
+     * @param min_gap minimum gap to test note "restrike"
      * @note
      * This occurs when multiple note-on events are active and the
      * corresponding note-off events occur at different times.  In this event,
@@ -119,7 +130,7 @@ private:
      * actually supposed to be a restrike and this note-off is the end of that
      * restrike event.
      */
-    void backfill_on_event(OrganNote &organ_ev);
+    void backfill_on_event(OrganNote &organ_ev, double min_gap);
 
     bool m_on_now;  ///< Current state, note is on now
     bool m_last_event_was_on;  ///< The last event processed was a note-on
@@ -139,11 +150,8 @@ private:
 
     /**
      * @brief Event list for this note
-     * @note
-     *   - `first` is the note-on event,
-     *   - `second` is the matching note-off event
      */
-    std::list<std::pair<OrganNote, OrganNote>> m_event_list;
+    std::list<EventPair> m_event_list;
 };
 
 }  //  end bach_bot
