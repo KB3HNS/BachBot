@@ -119,21 +119,7 @@ private:
      */
     void insert_off_event(OrganNote &organ_ev, double min_length);
 
-    /**
-     * @brief Insert a simulated note-on event from last note-off.
-     * @param organ_ev note-off event that necessitated the backfill.
-     * @param min_gap minimum gap to test note "restrike"
-     * @note
-     * This occurs when multiple note-on events are active and the
-     * corresponding note-off events occur at different times.  In this event,
-     * the first note-off, which would have turned the channel off, was
-     * actually supposed to be a restrike and this note-off is the end of that
-     * restrike event.
-     */
-    void backfill_on_event(OrganNote &organ_ev, double min_gap);
-
     bool m_on_now;  ///< Current state, note is on now
-    bool m_last_event_was_on;  ///< The last event processed was a note-on
 
     /**
      * @brief MIDI time that the most recent"on" time occured

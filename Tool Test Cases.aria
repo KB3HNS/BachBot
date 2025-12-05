@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <seqview xscroll="0.000000" yscroll="0" zoom="150">
-<sequence maintempo="120" measureAmount="109" currentTrack="0" beatResolution="960" internalName="Tool Test Cases" fileFormatVersion="4" channelManagement="manual" metronome="false">
+<sequence maintempo="120" measureAmount="109" currentTrack="1" beatResolution="960" internalName="Tool Test Cases" fileFormatVersion="4" channelManagement="manual" metronome="false">
 
 <measure  firstMeasure="0" denom="4" num="4"/>
 
 <tempo>
+  <controlevent type="201" tick="46080" value="52.89473724"/>
+  <controlevent type="201" tick="61440" value="93.31578827"/>
+  <controlevent type="201" tick="76800" value="93.31578827"/>
 </tempo>
 <text>
 </text>
@@ -20,9 +23,9 @@
     <keyboard enabled="false" scroll="0.500000"/>
     <guitar enabled="false"/>
     <drum enabled="false" scroll="0.000000"/>
-    <controller enabled="true" controller="72" proportion="0.500000"/>
+    <controller enabled="true" controller="201" proportion="0.500000"/>
   </editors>
-  <magneticgrid divider="8" triplet="false" dotted="false"/>
+  <magneticgrid divider="4" triplet="false" dotted="false"/>
   <instrument id="0"/>
   <drumkit id="0" collapseView="false"/>
   <guitartuning  string0="67" string1="72" string2="76" string3="81" string4="86" string5="91"/>
@@ -328,6 +331,8 @@
   <note pitch="62" start="75360" end="75840" volume="80" fret="3" string="0"/>
   <note pitch="62" start="75840" end="76320" volume="80" fret="3" string="0"/>
   <note pitch="62" start="76320" end="76800" volume="80" fret="3" string="0"/>
+  <note pitch="60" start="76800" end="79680" volume="80" selected="true"/>
+  <note pitch="59" start="80640" end="84480" volume="80"/>
   <controlevent type="72" tick="46080" value="125.00000000"/>
   <controlevent type="72" tick="46081" value="124.00000000"/>
   <controlevent type="72" tick="46203" value="123.00000000"/>
@@ -586,7 +591,7 @@
 <track name="B" id="1" channel="1" muted="false" soloed="false" volume="100" default_volume="80">
   <key type="C" />
   <editors height="128">
-    <score enabled="true" musical_notation="true" linear_notation="true" g_clef="true" f_clef="true" scroll="0.547945" proportion="1.000000"/>
+    <score enabled="true" musical_notation="true" linear_notation="true" g_clef="true" f_clef="true" scroll="0.587945" proportion="1.000000"/>
     <keyboard enabled="false" scroll="0.500000"/>
     <guitar enabled="false"/>
     <drum enabled="false" scroll="0.000000"/>
@@ -606,6 +611,10 @@
   <note pitch="67" start="38400" end="40320" volume="80"/>
   <note pitch="67" start="40320" end="42240" volume="80"/>
   <note pitch="62" start="42240" end="43200" volume="80"/>
+  <note pitch="59" start="77760" end="79680" volume="80"/>
+  <note pitch="59" start="80640" end="81600" volume="80"/>
+  <note pitch="57" start="81600" end="82560" volume="80"/>
+  <note pitch="59" start="82560" end="84480" volume="80" selected="true"/>
 </track>
 
 

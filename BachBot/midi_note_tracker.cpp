@@ -54,7 +54,6 @@ namespace bach_bot {
 
 MidiNoteTracker::MidiNoteTracker() :
     m_on_now{false},
-    m_last_event_was_on{false},
     m_midi_ticks_on_time{-1},
     m_last_midi_off_time{-1},
     m_note_nesting_count{0U},
@@ -71,25 +70,27 @@ void MidiNoteTracker::add_event(const smf::MidiEvent &ev,
 {
     auto organ_event = OrganNote(new OrganMidiEvent(ev, m_keyboard));
 
-    if (ev.isNoteOn() && !m_on_now) {
-        process_new_note_on_event(organ_event, note_config.min_gap);
-    } else if (ev.isNoteOff() && m_last_event_was_on) {
-        process_new_note_off_event(organ_event, note_config.min_len);
-    } else if (ev.isNoteOn() && is_same_time(ev, m_midi_ticks_on_time)) {
-        ++m_note_nesting_count;
-    } else if (ev.isNoteOff() &&
-               is_same_time(ev, m_last_midi_off_time) &&
-               (m_note_nesting_count > 0U)) {
-        --m_note_nesting_count;
-    } else if (ev.isNoteOn() && m_on_now) {
-        insert_off_event(organ_event, note_config.min_len);
-        process_new_note_on_event(organ_event, note_config.min_gap);
-    } else if (ev.isNoteOff() && !m_on_now && (m_note_nesting_count > 0U)) {
-        backfill_on_event(organ_event, note_config.min_gap);
-        process_new_note_off_event(organ_event, note_config.min_len);
+    if (ev.isNoteOn()) {
+        if (!m_on_now) {
+            //  New note
+            process_new_note_on_event(organ_event, note_config.min_gap);
+        } else if (ev.isNoteOn() && is_same_time(ev, m_midi_ticks_on_time)) {
+            //  Note turned on twice at the same time
+            ++m_note_nesting_count;
+        } else {
+            //  Note turned on during current note
+            insert_off_event(organ_event, note_config.min_len);
+            process_new_note_on_event(organ_event, note_config.min_gap);
+            ++m_note_nesting_count;
+        }
+    } else if (ev.isNoteOff() && m_on_now) {
+        if (0 == m_note_nesting_count) {
+            process_new_note_off_event(organ_event, note_config.min_len);
+        } else {
+            //  Keep note on until all note off events have occurred
+            --m_note_nesting_count;
+        }
     }
-
-    m_last_event_was_on = ev.isNoteOn();
 }
 
 
@@ -148,7 +149,6 @@ void MidiNoteTracker::process_new_note_on_event(OrganNote &organ_ev,
     m_note_on = organ_ev;
     m_midi_ticks_on_time = organ_ev->m_midi_time;
     m_on_now = true;
-    ++m_note_nesting_count;
     organ_ev->m_byte2 = SYNDYNE_NOTE_ON_VELOCITY;
 }
 
@@ -157,7 +157,6 @@ void MidiNoteTracker::process_new_note_off_event(OrganNote &organ_ev,
                                                  double min_length)
 {
     m_note_off = organ_ev;
-    --m_note_nesting_count;
     m_on_now = false;
     m_last_midi_off_time = organ_ev->m_midi_time;
     organ_ev->m_byte2 = uint8_t(0U);
@@ -171,18 +170,6 @@ void MidiNoteTracker::insert_off_event(OrganNote &organ_ev, double min_length)
     organ_event->m_event_code = make_midi_command_byte(m_keyboard,
                                                        MidiCommands::NOTE_OFF);
     process_new_note_off_event(organ_event, min_length);
-    ++m_note_nesting_count;
-}
-
-
-void MidiNoteTracker::backfill_on_event(OrganNote &organ_ev, double min_gap)
-{
-    static_cast<void>(organ_ev);
-    OrganNote organ_event(*m_note_off);
-    organ_event->m_event_code = make_midi_command_byte(m_keyboard,
-                                                       MidiCommands::NOTE_ON);
-    process_new_note_on_event(organ_event, min_gap);
-    --m_note_nesting_count;
 }
 
 }  //  end bach_bot
