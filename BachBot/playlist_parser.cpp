@@ -23,7 +23,16 @@
  */
 
 
+//  system includes
+#include <cstdint>   //  uint32_t
+#include <limits>  //  std::nmumeric_limits
+
+ //  module includes
+ // -none-
+
+ //  local includes
 #include "playlist_parser.h"
+
 
 namespace bach_bot {
 
@@ -105,7 +114,7 @@ PlaylistParseError::PlaylistParseError(const wxString &error_text) :
 }
 
 
-const char *PlaylistParseError::what() const
+const char *PlaylistParseError::what() const NOEXCEPT
 {
     return m_what.c_str().AsChar();
 }
