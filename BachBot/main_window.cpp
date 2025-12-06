@@ -1046,6 +1046,21 @@ AppConfigDialog::AppConfigDialog( wxWindow* parent, wxWindowID id, const wxStrin
 
 	bSizer37->Add( 0, 10, 0, 0, 5 );
 
+	wxBoxSizer* bSizer28;
+	bSizer28 = new wxBoxSizer( wxHORIZONTAL );
+
+	m_staticText58 = new wxStaticText( this, wxID_ANY, wxT("Default Voice"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText58->Wrap( -1 );
+	bSizer28->Add( m_staticText58, 0, wxALIGN_CENTER|wxALL, 5 );
+
+	wxArrayString m_default_voiceChoices;
+	m_default_voice = new wxChoice( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, m_default_voiceChoices, 0 );
+	m_default_voice->SetSelection( 0 );
+	bSizer28->Add( m_default_voice, 1, wxALL, 5 );
+
+
+	bSizer37->Add( bSizer28, 1, wxEXPAND, 5 );
+
 	m_sdbSizer1 = new wxStdDialogButtonSizer();
 	m_sdbSizer1OK = new wxButton( this, wxID_OK );
 	m_sdbSizer1->AddButton( m_sdbSizer1OK );

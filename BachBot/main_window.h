@@ -34,6 +34,7 @@
 #include <wx/dialog.h>
 #include <wx/radiobut.h>
 #include <wx/valtext.h>
+#include <wx/choice.h>
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -306,6 +307,7 @@ namespace bach_bot
 				wxStaticText* m_staticText22;
 				wxStaticText* m_staticText15;
 				wxStaticText* m_staticText18;
+				wxStaticText* m_staticText58;
 				wxStdDialogButtonSizer* m_sdbSizer1;
 				wxButton* m_sdbSizer1OK;
 				wxButton* m_sdbSizer1Cancel;
@@ -321,11 +323,12 @@ namespace bach_bot
 				wxTextCtrl* path_find;
 				wxStaticText* m_staticText72;
 				wxTextCtrl* path_replace;
+				wxChoice* m_default_voice;
 
 			public:
 				wxStaticText* extended_ending_label;
 
-				AppConfigDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Default Import Settings"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 437,336 ), long style = wxDEFAULT_DIALOG_STYLE );
+				AppConfigDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Default Import Settings"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 449,388 ), long style = wxDEFAULT_DIALOG_STYLE );
 
 				~AppConfigDialog();
 

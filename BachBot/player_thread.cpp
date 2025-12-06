@@ -26,6 +26,7 @@
 //  system includes
 #include <stdexcept>  //  std::runtime_error
 #include <memory>  //  std::unique_ptr
+#include <wx/config.h>  //  wxConfig API
 
 //  module includes
 // -none-
@@ -84,13 +85,17 @@ PlayerThread::PlayerThread(wxFrame* const frame, RtMidiOut &intf) :
     m_last_message{MessageId::NO_MESSAGE},
     m_first_match{false},
     m_desired_config_shared(),
-    m_notes_on()
+    m_notes_on(),
+    m_playback_voice{0}
 {
     m_desired_config_shared = int(m_desired_config);
     m_bank_change_delay.Start(MINIMUM_BANK_CHANGE_INTERVAL_MS);
     for (auto &i : m_notes_on) {
         i.fill(0U);
     }
+
+    auto config = wxConfig::Get();
+    m_playback_voice = uint8_t(config->ReadLong(L"voice/default_voice", 0));
 }
 
 
@@ -99,6 +104,7 @@ wxThread::ExitCode PlayerThread::Entry()
     std::unique_ptr<RTTimer> timer(create_timer(this));
     
     timer->start_timer();
+    init_default_instrument();
     while (load_next_song()) {
         if (!run_song()) {
             break;
@@ -149,6 +155,7 @@ bool PlayerThread::run_song()
                 tick_event.SetInt(int(m_midi_event_queue.size()));
                 wxQueueEvent(m_frame, tick_event.Clone());
             }
+
             if (m_first_match) {
                 process_notes();
             }
@@ -426,6 +433,26 @@ void PlayerThread::update_event_table(const OrganMidiEvent &event)
     }
 
     m_notes_on[index][note] = vel;
+}
+
+
+void PlayerThread::init_default_instrument()
+{
+    std::array<uint8_t, MIDI_MESSAGE_SIZE> message;
+    message.fill(0U);
+    
+    message[1U] = m_playback_voice;
+    message[0U] = make_midi_command_byte(SyndyneKeyboards::MANUAL1_GREAT,
+                                         MidiCommands::PATCH_CHANGE);
+    m_midi_out.sendMessage(message.data(), message.size());
+
+    message[0U] = make_midi_command_byte(SyndyneKeyboards::MANUAL2_SWELL,
+                                         MidiCommands::PATCH_CHANGE);
+    m_midi_out.sendMessage(message.data(), message.size());
+
+    message[0U] = make_midi_command_byte(SyndyneKeyboards::PEDAL,
+                                         MidiCommands::PATCH_CHANGE);
+    m_midi_out.sendMessage(message.data(), message.size());
 }
 
 

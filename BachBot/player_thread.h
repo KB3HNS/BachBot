@@ -216,6 +216,8 @@ private:
 
     void update_event_table(const OrganMidiEvent &event);
 
+    void init_default_instrument();
+
     /**
      * @brief Shared data are protected by mutex
      * @p
@@ -279,6 +281,11 @@ private:
      * @brief What notes are currently playing?
      */
     SyndyneMidiEventTable<uint8_t> m_notes_on;
+
+    /**
+     * @brief Set the playback voice (instrument) to be used.
+     */
+    uint8_t m_playback_voice;
 };
 
 }  //  end bach_bot
