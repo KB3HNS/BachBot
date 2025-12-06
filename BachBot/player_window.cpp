@@ -852,7 +852,7 @@ void PlayerWindow::on_delete_selected(wxCommandEvent &event)
 
 void PlayerWindow::on_edit_preferences(wxCommandEvent &event)
 {
-    auto config = wxConfig::Get();
+    static_cast<void>(event);
     BachbotConfigDialog dialog(this);
     dialog.run();
 }

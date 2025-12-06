@@ -345,7 +345,7 @@ void PlaylistEntryControl::on_configure_clicked(wxCommandEvent &event)
             return;
         }
 
-        auto error_text = m_playlist_entry.load_config(update_dialog);
+        error_text = m_playlist_entry.load_config(update_dialog);
         if (error_text.has_value()) {
             wxMessageBox(error_text.value(), wxT("Form Error"),
                          wxOK | wxICON_INFORMATION);

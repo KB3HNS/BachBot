@@ -33,6 +33,13 @@
 #include <vector>  //  std::vector
 #include <wx/xml/xml.h>  //  wxXml API
 
+#ifdef WIN32
+//  MSW C++ is **WRONG** and **NOT CONFORMANT**
+#define NOEXCEPT
+#else
+#define NOEXCEPT noexcept
+#endif
+
 
 namespace bach_bot {
 
@@ -48,7 +55,7 @@ public:
     */
     PlaylistParseError(const wxString& error_text);
 
-    const char* what() const override;
+    const char* what() const NOEXCEPT override;
 
 private:
     wxString m_what;  ///<  Persistent storage
