@@ -285,7 +285,7 @@ private:
     /**
      * @brief Set the playback voice (instrument) to be used.
      */
-    uint8_t m_playback_voice;
+    const uint8_t m_playback_voice;
 };
 
 }  //  end bach_bot

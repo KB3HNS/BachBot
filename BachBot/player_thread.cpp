@@ -45,6 +45,17 @@ constexpr std::array g_chan_map = {
     bach_bot::SyndyneKeyboards::PEDAL
 };
 
+
+/**
+ * @brief Get the "default" voice from the global configuration manager.
+ * @return MIDI instrument to use
+ * @note As a function so this can be called during construction
+*/
+uint8_t get_default_voice()
+{
+    auto config = wxConfig::Get();
+    return uint8_t(config->ReadLong(L"voice/default_voice", 0));
+}
 }
 
 
@@ -86,16 +97,13 @@ PlayerThread::PlayerThread(wxFrame* const frame, RtMidiOut &intf) :
     m_first_match{false},
     m_desired_config_shared(),
     m_notes_on(),
-    m_playback_voice{0}
+    m_playback_voice{get_default_voice()}
 {
     m_desired_config_shared = int(m_desired_config);
     m_bank_change_delay.Start(MINIMUM_BANK_CHANGE_INTERVAL_MS);
     for (auto &i : m_notes_on) {
         i.fill(0U);
     }
-
-    auto config = wxConfig::Get();
-    m_playback_voice = uint8_t(config->ReadLong(L"voice/default_voice", 0));
 }
 
 
