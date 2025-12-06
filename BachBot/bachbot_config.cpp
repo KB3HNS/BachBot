@@ -214,6 +214,15 @@ BachbotConfigDialog::BachbotConfigDialog(MainWindow *parent) :
     m_default_voice->Set(instruments);
     m_default_voice->SetSelection(
         int(m_config->ReadLong(L"voice/default_voice", 0)));
+
+#ifdef __linux__
+    auto size = GetSize();
+    auto height = double(size.y) * 1.5;
+    auto width = double(size.x) * 1.25;
+    size.y = int(height);
+    size.x = int(width);
+    SetSize(size);
+#endif
 }
 
 
