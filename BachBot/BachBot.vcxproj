@@ -118,11 +118,12 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;FMT_DEPRECATED_INCLUDE_XCHAR</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>..\midifile\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>26812</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -136,7 +137,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;FMT_DEPRECATED_INCLUDE_XCHAR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>..\midifile\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -151,6 +152,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bachbot_config.cpp" />
     <ClCompile Include="bitmap_painter.cpp" />
     <ClCompile Include="label_animator.cpp" />
     <ClCompile Include="main.cpp" />
@@ -161,12 +163,14 @@
     <ClCompile Include="player_window.cpp" />
     <ClCompile Include="playlist_entry_control.cpp" />
     <ClCompile Include="playlist_loader.cpp" />
+    <ClCompile Include="playlist_parser.cpp" />
     <ClCompile Include="play_list.cpp" />
     <ClCompile Include="rt_timer_win.cpp" />
     <ClCompile Include="syndyne_importer.cpp" />
     <ClCompile Include="thread_loader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bachbot_config.h" />
     <ClInclude Include="bitmap_painter.h" />
     <ClInclude Include="common_defs.h" />
     <ClInclude Include="label_animator.h" />
@@ -177,6 +181,7 @@
     <ClInclude Include="player_window.h" />
     <ClInclude Include="playlist_entry_control.h" />
     <ClInclude Include="playlist_loader.h" />
+    <ClInclude Include="playlist_parser.h" />
     <ClInclude Include="play_list.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="rt_timer.h" />

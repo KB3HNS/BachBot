@@ -33,6 +33,8 @@
 #include <wx/checkbox.h>
 #include <wx/dialog.h>
 #include <wx/radiobut.h>
+#include <wx/valtext.h>
+#include <wx/choice.h>
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -126,6 +128,7 @@ namespace bach_bot
 				virtual void on_shift_down( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_group_edit( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_delete_selected( wxCommandEvent& event ) { event.Skip(); }
+				virtual void on_edit_preferences( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_manual_advance( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_manual_prev( wxCommandEvent& event ) { event.Skip(); }
 				virtual void on_manual_cancel( wxCommandEvent& event ) { event.Skip(); }
@@ -134,7 +137,7 @@ namespace bach_bot
 
 			public:
 
-				MainWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("BachBot Player"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 815,727 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
+				MainWindow( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("BachBot Player"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 864,727 ), long style = wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
 
 				~MainWindow();
 
@@ -159,6 +162,7 @@ namespace bach_bot
 				wxStaticText* m_staticText18;
 
 			public:
+				wxFlexGridSizer* container_sizer;
 				wxStaticText* file_name_label;
 				wxStaticText* tempo_label;
 				wxSpinCtrl* select_tempo;
@@ -174,7 +178,7 @@ namespace bach_bot
 				wxButton* m_sdbSizer1OK;
 				wxButton* m_sdbSizer1Cancel;
 
-				LoadMidiDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Import MIDI File"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 400,286 ), long style = wxDEFAULT_DIALOG_STYLE );
+				LoadMidiDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Import MIDI File"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( -1,-1 ), long style = wxDEFAULT_DIALOG_STYLE );
 
 				~LoadMidiDialog();
 
@@ -211,6 +215,7 @@ namespace bach_bot
 			protected:
 				wxBoxSizer* layout;
 				wxRadioButton* now_playing;
+				wxRadioButton* not_playing;
 				wxStaticText* song_label;
 				wxButton* configure_button;
 				wxCheckBox* auto_play;
@@ -247,23 +252,27 @@ namespace bach_bot
 		class GroupEditMidiDialog : public wxDialog
 		{
 			private:
-
-			protected:
+				wxStaticText* m_staticText1;
 				wxStaticText* m_staticText10;
 				wxStaticText* m_staticText14;
+				wxStaticText* initial_gap_label;
 				wxStaticText* m_staticText17;
 				wxStaticText* m_staticText19;
 				wxStaticText* m_staticText20;
 				wxStaticText* m_staticText21;
 				wxStaticText* m_staticText22;
+				wxStaticText* extended_ending_label;
 				wxStaticText* m_staticText15;
 				wxStaticText* m_staticText18;
+				wxStdDialogButtonSizer* m_sdbSizer1;
+				wxButton* m_sdbSizer1OK;
+				wxButton* m_sdbSizer1Cancel;
+
+			protected:
 
 			public:
-				wxStaticText* m_staticText1;
 				wxSpinCtrl* select_tempo;
 				wxCheckBox* tempo_checkbox;
-				wxStaticText* initial_gap_label;
 				wxTextCtrl* initial_gap_text_box;
 				wxCheckBox* silence_checkbox;
 				wxSpinCtrl* memory_select;
@@ -271,18 +280,57 @@ namespace bach_bot
 				wxCheckBox* bank_config_checkbox;
 				wxSpinCtrl* pitch_change;
 				wxCheckBox* pitch_checkbox;
-				wxStaticText* extended_ending_label;
 				wxTextCtrl* extend_ending_textbox;
 				wxCheckBox* extend_ending_checkbox;
 				wxCheckBox* play_next_checkbox;
 				wxCheckBox* apply_play_next_checkbox;
-				wxStdDialogButtonSizer* m_sdbSizer1;
-				wxButton* m_sdbSizer1OK;
-				wxButton* m_sdbSizer1Cancel;
+				wxString initial_gap_text;
+				wxString extended_ending_text;
 
 				GroupEditMidiDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Group Edit Midi"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 400,275 ), long style = wxDEFAULT_DIALOG_STYLE );
 
 				~GroupEditMidiDialog();
+
+		};
+
+		///////////////////////////////////////////////////////////////////////////////
+		/// Class AppConfigDialog
+		///////////////////////////////////////////////////////////////////////////////
+		class AppConfigDialog : public wxDialog
+		{
+			private:
+				wxStaticText* initial_gap_label;
+				wxStaticText* m_staticText17;
+				wxStaticText* m_staticText19;
+				wxStaticText* m_staticText20;
+				wxStaticText* m_staticText21;
+				wxStaticText* m_staticText22;
+				wxStaticText* m_staticText15;
+				wxStaticText* m_staticText18;
+				wxStaticText* m_staticText58;
+				wxStdDialogButtonSizer* m_sdbSizer1;
+				wxButton* m_sdbSizer1OK;
+				wxButton* m_sdbSizer1Cancel;
+
+			protected:
+				wxTextCtrl* initial_gap_text_box;
+				wxSpinCtrl* memory_select;
+				wxSpinCtrl* mode_select;
+				wxSpinCtrl* pitch_change;
+				wxTextCtrl* extend_ending_textbox;
+				wxCheckBox* play_next_checkbox;
+				wxStaticText* m_staticText71;
+				wxTextCtrl* path_find;
+				wxStaticText* m_staticText72;
+				wxTextCtrl* path_replace;
+				wxChoice* m_default_voice;
+
+			public:
+				wxStaticText* extended_ending_label;
+
+				AppConfigDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Default Import Settings"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 449,388 ), long style = wxDEFAULT_DIALOG_STYLE );
+
+				~AppConfigDialog();
 
 		};
 

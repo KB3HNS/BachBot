@@ -28,9 +28,10 @@
 #pragma once
 
 //  system includes
+#include <list>  //  std::list
+#include <variant>  //  std::variant
 #include <vector>  //  std::vector
-#include <utility>  //  std::pair
-#include <wx/xml/xml.h>  //  wxXml API
+#include <wx/config.h>  //  wxConfig API
 #include <wx/wx.h>  //  wxThread, etc
 
  //  module includes
@@ -38,6 +39,7 @@
 
  //  local includes
 #include "play_list.h"  //  PlayList, PlayListEntry
+#include "playlist_parser.h"  //  PlaylistParser
 #include "thread_loader.h"  //  ThreadLoader
 
 
@@ -49,7 +51,6 @@ namespace ui {
  */
 class PlaylistXmlLoader : public ThreadLoader
 {
-    using SongNode = std::pair<uint32_t, const wxXmlNode*>;
 public:
     /**
      * @brief Constructor
@@ -65,18 +66,9 @@ protected:
                                       const uint32_t song_number) override;
 
 private:
-    /**
-     * @brief Count children (ie songs) in XML tree and sorts them into the
-     *        internal vector (sends start event)
-     * @param playlist_root root note of playlist
-     * @return number of children
-     * @retval <= 0 indicates error
-     */
-    int _count_children(const wxXmlNode *const playlist_root);
-
-    wxXmlDocument m_playlist_doc;
-    const wxString m_filename;
-    std::vector<SongNode> m_entries;
+    PlaylistParser m_parser;  ///<  Parser storage
+    const wxString m_filename;  ///<  Filename
+    std::vector<PlaylistParser::SongNode> m_entries;  ///<  Pasrsed entries
 };
 
 /**
@@ -84,6 +76,52 @@ private:
  */
 class PlaylistDndLoader : public ThreadLoader
 {
+    /**
+     * @brief Simplify playlist entries:  Song node and filename index
+     */
+    using PlaylistEntry = std::pair<PlaylistParser::SongNode, size_t>;
+    
+    /**
+     * @brief Simplify the entry type
+     * @note Either the filename (load a MIDI file directly), or 
+     */
+    using SongEntry = std::variant<wxString, PlaylistEntry>;
+
+    /**
+     * @brief Callable object for handling Song entries
+     */
+    class PlaylistAccess
+    {
+    public:
+        /**
+         * @brief Constructor
+         * @param parent parent object
+         * @param entry Song entry (output)
+         * @param song_number song number to load (overrides parsed value)
+         */
+        PlaylistAccess(PlaylistDndLoader &parent,
+                       PlayListEntry &entry,
+                       const uint32_t song_number);
+
+        /**
+         * @brief Visitor access for standard midi files
+         * @param entry filename
+         */
+        void operator()(const wxString &entry);
+
+        /**
+         * @brief Visitor access for playlist entries
+         * @param entry Playlist entry data
+         */
+        void operator()(const PlaylistEntry &entry);
+
+    private:
+        PlaylistDndLoader &m_parent;  ///<  Parent
+        PlayListEntry &m_entry;  ///<  Entry output
+        const uint32_t m_song_number;  ///< Song number to assign to this entry
+        const wxConfigBase *const m_config;  ///<  Global configuration
+    };
+
 public:
     /**
      * @brief Constructor
@@ -101,10 +139,11 @@ protected:
                                       const uint32_t song_number) override;
 
 private:
-    std::vector<wxString> m_files;
-    const uint32_t m_first_song_id;
+    std::list<PlaylistParser> m_parsers;
+    std::vector<wxString> m_files_dropped;
+    std::vector<SongEntry> m_files_to_load;
+    const uint32_t m_first_song_id;  ///<  Starting song ID (offset)
 };
-
 
 }  //  end ui
 }  // end bach_bot

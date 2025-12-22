@@ -50,16 +50,7 @@
 namespace bach_bot {
 namespace ui {
 
-/**
- * @brief Utility to set a playlist entry string so that the right part is
- *        visible (usually containing the filename and not the path).
- * @param label Label to set
- * @param filename filename to store in label
- * @param max_len maximum number of characters label will support
- */
-void set_label_filename(wxStaticText *const label,
-                        const wxString &filename,
-                        const size_t max_len);
+void set_midi_dialog_filename(LoadMidiDialog &dialog, const wxString &filename);
 
 
 /** Various color entries based on state */
@@ -69,6 +60,8 @@ enum PlaylistControlState : size_t
     ENTRY_NEXT,
     ENTRY_PLAYING,
     ENTRY_SELECTED,
+    ENTRY_TEXT,
+    ENTRY_BLACK_TEXT,
     SIZE_COLOR_ARRAY
 };
 
@@ -235,7 +228,6 @@ protected:
     virtual void on_move_down(wxCommandEvent &event) override final;
     virtual void on_radio_selected(wxCommandEvent& event) override final;
     virtual void on_remove_song(wxCommandEvent& event) override final;
-    virtual void PlaylistEntryPanelOnSize(wxSizeEvent &event) override final;
 
 private:
     /**
@@ -250,17 +242,11 @@ private:
     static void dummy_event(const PlaylistEntryEventId,
                             uint32_t, PlaylistEntryControl*, bool);
 
-    static double calculate_pix_per_char(const wxStaticText *const label);
-
-    wxWindow *const m_parent;
-    bool m_up_next;
-    bool m_playing;
+    wxWindow *const m_parent;  ///<  Parent
+    bool m_up_next;  ///<  Flag: Up next
+    bool m_playing;  ///<  Flag: Now playing
     uint32_t m_prev_song_id;
     uint32_t m_next_song_id;
-    const wxSize m_panel_size;
-    // std::optional<std::pair<wxSize, wxSize>> m_initial_sizes;
-    uint32_t m_text_width;
-    const double m_pix_per_char;
 
     PlayListEntry m_playlist_entry;
     LoadMidiDialog *m_active_dialog;
@@ -268,7 +254,7 @@ private:
     static const size_t ARRAY_SIZE = PlaylistControlState::SIZE_COLOR_ARRAY;
     const std::array<wxColor, ARRAY_SIZE> m_colors;
     CallBack m_event_handler;
-    bool m_currently_selected;
+    bool m_currently_selected;  ///<  Flag: Selected
 };
 
 }  //  end ui

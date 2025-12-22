@@ -23,7 +23,6 @@
  */
 
 //  system includes
-#include <fmt/format.h>  //  fmt::format(L
 #include <stdexcept>  //  std::runtime_error
 
 //  module includes
@@ -31,11 +30,6 @@
 
 //  local includes
 #include "thread_loader.h"  //  local include
-#include "playlist_entry_control.h"  //  set_label_filename
-
-namespace {
-    constexpr const size_t MAX_FILENAME_LEN = 58U;
-}
 
 namespace bach_bot {
 namespace ui {
@@ -49,7 +43,7 @@ ThreadLoader::ThreadLoader(wxFrame *const parent) :
     m_playlist(),
     m_error_text(),
     m_count{0U},
-    m_last_progress_len{MAX_FILENAME_LEN},
+    m_last_progress_len{0U},
     m_success_callback{std::bind(&ThreadLoader::dummy_callback, this, _1)}
 {
 }
@@ -102,8 +96,8 @@ wxThread::ExitCode ThreadLoader::Entry()
     } else {
         exit_event.SetInt(wxID_OK);
     }
-    wxQueueEvent(this, exit_event.Clone());
 
+    wxQueueEvent(this, exit_event.Clone());
     return nullptr;
 }
 
@@ -114,6 +108,16 @@ void ThreadLoader::set_error_text(const wxString &error)
         m_error_text = error;
     }
 }
+
+std::vector<ThreadLoader::SongNode> ThreadLoader::parse_playlist(const wxString &file_name)
+{
+    std::vector<SongNode> result;
+
+
+
+    return result;
+}
+
 
 void ThreadLoader::on_start_event(wxThreadEvent &event)
 {
@@ -139,10 +143,6 @@ void ThreadLoader::on_tick_event(wxThreadEvent &event)
     //  The first entry will have a *very* brief glitch here.  I can't seem to
     // avoid it.
     if (label_len != m_last_progress_len) {
-        m_last_progress_len = label_len;
-        set_label_filename(filename_label,
-                           filename_label->GetLabelText(),
-                           MAX_FILENAME_LEN - label_len);
         Layout();
     }
 }
@@ -163,9 +163,7 @@ void ThreadLoader::on_close_event(wxThreadEvent &event)
 
 void ThreadLoader::on_filename_event(wxThreadEvent &event)
 {
-    const auto string_len = MAX_FILENAME_LEN -
-                            progress_label->GetLabelText().Length();
-    set_label_filename(filename_label, event.GetString(), string_len);
+    filename_label->SetLabel(event.GetString());
 }
 
 
@@ -186,8 +184,8 @@ void ThreadLoader::parse_playlist()
         wxQueueEvent(this, file_event.Clone());
 
         if (!song_entry.import_midi()) {
-            set_error_text(fmt::format(L"Unable to import song: {}",
-                                       song_entry.file_name));
+            set_error_text(wxString::Format(wxT("Unable to import song: %s"),
+                                            song_entry.file_name));
         } else {
             m_playlist.push_back(std::move(song_entry));
             wxThreadEvent tick_event(wxEVT_THREAD, LoaderEvents::TICK_EVENT);

@@ -29,8 +29,9 @@
 #include <string>  //  std::string
 #include <string_view>  //  sv, std::swap
 #include <array>  //  std::array
-#include <fmt/format.h>  //  fmt::format
 #include <wx/xml/xml.h>  //  wxXml API
+#include <wx/wupdlock.h>  //  wxWindowUpdateLocker
+#include <wx/valnum.h>  //  wxFloatingPointValidator
 
 //  module includes
 // -none-
@@ -41,14 +42,22 @@
 #include "organ_midi_event.h"  //  OrganMidiEvent, BankConfig
 #include "syndyne_importer.h"  //  SyndineImporter
 #include "playlist_loader.h"  //  PlaylistLoader
-
+#include "bachbot_config.h"  //  BachbotConfigDialog
 
 namespace {
     using namespace std::literals::string_view_literals;
-    constexpr const auto EDITION = L"Reformation"sv;
+    constexpr const auto EDITION = "Advent"sv;
+#ifdef WIN32
 
-    constexpr const auto NOW_PLAYING_LEN = 78U;
-    constexpr const auto UP_NEXT_LEN = 76U;
+    constexpr const auto NOW_PLAYING_LEN = 20U;
+    constexpr const auto UP_NEXT_LEN = 30U;
+
+#else
+    constexpr const auto NOW_PLAYING_LEN = 20U;
+    constexpr const auto UP_NEXT_LEN = 30U;
+
+#endif // WIN32
+
 
     enum AcceleratorEntries : size_t
     {
@@ -212,6 +221,7 @@ void PlayerWindow::on_load_playlist(wxCommandEvent &event)
 
     PlaylistXmlLoader loader(this, open_dialog.GetPath());
     loader.set_on_success_callback([&](std::list<PlayListEntry> playlist) {
+        wxWindowUpdateLocker lock(playlist_panel);
         clear_playlist_window();
         if (playlist.size() > 0U) {
             for (const auto &i: playlist) {
@@ -225,9 +235,9 @@ void PlayerWindow::on_load_playlist(wxCommandEvent &event)
     });
 
     if (loader.ShowModal() != wxID_OK) {
-        wxMessageBox(fmt::format(L"Error loading playlist:\n"
-                                  "Error reported was: {}",
-                                 loader.get_error_text().value()));
+        wxMessageBox(wxString::Format(wxT("Error loading playlist:\n"
+                                          "Error reported was: %s"),
+                                      loader.get_error_text().value()));
         return;
     }
 }
@@ -289,11 +299,29 @@ void PlayerWindow::on_open_midi(wxCommandEvent &event)
     }
 
     LoadMidiDialog import_dialog(this);
+    auto config = wxConfig::Get();
 
-    set_label_filename(import_dialog.file_name_label,
-                       open_dialog.GetPath(),
-                       PlayListEntry::CFGMIDI_DIALOG_MAX_LEN);
-    import_dialog.tempo_label->SetLabelText(fmt::format(L"{}bpm", tempo));
+    auto gap = config->ReadDouble(L"import/gap", 0.0);
+    import_dialog.initial_gap_text_box->SetValue(wxString::FromDouble(gap));
+
+    auto mem = config->ReadLong(L"import/mem", 1);
+    import_dialog.memory_select->SetValue(int(mem));
+
+    auto mode = config->ReadLong(L"import/mode", 1);
+    import_dialog.mode_select->SetValue(int(mode));
+
+    auto mul = config->ReadDouble(L"import/mul", 1.0);
+    import_dialog.extend_ending_textbox->SetValue(wxString::FromDouble(mul));
+
+    auto pitch = config->ReadLong(L"import/pitch", 0);
+    import_dialog.pitch_change->SetValue(int(pitch));
+
+    auto play_next = config->ReadBool(L"import/next", false);
+    import_dialog.play_next_checkbox->SetValue(play_next);
+
+    set_midi_dialog_filename(import_dialog, open_dialog.GetPath());
+    import_dialog.tempo_label->SetLabelText(wxString::Format(wxT("%ibpm"),
+                                                             tempo));
     import_dialog.select_tempo->SetValue(tempo);
 
     std::optional<wxString> error_text;
@@ -329,14 +357,14 @@ void PlayerWindow::on_quit(wxCommandEvent &event)
 void PlayerWindow::on_about(wxCommandEvent &event)
 {
     static_cast<void>(event);
-    wxMessageBox(fmt::format(
-        L"BachBot MIDI player for Schlicker Organs \"{}\" edition:\n\n"
-         "BachBot is a MIDI player intended Schlicker Pipe Organs or other "
-         "Organs using the Syndyne Console Control system.\n"
-         "Written By Andrew Buettner for Zion Lutheran Church and School "
-         "Hartland, WI\n"
-         "https://www.github.com/KB3HNS/BachBot"
-         "\n\nImage by rawpixel.com on Freepik.com", EDITION),
+    wxMessageBox(wxString::Format(
+        wxT("BachBot MIDI player for Schlicker Organs \"%s\" edition:\n\n"
+            "BachBot is a MIDI player intended Schlicker Pipe Organs or other "
+            "Organs using the Syndyne Console Control system.\n"
+            "Written By Andrew Buettner for Zion Lutheran Church\n"
+            "Hartland, WI\n"
+            "https://www.github.com/KB3HNS/BachBot"
+            "\n\nImage by rawpixel.com on Freepik.com"), _(EDITION.data())),
         wxT("About BachBot"), wxOK | wxICON_INFORMATION);
 }
 
@@ -347,6 +375,7 @@ void PlayerWindow::on_thread_tick(wxThreadEvent &event)
     if (m_current_song_event_count > 0U) {
         events_complete = int(m_current_song_event_count)-event.GetInt();
     }
+
     event_count->SetValue(events_complete);
 }
 
@@ -537,6 +566,8 @@ void PlayerWindow::on_move_event(const uint32_t song_id,
             set_next_song(cur_sequence.second);
         }
     }
+
+    update_window_title(true);
 }
 
 
@@ -623,6 +654,7 @@ void PlayerWindow::on_drop_midi_file(wxDropFilesEvent &event)
     PlaylistDndLoader loader(this, event, uint32_t(m_song_labels.size()) + 1U);
     loader.set_on_success_callback([=](std::list<PlayListEntry> playlist) {
         if (playlist.size() > 0U) {
+            wxWindowUpdateLocker lock(playlist_panel);
             std::for_each(playlist.begin(), playlist.end(),
                           [=](const PlayListEntry &i) {
                               add_playlist_entry(i);
@@ -633,10 +665,9 @@ void PlayerWindow::on_drop_midi_file(wxDropFilesEvent &event)
     });
 
     if (loader.ShowModal() != wxID_OK) {
-        wxMessageBox(fmt::format(L"Error with import:\n"
-                                 "Error reported was: {}",
-                                 loader.get_error_text().value()));
-        return;
+        wxMessageBox(wxString::Format(wxT("Error with import:\n"
+                                          "Error reported was: %s"),
+                                      loader.get_error_text().value()));
     }
 }
 
@@ -776,6 +807,9 @@ void PlayerWindow::on_group_edit(wxCommandEvent &event)
     if (select_multi_menu->IsChecked()) {
         static_cast<void>(event);
         GroupEditMidiDialog dialog(this);
+        dialog.initial_gap_text = L"0.0";
+        dialog.extended_ending_text = L"1.0";
+
         const auto result = dialog.ShowModal();
         if (wxID_CANCEL == result) {
             return;
@@ -813,6 +847,14 @@ void PlayerWindow::on_delete_selected(wxCommandEvent &event)
 
         song_id = sequence.second;
     }
+}
+
+
+void PlayerWindow::on_edit_preferences(wxCommandEvent &event)
+{
+    static_cast<void>(event);
+    BachbotConfigDialog dialog(this);
+    dialog.run();
 }
 
 
@@ -1071,10 +1113,10 @@ void PlayerWindow::update_window_title(const bool playlist_changed)
 
     const auto &title = s_window_title.value();
     if (m_playlist_name.has_value()) {
-        const auto change_flag = (m_playlist_changed ? L"*"sv : L""sv);
-        SetTitle(fmt::format(L"{} - {}{}",
-                             title, m_playlist_name.value(),
-                             change_flag));
+        const auto change_flag = (m_playlist_changed ? "*"sv : ""sv);
+        SetTitle(wxString::Format(wxT("%s - %s%s"),
+                                  title, m_playlist_name.value(),
+                                  change_flag.data()));
     } else {
         SetTitle(title);
     }
@@ -1086,11 +1128,9 @@ void PlayerWindow::remove_song(PlaylistEntryControl *const widget,
 {
     const auto sequence = widget->get_sequence();
 
-    PlaylistEntryControl *prev_song = nullptr;
-
     assert(song_id != m_current_song_id);
     if (sequence.first > 0U) {
-        prev_song = m_song_labels[sequence.first].get();
+        auto prev_song = m_song_labels[sequence.first].get();
         prev_song->set_sequence(-1, int(sequence.second));
     } else {
         //  Removing first entry in playlist

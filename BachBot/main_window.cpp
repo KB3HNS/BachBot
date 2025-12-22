@@ -12,7 +12,7 @@ using namespace bach_bot::ui;
 
 MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxFrame( parent, id, title, pos, size, style )
 {
-	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
+	this->SetSizeHints( wxSize( 864,727 ), wxDefaultSize );
 	this->DragAcceptFiles( true );
 
 	wxBoxSizer* bSizer2;
@@ -93,7 +93,7 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 
 	next_song_grid_sizer->Add( sync_button, 0, wxALL, 5 );
 
-	m_staticText5 = new wxStaticText( next_song_panel, wxID_ANY, wxT("Mode"), wxDefaultPosition, wxSize( 30,-1 ), wxALIGN_CENTER_HORIZONTAL );
+	m_staticText5 = new wxStaticText( next_song_panel, wxID_ANY, wxT("Mode"), wxDefaultPosition, wxSize( -1,-1 ), wxALIGN_CENTER_HORIZONTAL );
 	m_staticText5->Wrap( -1 );
 	next_song_grid_sizer->Add( m_staticText5, 1, wxALL|wxEXPAND, 8 );
 
@@ -312,6 +312,12 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	delete_multi_menu = new wxMenuItem( edit_menu, wxID_ANY, wxString( wxT("Remove Selected") ) + wxT('\t') + wxT("Del"), wxEmptyString, wxITEM_NORMAL );
 	edit_menu->Append( delete_multi_menu );
 
+	edit_menu->AppendSeparator();
+
+	wxMenuItem* m_menuItem21;
+	m_menuItem21 = new wxMenuItem( edit_menu, wxID_ANY, wxString( wxT("Preferences") ) , wxEmptyString, wxITEM_NORMAL );
+	edit_menu->Append( m_menuItem21 );
+
 	m_menubar1->Append( edit_menu, wxT("&Edit") );
 
 	device_select = new wxMenu();
@@ -375,6 +381,7 @@ MainWindow::MainWindow( wxWindow* parent, wxWindowID id, const wxString& title, 
 	edit_menu->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWindow::on_shift_down ), this, m_menuItem18->GetId());
 	edit_menu->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWindow::on_group_edit ), this, group_edit_menu->GetId());
 	edit_menu->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWindow::on_delete_selected ), this, delete_multi_menu->GetId());
+	edit_menu->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWindow::on_edit_preferences ), this, m_menuItem21->GetId());
 	m_menu4->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWindow::on_manual_advance ), this, m_menuItem7->GetId());
 	m_menu4->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWindow::on_manual_prev ), this, m_menuItem8->GetId());
 	m_menu4->Bind(wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainWindow::on_manual_cancel ), this, m_menuItem9->GetId());
@@ -409,22 +416,20 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 {
 	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
 
-	wxFlexGridSizer* fgSizer3;
-	fgSizer3 = new wxFlexGridSizer( 8, 1, 0, 0 );
-	fgSizer3->SetFlexibleDirection( wxBOTH );
-	fgSizer3->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
+	container_sizer = new wxFlexGridSizer( 8, 1, 0, 0 );
+	container_sizer->SetFlexibleDirection( wxBOTH );
+	container_sizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
 
-	fgSizer3->SetMinSize( wxSize( 360,-1 ) );
-	file_name_label = new wxStaticText( this, wxID_ANY, wxT("foo.mid"), wxDefaultPosition, wxSize( 380,-1 ), 0 );
+	file_name_label = new wxStaticText( this, wxID_ANY, wxT("foo.mid"), wxDefaultPosition, wxSize( -1,-1 ), 0 );
 	file_name_label->Wrap( -1 );
 	file_name_label->SetFont( wxFont( 12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, wxT("Courier New") ) );
 
-	fgSizer3->Add( file_name_label, 0, wxALL, 5 );
+	container_sizer->Add( file_name_label, 0, wxALL, 5 );
 
 	wxBoxSizer* bSizer11;
 	bSizer11 = new wxBoxSizer( wxHORIZONTAL );
 
-	bSizer11->SetMinSize( wxSize( 360,-1 ) );
+	bSizer11->SetMinSize( wxSize( 380,-1 ) );
 	m_staticText10 = new wxStaticText( this, wxID_ANY, wxT("Tempo Reported"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_staticText10->Wrap( -1 );
 	bSizer11->Add( m_staticText10, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
@@ -446,7 +451,7 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 	bSizer11->Add( m_staticText14, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
 
-	fgSizer3->Add( bSizer11, 1, wxEXPAND, 5 );
+	container_sizer->Add( bSizer11, 1, wxEXPAND|wxLEFT, 5 );
 
 	wxBoxSizer* bSizer17;
 	bSizer17 = new wxBoxSizer( wxHORIZONTAL );
@@ -468,7 +473,7 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 	bSizer17->Add( m_staticText17, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
 
-	fgSizer3->Add( bSizer17, 1, wxEXPAND, 5 );
+	container_sizer->Add( bSizer17, 1, wxEXPAND|wxLEFT, 5 );
 
 	wxBoxSizer* bSizer19;
 	bSizer19 = new wxBoxSizer( wxHORIZONTAL );
@@ -495,7 +500,7 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 	bSizer19->Add( mode_select, 0, wxALL, 5 );
 
 
-	fgSizer3->Add( bSizer19, 1, wxEXPAND, 5 );
+	container_sizer->Add( bSizer19, 1, wxEXPAND|wxLEFT, 5 );
 
 	wxBoxSizer* bSizer20;
 	bSizer20 = new wxBoxSizer( wxHORIZONTAL );
@@ -515,7 +520,7 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 	bSizer20->Add( m_staticText22, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
 
-	fgSizer3->Add( bSizer20, 1, wxEXPAND, 5 );
+	container_sizer->Add( bSizer20, 1, wxEXPAND|wxLEFT, 5 );
 
 	wxBoxSizer* bSizer14;
 	bSizer14 = new wxBoxSizer( wxHORIZONTAL );
@@ -539,7 +544,7 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 	bSizer14->Add( extend_ending_textbox, 0, wxALL, 5 );
 
 
-	fgSizer3->Add( bSizer14, 1, wxEXPAND, 5 );
+	container_sizer->Add( bSizer14, 1, wxEXPAND|wxLEFT, 5 );
 
 	wxBoxSizer* bSizer18;
 	bSizer18 = new wxBoxSizer( wxHORIZONTAL );
@@ -555,7 +560,7 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 	bSizer18->Add( play_next_checkbox, 0, wxALL, 5 );
 
 
-	fgSizer3->Add( bSizer18, 1, wxBOTTOM|wxEXPAND, 5 );
+	container_sizer->Add( bSizer18, 1, wxBOTTOM|wxEXPAND|wxLEFT, 5 );
 
 	m_sdbSizer1 = new wxStdDialogButtonSizer();
 	m_sdbSizer1OK = new wxButton( this, wxID_OK );
@@ -564,11 +569,12 @@ LoadMidiDialog::LoadMidiDialog( wxWindow* parent, wxWindowID id, const wxString&
 	m_sdbSizer1->AddButton( m_sdbSizer1Cancel );
 	m_sdbSizer1->Realize();
 
-	fgSizer3->Add( m_sdbSizer1, 1, wxALIGN_BOTTOM|wxALL|wxEXPAND, 5 );
+	container_sizer->Add( m_sdbSizer1, 1, wxALIGN_BOTTOM|wxALL|wxEXPAND, 5 );
 
 
-	this->SetSizer( fgSizer3 );
+	this->SetSizer( container_sizer );
 	this->Layout();
+	container_sizer->Fit( this );
 
 	this->Centre( wxBOTH );
 }
@@ -599,7 +605,7 @@ LoadingPopup::LoadingPopup( wxWindow* parent, wxWindowID id, const wxString& tit
 
 	bSizer15->Add( progress_label, 0, wxALL, 5 );
 
-	filename_label = new wxStaticText( this, wxID_ANY, wxT("Preparing..."), wxDefaultPosition, wxDefaultSize, 0 );
+	filename_label = new wxStaticText( this, wxID_ANY, wxT("Preparing..."), wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_START );
 	filename_label->Wrap( -1 );
 	filename_label->SetFont( wxFont( wxNORMAL_FONT->GetPointSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Courier New") ) );
 
@@ -628,14 +634,21 @@ PlaylistEntryPanel::PlaylistEntryPanel( wxWindow* parent, wxWindowID id, const w
 {
 	layout = new wxBoxSizer( wxHORIZONTAL );
 
-	now_playing = new wxRadioButton( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	now_playing = new wxRadioButton( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxRB_GROUP );
 	now_playing->SetFont( wxFont( 12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Courier New") ) );
 
 	layout->Add( now_playing, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
-	song_label = new wxStaticText( this, wxID_ANY, wxT("*.mid"), wxDefaultPosition, wxDefaultSize, 0 );
+	not_playing = new wxRadioButton( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	not_playing->SetValue( true );
+	not_playing->Hide();
+
+	layout->Add( not_playing, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+	song_label = new wxStaticText( this, wxID_ANY, wxT("*.mid"), wxDefaultPosition, wxDefaultSize, wxST_ELLIPSIZE_START );
 	song_label->Wrap( -1 );
 	song_label->SetFont( wxFont( 8, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Courier New") ) );
+	song_label->SetForegroundColour( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOWTEXT ) );
 
 	layout->Add( song_label, 1, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 
@@ -746,6 +759,8 @@ GroupEditMidiDialog::GroupEditMidiDialog( wxWindow* parent, wxWindowID id, const
 	bSizer17->Add( 0, 0, 1, wxEXPAND, 5 );
 
 	initial_gap_text_box = new wxTextCtrl( this, wxID_ANY, wxT("0.0"), wxDefaultPosition, wxDefaultSize, 0 );
+	initial_gap_text_box->SetValidator( wxTextValidator( wxFILTER_NUMERIC, &initial_gap_text ) );
+
 	bSizer17->Add( initial_gap_text_box, 0, wxALL, 5 );
 
 	m_staticText17 = new wxStaticText( this, wxID_ANY, wxT("beats"), wxDefaultPosition, wxDefaultSize, 0 );
@@ -830,6 +845,8 @@ GroupEditMidiDialog::GroupEditMidiDialog( wxWindow* parent, wxWindowID id, const
 	extend_ending_textbox = new wxTextCtrl( this, wxID_ANY, wxT("1.0"), wxDefaultPosition, wxDefaultSize, 0 );
 	extend_ending_textbox->SetToolTip( wxT("Extends duration of final note by multiplying the length by this number.") );
 
+	extend_ending_textbox->SetValidator( wxTextValidator( wxFILTER_NUMERIC, &extended_ending_text ) );
+
 	bSizer14->Add( extend_ending_textbox, 0, wxALL, 5 );
 
 	extend_ending_checkbox = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
@@ -874,5 +891,192 @@ GroupEditMidiDialog::GroupEditMidiDialog( wxWindow* parent, wxWindowID id, const
 }
 
 GroupEditMidiDialog::~GroupEditMidiDialog()
+{
+}
+
+AppConfigDialog::AppConfigDialog( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxDialog( parent, id, title, pos, size, style )
+{
+	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
+	this->SetToolTip( wxT("Apply a find and replace to the path component when importing playlists.\n\nThis allows for easier porting of playlists between computers where midi files are generally in a \"common\" structure.") );
+
+	wxBoxSizer* bSizer37;
+	bSizer37 = new wxBoxSizer( wxVERTICAL );
+
+	wxBoxSizer* bSizer17;
+	bSizer17 = new wxBoxSizer( wxHORIZONTAL );
+
+	initial_gap_label = new wxStaticText( this, wxID_ANY, wxT("Add silence gap before first note"), wxDefaultPosition, wxDefaultSize, 0 );
+	initial_gap_label->Wrap( -1 );
+	initial_gap_label->SetToolTip( wxT("Add a gap of silence of N beats before playing song.") );
+
+	bSizer17->Add( initial_gap_label, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+
+	bSizer17->Add( 0, 0, 1, wxEXPAND, 5 );
+
+	initial_gap_text_box = new wxTextCtrl( this, wxID_ANY, wxT("0.0"), wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer17->Add( initial_gap_text_box, 0, wxALL, 5 );
+
+	m_staticText17 = new wxStaticText( this, wxID_ANY, wxT("beats"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText17->Wrap( -1 );
+	bSizer17->Add( m_staticText17, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+
+	bSizer37->Add( bSizer17, 0, wxEXPAND, 5 );
+
+	wxBoxSizer* bSizer19;
+	bSizer19 = new wxBoxSizer( wxHORIZONTAL );
+
+	m_staticText19 = new wxStaticText( this, wxID_ANY, wxT("Set starting registration"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText19->Wrap( -1 );
+	bSizer19->Add( m_staticText19, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+
+	bSizer19->Add( 0, 0, 1, wxEXPAND, 5 );
+
+	memory_select = new wxSpinCtrl( this, wxID_ANY, wxT("1"), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 100, 0 );
+	memory_select->SetToolTip( wxT("Set starting memory number (1-100)") );
+
+	bSizer19->Add( memory_select, 0, wxALL, 5 );
+
+	m_staticText20 = new wxStaticText( this, wxID_ANY, wxT("/"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText20->Wrap( -1 );
+	bSizer19->Add( m_staticText20, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+	mode_select = new wxSpinCtrl( this, wxID_ANY, wxT("1"), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 8, 0 );
+	mode_select->SetToolTip( wxT("Set starting general piston mode number (1-8)") );
+
+	bSizer19->Add( mode_select, 0, wxALL, 5 );
+
+
+	bSizer37->Add( bSizer19, 0, wxEXPAND, 5 );
+
+	wxBoxSizer* bSizer20;
+	bSizer20 = new wxBoxSizer( wxHORIZONTAL );
+
+	m_staticText21 = new wxStaticText( this, wxID_ANY, wxT("Change Pitch"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText21->Wrap( -1 );
+	bSizer20->Add( m_staticText21, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+
+	bSizer20->Add( 0, 0, 1, wxEXPAND, 5 );
+
+	pitch_change = new wxSpinCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, -12, 12, 0 );
+	bSizer20->Add( pitch_change, 0, wxALL, 5 );
+
+	m_staticText22 = new wxStaticText( this, wxID_ANY, wxT("half steps"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText22->Wrap( -1 );
+	bSizer20->Add( m_staticText22, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+
+	bSizer37->Add( bSizer20, 0, wxEXPAND, 5 );
+
+	wxBoxSizer* bSizer14;
+	bSizer14 = new wxBoxSizer( wxHORIZONTAL );
+
+	extended_ending_label = new wxStaticText( this, wxID_ANY, wxT("Extend last note by"), wxDefaultPosition, wxDefaultSize, 0 );
+	extended_ending_label->Wrap( -1 );
+	extended_ending_label->SetToolTip( wxT("Extends duration of final note by multiplying the length by this number.") );
+
+	bSizer14->Add( extended_ending_label, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+
+	bSizer14->Add( 0, 0, 1, wxEXPAND, 5 );
+
+	m_staticText15 = new wxStaticText( this, wxID_ANY, wxT("X"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText15->Wrap( -1 );
+	bSizer14->Add( m_staticText15, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+	extend_ending_textbox = new wxTextCtrl( this, wxID_ANY, wxT("1.0"), wxDefaultPosition, wxDefaultSize, 0 );
+	extend_ending_textbox->SetToolTip( wxT("Extends duration of final note by multiplying the length by this number.") );
+
+	bSizer14->Add( extend_ending_textbox, 0, wxALL, 5 );
+
+
+	bSizer37->Add( bSizer14, 0, wxEXPAND, 5 );
+
+	wxBoxSizer* bSizer18;
+	bSizer18 = new wxBoxSizer( wxHORIZONTAL );
+
+	m_staticText18 = new wxStaticText( this, wxID_ANY, wxT("Continue playing after track?"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText18->Wrap( -1 );
+	bSizer18->Add( m_staticText18, 0, wxALL, 5 );
+
+
+	bSizer18->Add( 0, 0, 1, wxEXPAND, 5 );
+
+	play_next_checkbox = new wxCheckBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	bSizer18->Add( play_next_checkbox, 0, wxALIGN_CENTER|wxALL, 5 );
+
+
+	bSizer37->Add( bSizer18, 0, wxBOTTOM|wxEXPAND, 5 );
+
+
+	bSizer37->Add( 0, 10, 1, 0, 5 );
+
+	wxStaticBoxSizer* sbSizer4;
+	sbSizer4 = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, wxT("Playlist Path Configuration") ), wxVERTICAL );
+
+	wxFlexGridSizer* fgSizer8;
+	fgSizer8 = new wxFlexGridSizer( 2, 2, 0, 0 );
+	fgSizer8->AddGrowableCol( 1 );
+	fgSizer8->SetFlexibleDirection( wxBOTH );
+	fgSizer8->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
+
+	m_staticText71 = new wxStaticText( sbSizer4->GetStaticBox(), wxID_ANY, wxT("Find:"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText71->Wrap( -1 );
+	fgSizer8->Add( m_staticText71, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+	path_find = new wxTextCtrl( sbSizer4->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	fgSizer8->Add( path_find, 0, wxALL|wxEXPAND, 5 );
+
+	m_staticText72 = new wxStaticText( sbSizer4->GetStaticBox(), wxID_ANY, wxT("Replace:"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText72->Wrap( -1 );
+	fgSizer8->Add( m_staticText72, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+
+	path_replace = new wxTextCtrl( sbSizer4->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	fgSizer8->Add( path_replace, 0, wxALL|wxEXPAND, 5 );
+
+
+	sbSizer4->Add( fgSizer8, 1, wxEXPAND, 5 );
+
+
+	bSizer37->Add( sbSizer4, 0, wxEXPAND, 5 );
+
+
+	bSizer37->Add( 0, 10, 0, 0, 5 );
+
+	wxBoxSizer* bSizer28;
+	bSizer28 = new wxBoxSizer( wxHORIZONTAL );
+
+	m_staticText58 = new wxStaticText( this, wxID_ANY, wxT("Default Voice"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_staticText58->Wrap( -1 );
+	bSizer28->Add( m_staticText58, 0, wxALIGN_CENTER|wxALL, 5 );
+
+	wxArrayString m_default_voiceChoices;
+	m_default_voice = new wxChoice( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, m_default_voiceChoices, 0 );
+	m_default_voice->SetSelection( 0 );
+	bSizer28->Add( m_default_voice, 1, wxALL, 5 );
+
+
+	bSizer37->Add( bSizer28, 1, wxEXPAND, 5 );
+
+	m_sdbSizer1 = new wxStdDialogButtonSizer();
+	m_sdbSizer1OK = new wxButton( this, wxID_OK );
+	m_sdbSizer1->AddButton( m_sdbSizer1OK );
+	m_sdbSizer1Cancel = new wxButton( this, wxID_CANCEL );
+	m_sdbSizer1->AddButton( m_sdbSizer1Cancel );
+	m_sdbSizer1->Realize();
+
+	bSizer37->Add( m_sdbSizer1, 0, wxALL|wxEXPAND, 5 );
+
+
+	this->SetSizer( bSizer37 );
+	this->Layout();
+
+	this->Centre( wxBOTH );
+}
+
+AppConfigDialog::~AppConfigDialog()
 {
 }

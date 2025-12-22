@@ -26,6 +26,7 @@
 //  system includes
 #include <stdexcept>  //  std::runtime_error
 #include <memory>  //  std::unique_ptr
+#include <wx/config.h>  //  wxConfig API
 
 //  module includes
 // -none-
@@ -38,6 +39,23 @@
 
 namespace {
 constexpr const auto TICKS_PER_UI_REFRESH = 500U;
+constexpr std::array g_chan_map = {
+    bach_bot::SyndyneKeyboards::MANUAL1_GREAT,
+    bach_bot::SyndyneKeyboards::MANUAL2_SWELL,
+    bach_bot::SyndyneKeyboards::PEDAL
+};
+
+
+/**
+ * @brief Get the "default" voice from the global configuration manager.
+ * @return MIDI instrument to use
+ * @note As a function so this can be called during construction
+*/
+uint8_t get_default_voice()
+{
+    auto config = wxConfig::Get();
+    return uint8_t(config->ReadLong(L"voice/default_voice", 0));
+}
 }
 
 
@@ -49,7 +67,7 @@ void send_bank_change_message(RtMidiOut &midi_out,
     std::array<uint8_t, MIDI_MESSAGE_SIZE> midi_message;
     midi_message[0] = make_midi_command_byte(0U, MidiCommands::CONTROL_CHANGE);
     midi_message[1] = SYNDYNE_CONTROLLER_ID;
-    midi_message[2] = value;
+    midi_message[2] = uint8_t(value);
 
     if (!midi_out.isPortOpen()) {
         throw std::runtime_error("Sending MIDI message on closed port");
@@ -77,10 +95,15 @@ PlayerThread::PlayerThread(wxFrame* const frame, RtMidiOut &intf) :
     m_bank_change_delay(),
     m_last_message{MessageId::NO_MESSAGE},
     m_first_match{false},
-    m_desired_config_shared()
+    m_desired_config_shared(),
+    m_notes_on(),
+    m_playback_voice{get_default_voice()}
 {
     m_desired_config_shared = int(m_desired_config);
     m_bank_change_delay.Start(MINIMUM_BANK_CHANGE_INTERVAL_MS);
+    for (auto &i : m_notes_on) {
+        i.fill(0U);
+    }
 }
 
 
@@ -89,6 +112,7 @@ wxThread::ExitCode PlayerThread::Entry()
     std::unique_ptr<RTTimer> timer(create_timer(this));
     
     timer->start_timer();
+    init_default_instrument();
     while (load_next_song()) {
         if (!run_song()) {
             break;
@@ -139,6 +163,7 @@ bool PlayerThread::run_song()
                 tick_event.SetInt(int(m_midi_event_queue.size()));
                 wxQueueEvent(m_frame, tick_event.Clone());
             }
+
             if (m_first_match) {
                 process_notes();
             }
@@ -237,7 +262,9 @@ void PlayerThread::process_notes()
 
         if (!midi_event.is_mode_change_event()) {
             midi_event.send_event(m_midi_out);
+            update_event_table(midi_event);
         }
+
         if (m_playing_test_pattern) {
             const BankConfig msg{uint32_t(midi_event.m_byte1.value()),
                                  uint8_t(midi_event.m_event_code & 0x0FU)};
@@ -311,6 +338,7 @@ void PlayerThread::do_mode_check()
         } else {
             --m_mode_number;
         }
+
         send_change(SyndyneBankCommands::PREV_BANK);
     };
 
@@ -386,8 +414,86 @@ void PlayerThread::handle_meta_event(const int meta_event_id)
 }
 
 
+void PlayerThread::update_event_table(const OrganMidiEvent &event)
+{
+    if (!event.m_byte1.has_value() || !event.m_byte2.has_value()) {
+        return;
+    }
+
+    auto note = event.m_byte1.value();
+    auto vel = event.m_byte2.value();
+    auto index = std::numeric_limits<size_t>::max();
+    switch (event.m_event_code & 0x0F) {
+    case SyndyneKeyboards::MANUAL1_GREAT:
+        index = 0U;
+        break;
+    
+    case SyndyneKeyboards::MANUAL2_SWELL:
+        index = 1U;
+        break;
+
+    case SyndyneKeyboards::PEDAL:
+        index = 2U;
+        break;
+
+    default:
+        return;
+    }
+
+    m_notes_on[index][note] = vel;
+}
+
+
+void PlayerThread::init_default_instrument()
+{
+    std::array<uint8_t, MIDI_MESSAGE_SIZE> message;
+    message.fill(0U);
+    
+    message[1U] = m_playback_voice;
+    message[0U] = make_midi_command_byte(SyndyneKeyboards::MANUAL1_GREAT,
+                                         MidiCommands::PATCH_CHANGE);
+    m_midi_out.sendMessage(message.data(), message.size());
+
+    message[0U] = make_midi_command_byte(SyndyneKeyboards::MANUAL2_SWELL,
+                                         MidiCommands::PATCH_CHANGE);
+    m_midi_out.sendMessage(message.data(), message.size());
+
+    message[0U] = make_midi_command_byte(SyndyneKeyboards::PEDAL,
+                                         MidiCommands::PATCH_CHANGE);
+    m_midi_out.sendMessage(message.data(), message.size());
+}
+
+
 PlayerThread::~PlayerThread()
 {
+    std::array<uint8_t, MIDI_MESSAGE_SIZE> midi_message;
+    midi_message[2U] = 0U;  //  All commands require the 3rd byte to be 0
+
+    for (auto i = 0U; i < m_notes_on.size(); ++i) {
+        auto &bank = m_notes_on[i];
+        midi_message[0U] = make_midi_command_byte(g_chan_map[i],
+                                                  MidiCommands::NOTE_OFF);
+
+        for (auto note = 0U; note < bank.size(); ++note) {
+            if (bank[note] > 0U) {
+                midi_message[1U] = note;
+                m_midi_out.sendMessage(midi_message.data(), MIDI_MESSAGE_SIZE);
+            }
+        }
+    }
+
+    //  This is modeled after Windows using a packet dump
+    for (uint8_t i = 0U; i < 16U; ++i) {
+        midi_message[0U] = make_midi_command_byte(
+            i, MidiCommands::CONTROL_CHANGE);
+
+        midi_message[1U] = 0x7B;  //  All notes off
+        m_midi_out.sendMessage(midi_message.data(), MIDI_MESSAGE_SIZE);
+
+        midi_message[1U] = 0x79;  //  All controllers off
+        m_midi_out.sendMessage(midi_message.data(), MIDI_MESSAGE_SIZE);
+    }
+   
     m_midi_out.closePort();
 }
 

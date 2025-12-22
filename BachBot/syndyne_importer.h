@@ -32,7 +32,6 @@
  * < +/- 1ms or better with an ideal timing accuracy of +/- 100nS.
  */
 
-
 #pragma once
 
 //  system includes

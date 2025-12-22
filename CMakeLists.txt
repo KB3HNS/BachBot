@@ -5,8 +5,6 @@ project(BachBot VERSION 0.4.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# set(CMAKE_TOOLCHAIN_FILE "D:/devel/vcpkg/scripts/buildsystems/vcpkg.cmake")
-# set(VCPKG_TARGET_TRIPLET "x64-windows")
 set(CMAKE_CL_64 True)
 
 find_package(fmt REQUIRED)
@@ -14,11 +12,6 @@ find_package(wxWidgets COMPONENTS core base xml REQUIRED)
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
     find_package(RtMidi REQUIRED)
 endif()
-
-add_compile_definitions(
-    _CRT_SECURE_NO_WARNINGS
-    FMT_DEPRECATED_INCLUDE_XCHAR
-)
 
 include(${wxWidgets_USE_FILE})
 include(CompilerWarnings.cmake)
@@ -37,6 +30,8 @@ set(SRCS
     BachBot/play_list.cpp
     BachBot/syndyne_importer.cpp
     BachBot/thread_loader.cpp
+    BachBot/playlist_parser.cpp
+    BachBot/bachbot_config.cpp
 )
 
 set(INCLUDE_DIRS
@@ -68,6 +63,10 @@ set_project_warnings(${PROJECT_NAME} False)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${INCLUDE_DIRS}
+)
+
+target_compile_definitions(${PROJECT_NAME} PUBLIC
+    _CRT_SECURE_NO_WARNINGS
 )
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")

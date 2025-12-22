@@ -24,16 +24,18 @@
 
 
 //  system includes
+#include <algorithm>  //  std::swap
 #include <stdexcept>  //  std::out_of_range
-#include <fmt/format.h>  //  fmt::format
 #include <memory>  //  std::make_unique
+#include <fmt/format.h>  //  fmt::format
+#include <wx/config.h>  //  wxConfig API
 
 //  module includes
 // -none-
 
 //  local includes
 #include "play_list.h"  //  local include
-#include "playlist_entry_control.h"  //  ui::set_label_filename
+#include "playlist_entry_control.h"  //  ui::set_midi_dialog_filename
 
 
 namespace bach_bot {
@@ -61,6 +63,7 @@ bool PlayListEntry::import_midi(SyndineImporter *importer)
     } catch (std::out_of_range&) {
         midi_events.clear();
     }
+
     return (midi_events.size() > 0U);
 }
 
@@ -96,6 +99,29 @@ bool PlayListEntry::load_config(const wxXmlNode *const playlist_node)
     if (file_name.length() == 0U) {
         throw std::out_of_range(fmt::format("Invalid filename line {}",
                                             playlist_node->GetLineNumber()));
+    }
+
+    auto config = wxConfig::Get();
+    wxString path_find;
+    wxString path_replace;
+
+    if (config->Read(L"path/find", &path_find) &&
+        config->Read(L"path/replace", &path_replace))
+    {
+        file_name.Replace(path_find, path_replace);
+    }
+
+    auto sep_find = L'\\';
+    auto sep_replace = L'/';
+
+#ifdef WIN32
+    std::swap(sep_find, sep_replace);
+#endif // WIN32
+
+    for (size_t i = 0U; i < file_name.Len(); ++i) {
+        if (sep_find == file_name[i]) {
+            file_name[i] = sep_replace;
+        }
     }
 
     if (playlist_node->HasAttribute(wxT("tempo_requested"))) {
@@ -153,13 +179,13 @@ std::optional<wxString> PlayListEntry::load_config(
 
     if (!test(last_note_multiplier,
               dialog.extend_ending_textbox)) {
-        return fmt::format(L"Error in field: {}",
-                           dialog.extended_ending_label->GetLabelText());
+        return wxString::Format(wxT("Error in field: %s"),
+                                dialog.extended_ending_label->GetLabelText());
     }
 
     if (!test(gap_beats, dialog.initial_gap_text_box)) {
-        return fmt::format(L"Error in field: {}",
-                           dialog.initial_gap_label->GetLabelText());
+        return wxString::Format(wxT("Error in field: %s"),
+                                dialog.initial_gap_label->GetLabelText());
     }
 
     tempo_requested = dialog.select_tempo->GetValue();
@@ -208,13 +234,11 @@ void PlayListEntry::save_config(wxXmlNode *const playlist_node) const
 
 void PlayListEntry::populate_dialog(ui::LoadMidiDialog &dialog) const
 {
-    ui::set_label_filename(dialog.file_name_label,
-                           file_name,
-                           CFGMIDI_DIALOG_MAX_LEN);
+    ui::set_midi_dialog_filename(dialog, file_name);
 
     if (tempo_detected.has_value()) {
         dialog.tempo_label->SetLabelText(
-            fmt::format(L"{}bpm", tempo_detected.value()));
+            wxString::Format(wxT("%ibpm"), tempo_detected.value()));
         dialog.select_tempo->SetValue(
             (tempo_requested > 0 ? tempo_requested : tempo_detected.value()));
     } else {

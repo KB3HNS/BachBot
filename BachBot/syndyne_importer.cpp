@@ -47,7 +47,7 @@ const std::array<SyndyneKeyboards,
                  bach_bot::NUM_SYNDYNE_KEYBOARDS> g_keyboard_indexes = {
     SyndyneKeyboards::MANUAL1_GREAT,
     SyndyneKeyboards::MANUAL2_SWELL,
-    SyndyneKeyboards::PETAL
+    SyndyneKeyboards::PEDAL
 };
 
 /** Map drums to commands */
@@ -134,10 +134,10 @@ const std::pair<uint8_t, SyndyneBankCommands> g_drum_map[] = {
 const std::array<uint8_t, 16U> g_channel_mapping = {
     SyndyneKeyboards::MANUAL2_SWELL, SyndyneKeyboards::MANUAL2_SWELL, SyndyneKeyboards::MANUAL2_SWELL,
     SyndyneKeyboards::MANUAL1_GREAT, SyndyneKeyboards::MANUAL1_GREAT, SyndyneKeyboards::MANUAL1_GREAT,
-    SyndyneKeyboards::PETAL, SyndyneKeyboards::PETAL, SyndyneKeyboards::PETAL,
+    SyndyneKeyboards::PEDAL, SyndyneKeyboards::PEDAL, SyndyneKeyboards::PEDAL,
     std::numeric_limits<uint8_t>::max(),  //  (9) Drums - used for control
-    SyndyneKeyboards::MANUAL2_SWELL, SyndyneKeyboards::MANUAL1_GREAT, SyndyneKeyboards::PETAL,
-    SyndyneKeyboards::MANUAL2_SWELL, SyndyneKeyboards::MANUAL1_GREAT, SyndyneKeyboards::PETAL
+    SyndyneKeyboards::MANUAL2_SWELL, SyndyneKeyboards::MANUAL1_GREAT, SyndyneKeyboards::PEDAL,
+    SyndyneKeyboards::MANUAL2_SWELL, SyndyneKeyboards::MANUAL1_GREAT, SyndyneKeyboards::PEDAL
 };
 
 /**
@@ -175,7 +175,7 @@ std::deque<OrganMidiEvent> generate_test_pattern()
 {
     std::deque<OrganMidiEvent> event_queue;
     auto midi_time = 0.0;
-    midi_time = ::generate_test_pattern(SyndyneKeyboards::PETAL,
+    midi_time = ::generate_test_pattern(SyndyneKeyboards::PEDAL,
                                         midi_time, event_queue);
     midi_time = ::generate_test_pattern(SyndyneKeyboards::MANUAL1_GREAT,
                                         midi_time, event_queue);
@@ -212,7 +212,7 @@ SyndineImporter::SyndineImporter(const std::string &file_name,
         }
     }
 
-    for (const auto [note, bank_command]: g_drum_map) {
+    for (const auto &[note, bank_command]: g_drum_map) {
         m_drum_map[note] = bank_command;
     }
 }
@@ -272,8 +272,8 @@ uint8_t SyndineImporter::remap_note(const int note,
 {
     uint8_t low_limit = 36U;  //  Standard range of organ keys.
     uint8_t high_limit = 96U;
-    if (SyndyneKeyboards::PETAL == keyboard) {
-        high_limit = 67U;  //  Petal only goes up to G above middle-C
+    if (SyndyneKeyboards::PEDAL == keyboard) {
+        high_limit = 67U;  //  Pedal only goes up to G above middle-C
     }
 
     auto mapped_note = uint8_t(note + m_note_offset);
@@ -307,7 +307,7 @@ void SyndineImporter::update_bank_event(const int note)
 
         case SyndyneBankCommands::NEXT_BANK:
             ++m_current_config.mode;
-            if (m_current_config.mode >= 8U) {
+            if (m_current_config.mode > 8U) {
                 m_current_config.mode = 1U;
                 ++m_current_config.memory;
             }
@@ -329,23 +329,31 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
     std::list<OrganNote> events;
     auto current_config = m_current_config;
     m_file_events.clear();
+    std::array<NoteConfig, NUM_SYNDYNE_KEYBOARDS> note_configs;
 
     //  1st pass: Process all events
     for (auto i = 0; i < event_list.size(); ++i) {
         auto midi_event = event_list[i];
         midi_event.seconds *= m_time_scaling_factor;
+        const auto channel_id = get_control_index(midi_event.getChannel());
         if (midi_event.isNote()) {
-            const auto channel_id = get_control_index(midi_event.getChannel());
             if (channel_id < m_current_state.size()) {
                 const auto note = remap_note(midi_event.getKeyNumber(),
                                              g_keyboard_indexes[channel_id]);
                 midi_event[1] = note;
-                m_current_state[channel_id][note].add_event(midi_event);
+                m_current_state[channel_id][note].add_event(
+                    midi_event,
+                    note_configs[channel_id]);
             } else if (midi_event.isNoteOn()) {
                 //  Treat as control event
                 update_bank_event(midi_event.getKeyNumber());
-                events.emplace_back(new OrganMidiEvent(midi_event, m_current_config));
+                events.emplace_back(new OrganMidiEvent(midi_event,
+                                                       m_current_config));
             }
+        } else if ((channel_id < note_configs.size()) &&
+                   midi_event.isController())
+        {
+            note_configs[channel_id].parseMidiEvent(midi_event);
         }
     }
 
@@ -426,6 +434,7 @@ std::list<OrganNote> SyndineImporter::get_events(
         if (!m_tempo_detected.has_value()) {
             static_cast<void>(get_tempo());
         }
+
         const auto spb = 60.0 / double(m_bpm);  //  Seconds/beat
         const auto initial_delay = spb * initial_delay_beats;
         auto first_entry = m_file_events.front();

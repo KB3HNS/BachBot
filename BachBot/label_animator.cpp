@@ -25,7 +25,6 @@
 
 //  system includes
 #include <string_view>  //  sv
-#include <fmt/format.h>  //  fmt::format(L
 
 //  module includes
 // -none-
@@ -43,12 +42,12 @@ namespace ui {
 
 using namespace std::literals::string_view_literals;
 
-LabelAnimator::LabelAnimator(wxStaticText *const label, const uint32_t max_len) :
+LabelAnimator::LabelAnimator(wxStaticText *const label, const int padding) :
     m_label{label},
     m_label_text{label->GetLabelText()},
-    m_max_len{max_len},
+    m_padding{padding},
     m_state{0U},
-    m_pix_config()
+    m_pix_per_char()
 {
 }
 
@@ -65,23 +64,28 @@ void LabelAnimator::set_label_text(const wxString &text)
 
 void LabelAnimator::animate_tick()
 {
-    if (!m_pix_config.has_value()) {
-        const auto sizer = m_label->GetContainingSizer();
-        if (nullptr != sizer) {
-            const auto label_size = m_label->GetSize();
-            const auto container_size = sizer->GetSize();
-            const auto pix_per_char = double(label_size.x) / double(m_max_len);
-            const auto container_delta = container_size.x - label_size.x;
-            m_pix_config = std::make_pair(pix_per_char, container_delta);
-        }
+    if (m_label_text.empty()) {
+        return;
+    }
+
+    if (!m_pix_per_char.has_value()) {
+        auto len = m_label_text.Len() - 1U;
+
+        m_label->SetLabel(m_label_text.substr(0U, len));
+        auto label_size_new = m_label->GetSize();
+
+        m_label->SetLabel(m_label_text);
+        auto label_size_orig = m_label->GetSize();
+
+        m_pix_per_char = double(label_size_orig.x - label_size_new.x);
         return;
     }
 
     const auto size = m_label->GetContainingSizer()->GetSize();
-    const auto config = m_pix_config.value();
-    const auto label_width = double(size.x - config.second);
-    auto max_len = int(label_width / config.first);
-    const auto trim_elipsis = L"..."sv;
+    const auto pix_per_char = m_pix_per_char.value();
+    const auto label_width = double(size.x - m_padding);
+    auto max_len = int(label_width / pix_per_char);
+    const auto trim_elipsis = "..."sv;
     max_len = std::max(int(trim_elipsis.size() * 2U) + 1,
                        max_len);
 
@@ -89,8 +93,8 @@ void LabelAnimator::animate_tick()
         m_label->SetLabelText(m_label_text);
         m_state = 0;
     } else {
-        auto start_elipsis = L""sv;
-        auto end_elipsis = L""sv;
+        auto start_elipsis = ""sv;
+        auto end_elipsis = ""sv;
 
         if (m_state > 0) {
             start_elipsis = trim_elipsis;
@@ -111,11 +115,10 @@ void LabelAnimator::animate_tick()
         start += int(start_elipsis.size());
         end -= int(end_elipsis.size());
 
-        m_label->SetLabelText(fmt::format(
-            L"{}{}{}",
-            start_elipsis,
+        m_label->SetLabelText(wxString::Format("%s%s%s",
+            start_elipsis.data(),
             m_label_text.SubString(size_t(start), size_t(end)),
-            end_elipsis));
+            end_elipsis.data()));
 
         if (final_ticks > START_END_TICKS) {
             m_state = -START_END_TICKS;

@@ -35,7 +35,6 @@
 
  //  system includes
 #include <optional>  //  std::optional
-#include <utility>  //  std::pair
 #include <cstdint>  //  uint32_t
 #include <wx/wx.h>  //  wxStaticText, etc
 
@@ -48,7 +47,10 @@
 namespace bach_bot {
 namespace ui {
 
-
+/**
+ * @brief Animate a label whose text is too long
+ * @note Label shall used a **fixed width** font or math will fail!
+*/
 class LabelAnimator
 {
 public:
@@ -56,18 +58,23 @@ public:
     /** Recommmended tick interval */
     static constexpr const auto RECOMMENDED_TICK_MS = 100;
 
-    LabelAnimator(wxStaticText *const label, const uint32_t max_len);
+    /**
+     * @brief Constructor
+     * @param label Label to be "animated"
+     * @param padding 
+    */
+    LabelAnimator(wxStaticText *const label, const int padding);
 
     void set_label_text(const wxString &text);
 
     void animate_tick();
 
 private:
-    wxStaticText *const m_label;
-    wxString m_label_text;
-    const uint32_t m_max_len;
-    int m_state;
-    std::optional<std::pair<double, int>> m_pix_config;
+    wxStaticText *const m_label;  ///<  Label
+    wxString m_label_text;  ///<  Current _full_ label text
+    const int m_padding;  ///<  Padding
+    int m_state;  ///<  Animate tick counter
+    std::optional<double> m_pix_per_char;  ///<  Calculated pixels/char
 };
 
 }  //  end ui
