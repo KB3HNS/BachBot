@@ -1,5 +1,41 @@
 # Change Log
 
+## 0.5.0 "Advent"
+
+See Kabnboard item #20 for complete details.
+
+* Full Linux support including:
+  * Updated UI
+  * Updated build
+  * Manual note off tracking, controller clear, controller reset, etc (done
+  automatically on Windows)
+  * `wxString` and `std::wstring` interoperability issues with `fmt::format`
+* Fixed the following issues:
+  * Delete file causes segmentation fault
+  * x.7 + next roll-over issue
+  * Moving songs does not set "playlist changed" flag
+* Added Registry/INI based configuration
+* Configurable playback voice
+* Drag-n-Drop playlist
+* Path find/replace playlists for easily shuffeling between systems and OS
+* Configurable default import settings
+* Closed the "last note off" issue as this is the result of the OMR and not
+BachBot
+* Use Attack time / decay time to control note timing
+* Updated note de-duplication logic for "walking" notes
+
+### Known issues
+
+* Import progress bar text overhangs on Linux.
+* There's still a bit of "jank"(tm) for Linux UI layout and automatic window
+sizing.
+* Local install is still broken
+
+** Note:**  There was a patch release "0.4.1" that fixed a blocker issue where
+some file move and edit operations caused the playlist to enter an "undefined"
+state.  Also, most edits were "ignored".  Unfortunately, that code seems to be
+missing.
+
 ## 0.4.0 "Reformation"
 
 This update was _supposed to_ introduce the first port to Linux.  However, all
