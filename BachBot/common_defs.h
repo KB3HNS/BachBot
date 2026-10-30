@@ -57,13 +57,14 @@ enum class SyndyneBankCommands : uint8_t
  */
 enum SyndyneKeyboards : uint8_t
 {
-    MANUAL1_GREAT = 1U,  ///<  Bottom keyboard
+    PIANO = 0U,  ///<  Pass through - piano
+    MANUAL1_GREAT,  ///<  Bottom keyboard
     MANUAL2_SWELL,  ///<  Top keyboard
     PEDAL
 };
 
 /** Number of keyboards in the console */
-constexpr const size_t NUM_SYNDYNE_KEYBOARDS = 3U;
+constexpr const size_t NUM_SYNDYNE_KEYBOARDS = 4U;
 
 /** Organ "controller" `general controller 1` */
 constexpr const uint8_t SYNDYNE_CONTROLLER_ID = 16U;

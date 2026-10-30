@@ -45,6 +45,7 @@ namespace {
 /** Map of keyboard index to keyboard channel */
 const std::array<SyndyneKeyboards,
                  bach_bot::NUM_SYNDYNE_KEYBOARDS> g_keyboard_indexes = {
+    SyndyneKeyboards::PIANO,
     SyndyneKeyboards::MANUAL1_GREAT,
     SyndyneKeyboards::MANUAL2_SWELL,
     SyndyneKeyboards::PEDAL
@@ -137,7 +138,7 @@ const std::array<uint8_t, 16U> g_channel_mapping = {
     SyndyneKeyboards::PEDAL, SyndyneKeyboards::PEDAL, SyndyneKeyboards::PEDAL,
     std::numeric_limits<uint8_t>::max(),  //  (9) Drums - used for control
     SyndyneKeyboards::MANUAL2_SWELL, SyndyneKeyboards::MANUAL1_GREAT, SyndyneKeyboards::PEDAL,
-    SyndyneKeyboards::MANUAL2_SWELL, SyndyneKeyboards::MANUAL1_GREAT, SyndyneKeyboards::PEDAL
+    SyndyneKeyboards::MANUAL2_SWELL, SyndyneKeyboards::MANUAL1_GREAT, SyndyneKeyboards::PIANO
 };
 
 /**
@@ -274,6 +275,9 @@ uint8_t SyndineImporter::remap_note(const int note,
     uint8_t high_limit = 96U;
     if (SyndyneKeyboards::PEDAL == keyboard) {
         high_limit = 67U;  //  Pedal only goes up to G above middle-C
+    } else if (SyndyneKeyboards::PIANO == keyboard) {
+        high_limit = 108U;
+        low_limit = 21U;
     }
 
     auto mapped_note = uint8_t(note + m_note_offset);

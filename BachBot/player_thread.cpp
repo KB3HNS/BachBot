@@ -40,6 +40,7 @@
 namespace {
 constexpr const auto TICKS_PER_UI_REFRESH = 500U;
 constexpr std::array g_chan_map = {
+    bach_bot::SyndyneKeyboards::PIANO,
     bach_bot::SyndyneKeyboards::MANUAL1_GREAT,
     bach_bot::SyndyneKeyboards::MANUAL2_SWELL,
     bach_bot::SyndyneKeyboards::PEDAL
