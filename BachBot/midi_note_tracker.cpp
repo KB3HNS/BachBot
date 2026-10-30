@@ -149,7 +149,7 @@ void MidiNoteTracker::process_new_note_on_event(OrganNote &organ_ev,
     m_note_on = organ_ev;
     m_midi_ticks_on_time = organ_ev->m_midi_time;
     m_on_now = true;
-    organ_ev->m_byte2 = SYNDYNE_NOTE_ON_VELOCITY;
+    organ_ev->m_byte2 = organ_ev->m_byte2;
 }
 
 

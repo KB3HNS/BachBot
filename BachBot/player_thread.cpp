@@ -421,6 +421,11 @@ void PlayerThread::update_event_table(const OrganMidiEvent &event)
         return;
     }
 
+    auto command = event.m_event_code >> 4U;
+    if (MidiCommands::NOTE_ON != command && MidiCommands::NOTE_OFF != command) {
+        return;
+    }
+
     auto note = event.m_byte1.value();
     auto vel = event.m_byte2.value();
     auto index = std::numeric_limits<size_t>::max();
@@ -437,6 +442,10 @@ void PlayerThread::update_event_table(const OrganMidiEvent &event)
         index = 2U;
         break;
 
+    case SyndyneKeyboards::PIANO:
+        index = 3U;
+        break;
+
     default:
         return;
     }
@@ -451,17 +460,10 @@ void PlayerThread::init_default_instrument()
     message.fill(0U);
     
     message[1U] = m_playback_voice;
-    message[0U] = make_midi_command_byte(SyndyneKeyboards::MANUAL1_GREAT,
-                                         MidiCommands::PATCH_CHANGE);
-    m_midi_out.sendMessage(message.data(), message.size());
-
-    message[0U] = make_midi_command_byte(SyndyneKeyboards::MANUAL2_SWELL,
-                                         MidiCommands::PATCH_CHANGE);
-    m_midi_out.sendMessage(message.data(), message.size());
-
-    message[0U] = make_midi_command_byte(SyndyneKeyboards::PEDAL,
-                                         MidiCommands::PATCH_CHANGE);
-    m_midi_out.sendMessage(message.data(), message.size());
+    for (auto i : g_chan_map) {
+        message[0U] = make_midi_command_byte(i, MidiCommands::PATCH_CHANGE);
+        m_midi_out.sendMessage(message.data(), message.size());
+    }
 }
 
 

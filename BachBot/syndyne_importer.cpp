@@ -28,6 +28,7 @@
 #include <algorithm>  //  std::clamp, std::for_each
 #include <array>  //  std::array
 #include <utility>  //  std::pair
+#include <unordered_set>  //  std::unordered_set
 #include <stdexcept>   //  std::runtime_error, std::out_of_range
 #include <fmt/format.h>  //  fmt::format
 
@@ -334,6 +335,18 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
     auto current_config = m_current_config;
     m_file_events.clear();
     std::array<NoteConfig, NUM_SYNDYNE_KEYBOARDS> note_configs;
+    std::optional<std::pair<double, int>> first_event_time;
+    const std::unordered_set<uint8_t> filtered_events{
+        MIDI_CC_ATTACK_TIME,
+        MIDI_CC_RELEASE_TIME,
+        SYNDYNE_CONTROLLER_ID,
+        SYNDYNE_CONTROLLER_ID + 1U,
+        SYNDYNE_CONTROLLER_ID + 2U,
+        SYNDYNE_CONTROLLER_ID + 3U,
+        0x30U, 0x31U, 0x32U, 0x33U,  //  GPRs
+        0U,  //  Bank select
+        0x79, 0x7B  //  Resets
+    };
 
     //  1st pass: Process all events
     for (auto i = 0; i < event_list.size(); ++i) {
@@ -354,10 +367,26 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
                 events.emplace_back(new OrganMidiEvent(midi_event,
                                                        m_current_config));
             }
+
+            if (!first_event_time.has_value()) {
+                first_event_time = {midi_event.seconds, midi_event.tick};
+            }
         } else if ((channel_id < note_configs.size()) &&
                    midi_event.isController())
         {
             note_configs[channel_id].parseMidiEvent(midi_event);
+            auto command = midi_event[1];
+            auto idx = filtered_events.find(command);
+            if (filtered_events.end() == idx) {
+                midi_event.setChannel(channel_id);
+                events.emplace_back(new OrganMidiEvent(MidiCommands::CONTROL_CHANGE,
+                                                       SyndyneKeyboards(channel_id),
+                                                       command,
+                                                       midi_event[2]));
+                events.back()->set_bank_config(m_current_config);
+                events.back()->m_seconds = midi_event.seconds;
+                events.back()->m_midi_time = midi_event.tick;
+            }
         }
     }
 
@@ -387,8 +416,7 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
 
     //  5th pass: remove start dead time from song, assign song id
     auto last_element =  m_file_events.front();
-    const auto initial_delay_s = last_element->m_seconds;
-    const auto initial_delay_ticks = last_element->m_midi_time;
+    const auto [initial_delay_s, initial_delay_ticks] = first_event_time.value();
     for (auto &i: m_file_events) {
         i->m_song_id = m_song_id;
         i->offset_time(initial_delay_s, initial_delay_ticks);

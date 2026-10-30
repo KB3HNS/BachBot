@@ -76,7 +76,8 @@ OrganMidiEvent::OrganMidiEvent(const MidiCommands command,
                                const int8_t byte1,
                                const int8_t byte2) :
     m_event_code{make_midi_command_byte(channel, command)},
-    m_mode_change_event{(MidiCommands::CONTROL_CHANGE == command)},
+    m_mode_change_event{(MidiCommands::CONTROL_CHANGE == command &&
+                         SYNDYNE_CONTROLLER_ID == byte1)},
     m_desired_memory{1U},
     m_desired_mode_number{1U},
     m_seconds{0.0},
@@ -201,7 +202,14 @@ void OrganMidiEvent::calculate_delta(const OrganMidiEvent& rhs)
 void OrganMidiEvent::offset_time(const double seconds, const int ticks)
 {
     m_seconds -= seconds;
+    if (m_seconds < 0.0) {
+        m_seconds = 0.0;
+    }
+
     m_midi_time -= ticks;
+    if (m_midi_time < 0) {
+        m_midi_time = 0;
+    }
 }
 
 
