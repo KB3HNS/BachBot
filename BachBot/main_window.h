@@ -287,7 +287,7 @@ namespace bach_bot
 				wxString initial_gap_text;
 				wxString extended_ending_text;
 
-				GroupEditMidiDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Group Edit Midi"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 400,275 ), long style = wxDEFAULT_DIALOG_STYLE );
+				GroupEditMidiDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Group Edit Midi"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 550,395 ), long style = wxDEFAULT_DIALOG_STYLE );
 
 				~GroupEditMidiDialog();
 
