@@ -125,7 +125,6 @@ constexpr uint8_t make_midi_command_byte(const uint8_t chan,
     return uint8_t(command << 4U) | (chan & 0x0FU);
 }
 
-
 /*! @addtogroup magic_constants
  * Midi timing magic constants
  * @{

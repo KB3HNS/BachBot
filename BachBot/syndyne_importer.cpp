@@ -417,11 +417,29 @@ void SyndineImporter::build_syndyne_sequence(const smf::MidiEventList &event_lis
     //  5th pass: remove start dead time from song, assign song id
     auto last_element =  m_file_events.front();
     const auto [initial_delay_s, initial_delay_ticks] = first_event_time.value();
+    auto [last_event_s, last_event_ticks] = first_event_time.value();
     for (auto &i: m_file_events) {
         i->m_song_id = m_song_id;
         i->offset_time(initial_delay_s, initial_delay_ticks);
         i->calculate_delta(*last_element);
+        auto event_id = i->get_event_command();
+        if (MidiCommands::NOTE_ON == event_id ||
+            MidiCommands::NOTE_OFF == event_id)
+        {
+            last_event_s = i->m_seconds;
+            last_event_ticks = i->m_midi_time;
+        }
         last_element = i;
+    }
+
+    //  6th pass: remove end dead time from song
+    for (auto &i : m_file_events) {
+        if (i->m_seconds > last_event_s) {
+            i->m_seconds = last_event_s;
+            i->m_midi_time = last_event_ticks;
+            i->m_delta_time = 0.0;
+            i->m_delta = 0;
+        }
     }
 }
 

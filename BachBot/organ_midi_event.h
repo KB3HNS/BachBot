@@ -184,6 +184,15 @@ struct OrganMidiEvent
      */
     void offset_time(const double seconds, const int ticks);
 
+    /**
+     * @brief Get event code MIDI command irrespective of channel
+     * @return Event code
+    */
+    MidiCommands get_event_command() const
+    {
+        return MidiCommands(m_event_code >> 4U);
+    }
+
     ~OrganMidiEvent();
 
     uint8_t m_event_code;  ///<  This event command
